@@ -1,0 +1,12 @@
+{
+  "critical_params": {
+    "ISPIN": 2,
+    "LASPH": ".TRUE.",
+    "METAGGA": "SCAN",
+    "NSW": 0
+  },
+  "description": "为金属间化合物 Tm2ZnGa2 生成 SCAN metaGGA 泛函计算的 VASP INCAR。SCAN 是一种精确的 metaGGA 泛函。",
+  "formula": "Tm2ZnGa2",
+  "material_context": "Tm2ZnGa2 是含稀土 Tm 的金属间化合物，磁性体系(ISPIN=2)。metaGGA 需要 METAGGA=SCAN，并建议开启 LASPH=.TRUE. 用于非球面贡献。",
+  "task": "metagga_scan"
+}

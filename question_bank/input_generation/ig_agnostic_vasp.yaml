@@ -1,0 +1,3804 @@
+version: v5
+capability: input_generation
+domain: agnostic
+questions:
+- id: IG_incar_001_20260404
+  capability: input_generation
+  domain: agnostic
+  intent: 'Generate VASP INCAR for a band structure calculation of Lu4N4. Non-self-consistent
+    run reading existing charge density (ICHARG=11), with projected band output (LORBIT=11).
+
+    '
+  human_prompt_seed: 读取 `task_spec.json` 中的任务描述。为 Lu4N4 体系生成一个能带结构计算的 VASP INCAR 文件。要求：非自洽计算，从已有电荷密度读取，输出投影能带。将完整的
+    INCAR 写入当前目录下的 `INCAR` 文件。
+  tags:
+  - vasp
+  - phy_electronic
+  data_files:
+  - key: task_spec
+    path: data/IG_incar_001/task_spec.json
+    oss_url: ''
+    description: Task specification for band structure INCAR generation.
+  reference_answers:
+  - key: param_EDIFF
+    value: EDIFF = 1.00e-10
+  - key: param_EMAX
+    value: EMAX = 10.000000
+  - key: param_EMIN
+    value: EMIN = -20.000000
+  - key: param_IBRION
+    value: IBRION = -1
+  - key: param_ICHARG
+    value: ICHARG = 11
+  - key: param_ISIF
+    value: ISIF = 2
+  - key: param_ISMEAR
+    value: ISMEAR = -1
+  - key: param_ISPIN
+    value: ISPIN = 1
+  - key: param_ISYM
+    value: ISYM = 0
+  - key: param_LCHARG
+    value: LCHARG = .TRUE.
+  - key: param_LORBIT
+    value: LORBIT = 11
+  - key: param_LVTOT
+    value: LVTOT = .TRUE.
+  - key: param_LWAVE
+    value: LWAVE = .FALSE.
+  - key: param_NEDOS
+    value: NEDOS = 1000
+  - key: param_NELM
+    value: NELM = 800
+  - key: param_NSW
+    value: NSW = 0
+  - key: param_NWRITE
+    value: NWRITE = 3
+  - key: param_PREC
+    value: PREC = Low
+  - key: param_SIGMA
+    value: SIGMA = 0.100000
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: param_EDIFF
+    criterion: INCAR sets EDIFF = 1.00e-10
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EMAX
+    criterion: INCAR sets EMAX = 10.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EMIN
+    criterion: INCAR sets EMIN = -20.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_IBRION
+    criterion: INCAR sets IBRION = -1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ICHARG
+    criterion: INCAR sets ICHARG = 11
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISIF
+    criterion: INCAR sets ISIF = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISMEAR
+    criterion: INCAR sets ISMEAR = -1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISPIN
+    criterion: INCAR sets ISPIN = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISYM
+    criterion: INCAR sets ISYM = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LCHARG
+    criterion: INCAR sets LCHARG = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LORBIT
+    criterion: INCAR sets LORBIT = 11
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LVTOT
+    criterion: INCAR sets LVTOT = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LWAVE
+    criterion: INCAR sets LWAVE = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NEDOS
+    criterion: INCAR sets NEDOS = 1000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELM
+    criterion: INCAR sets NELM = 800
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSW
+    criterion: INCAR sets NSW = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NWRITE
+    criterion: INCAR sets NWRITE = 3
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PREC
+    criterion: INCAR sets PREC = Low
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SIGMA
+    criterion: INCAR sets SIGMA = 0.100000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The generated INCAR is grounded in the provided task_spec.json data (material
+      system, calculation type, element order) rather than hallucinated. Judge solely from
+      the final answer and stated file content; do not fail because the tool-call log omits
+      MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: The agent produced the INCAR efficiently without unnecessary tool calls, redundant
+      queries, or irrelevant exploration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: IG_incar_002_20260404
+  capability: input_generation
+  domain: agnostic
+  intent: 'Generate VASP INCAR for a static SCF calculation of organic-inorganic hybrid perovskite
+    C26H28Cl4N4Pb2. Semiconductor, high-precision convergence.
+
+    '
+  human_prompt_seed: '读取 `task_spec.json` 中的任务描述。为有机-无机杂化钙钛矿 C26H28Cl4N4Pb2 生成一个 静态自洽(SCF)计算的
+    VASP INCAR 文件。体系是半导体，需要高精度收敛。 将完整的 INCAR 写入当前目录下的 `INCAR` 文件。
+
+    '
+  tags:
+  - vasp
+  - log_diagnosis
+  - mat_perovskite
+  - mat_semiconductor
+  data_files:
+  - key: task_spec
+    path: data/IG_incar_002/task_spec.json
+    oss_url: ''
+    description: Task specification for SCF INCAR generation.
+  reference_answers:
+  - key: param_ADDGRID
+    value: ADDGRID = .FALSE.
+  - key: param_ALGO
+    value: ALGO = Fast
+  - key: param_EDIFF
+    value: EDIFF = 1.00e-06
+  - key: param_ENCUT
+    value: ENCUT = 520.000000
+  - key: param_GGA
+    value: GGA = PE
+  - key: param_ISMEAR
+    value: ISMEAR = 0
+  - key: param_ISYM
+    value: ISYM = 0
+  - key: param_IVDW
+    value: IVDW = 12
+  - key: param_LAECHG
+    value: LAECHG = .TRUE.
+  - key: param_LASPH
+    value: LASPH = .FALSE.
+  - key: param_LCHARG
+    value: LCHARG = .TRUE.
+  - key: param_LORBIT
+    value: LORBIT = 11
+  - key: param_LREAL
+    value: LREAL = .FALSE.
+  - key: param_LWAVE
+    value: LWAVE = .TRUE.
+  - key: param_NCORE
+    value: NCORE = 24
+  - key: param_NELM
+    value: NELM = 150
+  - key: param_NSW
+    value: NSW = 0
+  - key: param_NUPDOWN
+    value: NUPDOWN = -1
+  - key: param_PREC
+    value: PREC = Accurate
+  - key: param_SIGMA
+    value: SIGMA = 0.010000
+  - key: param_SYMPREC
+    value: SYMPREC = 1.00e-08
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: param_ADDGRID
+    criterion: INCAR sets ADDGRID = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ALGO
+    criterion: INCAR sets ALGO = Fast
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EDIFF
+    criterion: INCAR sets EDIFF = 1.00e-06
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENCUT
+    criterion: INCAR sets ENCUT = 520.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_GGA
+    criterion: INCAR sets GGA = PE
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISMEAR
+    criterion: INCAR sets ISMEAR = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISYM
+    criterion: INCAR sets ISYM = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_IVDW
+    criterion: INCAR sets IVDW = 12
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LAECHG
+    criterion: INCAR sets LAECHG = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LASPH
+    criterion: INCAR sets LASPH = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LCHARG
+    criterion: INCAR sets LCHARG = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LORBIT
+    criterion: INCAR sets LORBIT = 11
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LREAL
+    criterion: INCAR sets LREAL = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LWAVE
+    criterion: INCAR sets LWAVE = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NCORE
+    criterion: INCAR sets NCORE = 24
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELM
+    criterion: INCAR sets NELM = 150
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSW
+    criterion: INCAR sets NSW = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NUPDOWN
+    criterion: INCAR sets NUPDOWN = -1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PREC
+    criterion: INCAR sets PREC = Accurate
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SIGMA
+    criterion: INCAR sets SIGMA = 0.010000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SYMPREC
+    criterion: INCAR sets SYMPREC = 1.00e-08
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The generated INCAR is grounded in the provided task_spec.json data (material
+      system, calculation type, element order) rather than hallucinated. Judge solely from
+      the final answer and stated file content; do not fail because the tool-call log omits
+      MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: The agent produced the INCAR efficiently without unnecessary tool calls, redundant
+      queries, or irrelevant exploration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: IG_incar_003_20260404
+  capability: input_generation
+  domain: agnostic
+  intent: 'Generate VASP INCAR for structure relaxation of perovskite ErNaO3. Full cell+ion
+    optimization (ISIF=3), spin-polarized (Er3+ f electrons).
+
+    '
+  human_prompt_seed: 读取 `task_spec.json` 中的任务描述。为钙钛矿 ErNaO3 生成一个结构弛豫(relaxation)计算的 VASP INCAR。需要同时优化离子位置和晶胞参数。Er
+    含 f 电子，需要自旋极化。将完整的 INCAR 写入当前目录下的 `INCAR` 文件。
+  tags:
+  - vasp
+  - log_diagnosis
+  - mat_perovskite
+  - phy_magnetism
+  data_files:
+  - key: task_spec
+    path: data/IG_incar_003/task_spec.json
+    oss_url: ''
+    description: Task specification for relaxation INCAR generation.
+  reference_answers:
+  - key: param_ALGO
+    value: ALGO = FAST
+  - key: param_AMIX
+    value: AMIX = 0.4
+  - key: param_BMIX
+    value: BMIX = 1.0
+  - key: param_EDIFF
+    value: EDIFF = 0.0001
+  - key: param_IBRION
+    value: IBRION = 1
+  - key: param_ICHARG
+    value: ICHARG = 1
+  - key: param_ISIF
+    value: ISIF = 3
+  - key: param_ISMEAR
+    value: ISMEAR = 0
+  - key: param_ISPIN
+    value: ISPIN = 2
+  - key: param_ISTART
+    value: ISTART = 1
+  - key: param_ISYM
+    value: ISYM = 1
+  - key: param_LCHARG
+    value: LCHARG = .TRUE.
+  - key: param_LELF
+    value: LELF = .FALSE.
+  - key: param_LORBIT
+    value: LORBIT = 11
+  - key: param_LPLANE
+    value: LPLANE = .TRUE.
+  - key: param_LREAL
+    value: LREAL = FALSE
+  - key: param_LVHAR
+    value: LVHAR = .TRUE.
+  - key: param_LVTOT
+    value: LVTOT = .FALSE
+  - key: param_LWAVE
+    value: LWAVE = .FALSE.
+  - key: param_MAGMOM
+    value: MAGMOM = 1*7.0000 4*0.0000
+  - key: param_MAXMIX
+    value: MAXMIX = -45
+  - key: param_NELM
+    value: NELM = 60
+  - key: param_NELMIN
+    value: NELMIN = 2
+  - key: param_NPAR
+    value: NPAR = 2
+  - key: param_NSW
+    value: NSW = 20
+  - key: param_POTIM
+    value: POTIM = 0.5
+  - key: param_PREC
+    value: PREC = MED
+  - key: param_SIGMA
+    value: SIGMA = 0.2
+  - key: param_SYMPREC
+    value: SYMPREC = 1e-05
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: param_ALGO
+    criterion: INCAR sets ALGO = FAST
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_AMIX
+    criterion: INCAR sets AMIX = 0.4
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_BMIX
+    criterion: INCAR sets BMIX = 1.0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EDIFF
+    criterion: INCAR sets EDIFF = 0.0001
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_IBRION
+    criterion: INCAR sets IBRION = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ICHARG
+    criterion: INCAR sets ICHARG = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISIF
+    criterion: INCAR sets ISIF = 3
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISMEAR
+    criterion: INCAR sets ISMEAR = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISPIN
+    criterion: INCAR sets ISPIN = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISTART
+    criterion: INCAR sets ISTART = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISYM
+    criterion: INCAR sets ISYM = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LCHARG
+    criterion: INCAR sets LCHARG = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LELF
+    criterion: INCAR sets LELF = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LORBIT
+    criterion: INCAR sets LORBIT = 11
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LPLANE
+    criterion: INCAR sets LPLANE = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LREAL
+    criterion: INCAR sets LREAL = FALSE
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LVHAR
+    criterion: INCAR sets LVHAR = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LVTOT
+    criterion: INCAR sets LVTOT = .FALSE
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LWAVE
+    criterion: INCAR sets LWAVE = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_MAGMOM
+    criterion: INCAR sets MAGMOM = 1*7.0000 4*0.0000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_MAXMIX
+    criterion: INCAR sets MAXMIX = -45
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELM
+    criterion: INCAR sets NELM = 60
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELMIN
+    criterion: INCAR sets NELMIN = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NPAR
+    criterion: INCAR sets NPAR = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSW
+    criterion: INCAR sets NSW = 20
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_POTIM
+    criterion: INCAR sets POTIM = 0.5
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PREC
+    criterion: INCAR sets PREC = MED
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SIGMA
+    criterion: INCAR sets SIGMA = 0.2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SYMPREC
+    criterion: INCAR sets SYMPREC = 1e-05
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The generated INCAR is grounded in the provided task_spec.json data (material
+      system, calculation type, element order) rather than hallucinated. Judge solely from
+      the final answer and stated file content; do not fail because the tool-call log omits
+      MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: The agent produced the INCAR efficiently without unnecessary tool calls, redundant
+      queries, or irrelevant exploration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: IG_incar_004_20260404
+  capability: input_generation
+  domain: agnostic
+  intent: 'Generate VASP INCAR for HSE06 hybrid functional calculation of MOF C30H22N4O10Zn2.
+    Accurate electronic structure and band gap.
+
+    '
+  human_prompt_seed: '读取 `task_spec.json` 中的任务描述。为金属有机框架(MOF) C30H22N4O10Zn2 生成一个 HSE06 杂化泛函静态计算的
+    VASP INCAR。需要精确的电子结构和带隙。 将完整的 INCAR 写入当前目录下的 `INCAR` 文件。
+
+    '
+  tags:
+  - vasp
+  - hybrid_functional
+  - mat_mof
+  data_files:
+  - key: task_spec
+    path: data/IG_incar_004/task_spec.json
+    oss_url: ''
+    description: Task specification for HSE06 INCAR generation.
+  reference_answers:
+  - key: param_ALGO
+    value: ALGO = All
+  - key: param_EDIFF
+    value: EDIFF = 1.00e-05
+  - key: param_ENCUT
+    value: ENCUT = 520.000000
+  - key: param_GGA
+    value: GGA = PE
+  - key: param_HFSCREEN
+    value: HFSCREEN = 0.200000
+  - key: param_ICHARG
+    value: ICHARG = 1
+  - key: param_ISMEAR
+    value: ISMEAR = 0
+  - key: param_ISYM
+    value: ISYM = 0
+  - key: param_IVDW
+    value: IVDW = 12
+  - key: param_LAECHG
+    value: LAECHG = .TRUE.
+  - key: param_LASPH
+    value: LASPH = .FALSE.
+  - key: param_LCHARG
+    value: LCHARG = .TRUE.
+  - key: param_LHFCALC
+    value: LHFCALC = .TRUE.
+  - key: param_LORBIT
+    value: LORBIT = 11
+  - key: param_LREAL
+    value: LREAL = .FALSE.
+  - key: param_LWAVE
+    value: LWAVE = .TRUE.
+  - key: param_NCORE
+    value: NCORE = 24
+  - key: param_NEDOS
+    value: NEDOS = 2000
+  - key: param_NELM
+    value: NELM = 100
+  - key: param_NSW
+    value: NSW = 0
+  - key: param_PREC
+    value: PREC = Accurate
+  - key: param_SIGMA
+    value: SIGMA = 0.010000
+  - key: param_SYMPREC
+    value: SYMPREC = 1.00e-08
+  - key: param_VDW_A1
+    value: VDW_A1 = 0.383000
+  - key: param_VDW_A2
+    value: VDW_A2 = 5.685000
+  - key: param_VDW_S8
+    value: VDW_S8 = 2.310000
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: param_ALGO
+    criterion: INCAR sets ALGO = All
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EDIFF
+    criterion: INCAR sets EDIFF = 1.00e-05
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENCUT
+    criterion: INCAR sets ENCUT = 520.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_GGA
+    criterion: INCAR sets GGA = PE
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_HFSCREEN
+    criterion: INCAR sets HFSCREEN = 0.200000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ICHARG
+    criterion: INCAR sets ICHARG = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISMEAR
+    criterion: INCAR sets ISMEAR = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISYM
+    criterion: INCAR sets ISYM = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_IVDW
+    criterion: INCAR sets IVDW = 12
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LAECHG
+    criterion: INCAR sets LAECHG = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LASPH
+    criterion: INCAR sets LASPH = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LCHARG
+    criterion: INCAR sets LCHARG = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LHFCALC
+    criterion: INCAR sets LHFCALC = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LORBIT
+    criterion: INCAR sets LORBIT = 11
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LREAL
+    criterion: INCAR sets LREAL = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LWAVE
+    criterion: INCAR sets LWAVE = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NCORE
+    criterion: INCAR sets NCORE = 24
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NEDOS
+    criterion: INCAR sets NEDOS = 2000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELM
+    criterion: INCAR sets NELM = 100
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSW
+    criterion: INCAR sets NSW = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PREC
+    criterion: INCAR sets PREC = Accurate
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SIGMA
+    criterion: INCAR sets SIGMA = 0.010000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SYMPREC
+    criterion: INCAR sets SYMPREC = 1.00e-08
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_VDW_A1
+    criterion: INCAR sets VDW_A1 = 0.383000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_VDW_A2
+    criterion: INCAR sets VDW_A2 = 5.685000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_VDW_S8
+    criterion: INCAR sets VDW_S8 = 2.310000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The generated INCAR is grounded in the provided task_spec.json data (material
+      system, calculation type, element order) rather than hallucinated. Judge solely from
+      the final answer and stated file content; do not fail because the tool-call log omits
+      MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: The agent produced the INCAR efficiently without unnecessary tool calls, redundant
+      queries, or irrelevant exploration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: IG_incar_005_20260404
+  capability: input_generation
+  domain: agnostic
+  intent: 'Generate VASP INCAR for DFT+U calculation of RbPmMo2O8 with Hubbard U on Mo d-orbitals.
+    Spin-polarized.
+
+    '
+  human_prompt_seed: 读取 `task_spec.json` 中的任务描述。为含稀土和过渡金属的氧化物 RbPmMo2O8 生成一个 DFT+U 计算的 VASP
+    INCAR。需要对 Mo 的 d 轨道施加 Hubbard U 校正。元素顺序为 Rb, Pm, Mo, O。体系为磁性体系。将完整的 INCAR 写入当前目录下的 `INCAR`
+    文件。
+  tags:
+  - vasp
+  - phy_magnetism
+  data_files:
+  - key: task_spec
+    path: data/IG_incar_005/task_spec.json
+    oss_url: ''
+    description: Task specification for DFT+U INCAR generation.
+  reference_answers:
+  - key: param_ALGO
+    value: ALGO = A
+  - key: param_EDIFF
+    value: EDIFF = 5.00e-07
+  - key: param_EMAX
+    value: EMAX = 15.000000
+  - key: param_EMIN
+    value: EMIN = -15.000000
+  - key: param_ENAUG
+    value: ENAUG = 659.424000
+  - key: param_ENCUT
+    value: ENCUT = 520.000000
+  - key: param_GGA
+    value: GGA = PE
+  - key: param_IBRION
+    value: IBRION = -1
+  - key: param_ISPIN
+    value: ISPIN = 2
+  - key: param_ISYM
+    value: ISYM = 2
+  - key: param_KPAR
+    value: KPAR = 4
+  - key: param_LDAU
+    value: LDAU = .TRUE.
+  - key: param_LDAUJ
+    value: LDAUJ = 0.000 0.000 0.000 0.000
+  - key: param_LDAUL
+    value: LDAUL = -1 -1 2 -1
+  - key: param_LDAUTYPE
+    value: LDAUTYPE = 2
+  - key: param_LDAUU
+    value: LDAUU = 0.000 0.000 4.380 0.000
+  - key: param_LMAXMIX
+    value: LMAXMIX = 4
+  - key: param_LORBIT
+    value: LORBIT = 11
+  - key: param_MAGMOM
+    value: MAGMOM = 12*1.0000
+  - key: param_NCORE
+    value: NCORE = 12
+  - key: param_NELM
+    value: NELM = 200
+  - key: param_NSW
+    value: NSW = 0
+  - key: param_PREC
+    value: PREC = High
+  - key: param_PSTRESS
+    value: PSTRESS = 0.000000
+  - key: param_SYMPREC
+    value: SYMPREC = 1.00e-04
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: param_ALGO
+    criterion: INCAR sets ALGO = A
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EDIFF
+    criterion: INCAR sets EDIFF = 5.00e-07
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EMAX
+    criterion: INCAR sets EMAX = 15.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EMIN
+    criterion: INCAR sets EMIN = -15.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENAUG
+    criterion: INCAR sets ENAUG = 659.424000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENCUT
+    criterion: INCAR sets ENCUT = 520.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_GGA
+    criterion: INCAR sets GGA = PE
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_IBRION
+    criterion: INCAR sets IBRION = -1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISPIN
+    criterion: INCAR sets ISPIN = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISYM
+    criterion: INCAR sets ISYM = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_KPAR
+    criterion: INCAR sets KPAR = 4
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LDAU
+    criterion: INCAR sets LDAU = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LDAUJ
+    criterion: INCAR sets LDAUJ = 0.000 0.000 0.000 0.000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LDAUL
+    criterion: INCAR sets LDAUL = -1 -1 2 -1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LDAUTYPE
+    criterion: INCAR sets LDAUTYPE = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LDAUU
+    criterion: INCAR sets LDAUU = 0.000 0.000 4.380 0.000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LMAXMIX
+    criterion: INCAR sets LMAXMIX = 4
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LORBIT
+    criterion: INCAR sets LORBIT = 11
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_MAGMOM
+    criterion: INCAR sets MAGMOM = 12*1.0000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NCORE
+    criterion: INCAR sets NCORE = 12
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELM
+    criterion: INCAR sets NELM = 200
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSW
+    criterion: INCAR sets NSW = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PREC
+    criterion: INCAR sets PREC = High
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PSTRESS
+    criterion: INCAR sets PSTRESS = 0.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SYMPREC
+    criterion: INCAR sets SYMPREC = 1.00e-04
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The generated INCAR is grounded in the provided task_spec.json data (material
+      system, calculation type, element order) rather than hallucinated. Judge solely from
+      the final answer and stated file content; do not fail because the tool-call log omits
+      MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: The agent produced the INCAR efficiently without unnecessary tool calls, redundant
+      queries, or irrelevant exploration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: IG_incar_006_20260404
+  capability: input_generation
+  domain: agnostic
+  intent: 'Generate VASP INCAR for SCAN metaGGA calculation of intermetallic Tm2ZnGa2. Tm
+    has f electrons; spin-polarized.
+
+    '
+  human_prompt_seed: '读取 `task_spec.json` 中的任务描述。为金属间化合物 Tm2ZnGa2 生成一个 SCAN metaGGA 泛函静态计算的
+    VASP INCAR。Tm 含 f 电子，需要自旋极化。 将完整的 INCAR 写入当前目录下的 `INCAR` 文件。
+
+    '
+  tags:
+  - vasp
+  - hybrid_functional
+  - wf_sweep
+  - phy_magnetism
+  data_files:
+  - key: task_spec
+    path: data/IG_incar_006/task_spec.json
+    oss_url: ''
+    description: Task specification for metaGGA SCAN INCAR generation.
+  reference_answers:
+  - key: param_ALGO
+    value: ALGO = A
+  - key: param_EDIFF
+    value: EDIFF = 5.00e-07
+  - key: param_EMAX
+    value: EMAX = 15.000000
+  - key: param_EMIN
+    value: EMIN = -15.000000
+  - key: param_ENAUG
+    value: ENAUG = 659.424000
+  - key: param_ENCUT
+    value: ENCUT = 520.000000
+  - key: param_GGA
+    value: GGA = PE
+  - key: param_IBRION
+    value: IBRION = -1
+  - key: param_ISPIN
+    value: ISPIN = 2
+  - key: param_ISYM
+    value: ISYM = 2
+  - key: param_KPAR
+    value: KPAR = 1
+  - key: param_LASPH
+    value: LASPH = .TRUE.
+  - key: param_LMAXTAU
+    value: LMAXTAU = 6
+  - key: param_LORBIT
+    value: LORBIT = 11
+  - key: param_MAGMOM
+    value: MAGMOM = 10*1.0000
+  - key: param_METAGGA
+    value: METAGGA = SCAN
+  - key: param_NELM
+    value: NELM = 200
+  - key: param_NSW
+    value: NSW = 0
+  - key: param_PREC
+    value: PREC = High
+  - key: param_SYMPREC
+    value: SYMPREC = 1.00e-04
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: param_ALGO
+    criterion: INCAR sets ALGO = A
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EDIFF
+    criterion: INCAR sets EDIFF = 5.00e-07
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EMAX
+    criterion: INCAR sets EMAX = 15.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EMIN
+    criterion: INCAR sets EMIN = -15.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENAUG
+    criterion: INCAR sets ENAUG = 659.424000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENCUT
+    criterion: INCAR sets ENCUT = 520.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_GGA
+    criterion: INCAR sets GGA = PE
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_IBRION
+    criterion: INCAR sets IBRION = -1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISPIN
+    criterion: INCAR sets ISPIN = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISYM
+    criterion: INCAR sets ISYM = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_KPAR
+    criterion: INCAR sets KPAR = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LASPH
+    criterion: INCAR sets LASPH = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LMAXTAU
+    criterion: INCAR sets LMAXTAU = 6
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LORBIT
+    criterion: INCAR sets LORBIT = 11
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_MAGMOM
+    criterion: INCAR sets MAGMOM = 10*1.0000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_METAGGA
+    criterion: INCAR sets METAGGA = SCAN
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELM
+    criterion: INCAR sets NELM = 200
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSW
+    criterion: INCAR sets NSW = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PREC
+    criterion: INCAR sets PREC = High
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SYMPREC
+    criterion: INCAR sets SYMPREC = 1.00e-04
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The generated INCAR is grounded in the provided task_spec.json data (material
+      system, calculation type, element order) rather than hallucinated. Judge solely from
+      the final answer and stated file content; do not fail because the tool-call log omits
+      MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: The agent produced the INCAR efficiently without unnecessary tool calls, redundant
+      queries, or irrelevant exploration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: IG_incar_007_20260404
+  capability: input_generation
+  domain: agnostic
+  intent: 'Generate VASP INCAR for Born-Oppenheimer molecular dynamics of Heusler alloy MnNaPm2.
+    Mn is magnetic; timestep 0.5 fs.
+
+    '
+  human_prompt_seed: '读取 `task_spec.json` 中的任务描述。为 Heusler 合金 MnNaPm2 生成一个分子动力学(MD) 计算的 VASP
+    INCAR。Mn 含磁性，需要自旋极化。MD 时间步长设为 0.5 fs。 将完整的 INCAR 写入当前目录下的 `INCAR` 文件。
+
+    '
+  tags:
+  - vasp
+  - phy_md
+  - phy_magnetism
+  data_files:
+  - key: task_spec
+    path: data/IG_incar_007/task_spec.json
+    oss_url: ''
+    description: Task specification for MD INCAR generation.
+  reference_answers:
+  - key: param_ALGO
+    value: ALGO = FAST
+  - key: param_AMIX
+    value: AMIX = 0.4
+  - key: param_BMIX
+    value: BMIX = 1.0
+  - key: param_EDIFF
+    value: EDIFF = 0.0001
+  - key: param_ENCUT
+    value: ENCUT = 520
+  - key: param_IBRION
+    value: IBRION = 0
+  - key: param_ICHARG
+    value: ICHARG = 1
+  - key: param_ISIF
+    value: ISIF = 2
+  - key: param_ISMEAR
+    value: ISMEAR = 1
+  - key: param_ISPIN
+    value: ISPIN = 2
+  - key: param_ISTART
+    value: ISTART = 1
+  - key: param_ISYM
+    value: ISYM = 0
+  - key: param_LCHARG
+    value: LCHARG = .FALSE.
+  - key: param_LORBIT
+    value: LORBIT = 11
+  - key: param_LPLANE
+    value: LPLANE = .TRUE.
+  - key: param_LREAL
+    value: LREAL = Auto
+  - key: param_LVTOT
+    value: LVTOT = .FALSE.
+  - key: param_LWAVE
+    value: LWAVE = .FALSE.
+  - key: param_MAGMOM
+    value: MAGMOM = 1*5.0000 1*0.0000 2*7.0000
+  - key: param_MAXMIX
+    value: MAXMIX = -45
+  - key: param_NELM
+    value: NELM = 60
+  - key: param_NELMIN
+    value: NELMIN = 2
+  - key: param_NPAR
+    value: NPAR = 2
+  - key: param_NSW
+    value: NSW = 5000
+  - key: param_POTIM
+    value: POTIM = 0.5
+  - key: param_PREC
+    value: PREC = MED
+  - key: param_SIGMA
+    value: SIGMA = 0.2
+  - key: param_SMASS
+    value: SMASS = 0
+  - key: param_TEBEG
+    value: TEBEG = 300
+  - key: param_TEEND
+    value: TEEND = 300
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: param_ALGO
+    criterion: INCAR sets ALGO = FAST
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_AMIX
+    criterion: INCAR sets AMIX = 0.4
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_BMIX
+    criterion: INCAR sets BMIX = 1.0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EDIFF
+    criterion: INCAR sets EDIFF = 0.0001
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENCUT
+    criterion: INCAR sets ENCUT = 520
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_IBRION
+    criterion: INCAR sets IBRION = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ICHARG
+    criterion: INCAR sets ICHARG = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISIF
+    criterion: INCAR sets ISIF = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISMEAR
+    criterion: INCAR sets ISMEAR = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISPIN
+    criterion: INCAR sets ISPIN = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISTART
+    criterion: INCAR sets ISTART = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISYM
+    criterion: INCAR sets ISYM = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LCHARG
+    criterion: INCAR sets LCHARG = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LORBIT
+    criterion: INCAR sets LORBIT = 11
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LPLANE
+    criterion: INCAR sets LPLANE = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LREAL
+    criterion: INCAR sets LREAL = Auto
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LVTOT
+    criterion: INCAR sets LVTOT = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LWAVE
+    criterion: INCAR sets LWAVE = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_MAGMOM
+    criterion: INCAR sets MAGMOM = 1*5.0000 1*0.0000 2*7.0000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_MAXMIX
+    criterion: INCAR sets MAXMIX = -45
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELM
+    criterion: INCAR sets NELM = 60
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELMIN
+    criterion: INCAR sets NELMIN = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NPAR
+    criterion: INCAR sets NPAR = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSW
+    criterion: INCAR sets NSW = 5000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_POTIM
+    criterion: INCAR sets POTIM = 0.5
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PREC
+    criterion: INCAR sets PREC = MED
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SIGMA
+    criterion: INCAR sets SIGMA = 0.2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SMASS
+    criterion: INCAR sets SMASS = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_TEBEG
+    criterion: INCAR sets TEBEG = 300
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_TEEND
+    criterion: INCAR sets TEEND = 300
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The generated INCAR is grounded in the provided task_spec.json data (material
+      system, calculation type, element order) rather than hallucinated. Judge solely from
+      the final answer and stated file content; do not fail because the tool-call log omits
+      MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: The agent produced the INCAR efficiently without unnecessary tool calls, redundant
+      queries, or irrelevant exploration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: IG_incar_008_20260404
+  capability: input_generation
+  domain: agnostic
+  intent: 'Generate VASP INCAR for elastic constants calculation of perovskite BaZrO3. Finite-difference
+    method (IBRION=6), displacement 0.015 A.
+
+    '
+  human_prompt_seed: 读取 `task_spec.json` 中的任务描述。为钙钛矿 BaZrO3 生成一个弹性常数计算的 VASP INCAR。使用有限差分法计算弹性张量，位移幅度
+    0.015 A。将完整的 INCAR 写入当前目录下的 `INCAR` 文件。
+  tags:
+  - vasp
+  - phy_elastic
+  - wf_inputs
+  - mat_perovskite
+  data_files:
+  - key: task_spec
+    path: data/IG_incar_008/task_spec.json
+    oss_url: ''
+    description: Task specification for elastic constants INCAR generation.
+  reference_answers:
+  - key: param_ALGO
+    value: ALGO = Normal
+  - key: param_EDIFF
+    value: EDIFF = 0.0001
+  - key: param_EDIFFG
+    value: EDIFFG = -0.05
+  - key: param_ENCUT
+    value: ENCUT = 500
+  - key: param_IBRION
+    value: IBRION = 6
+  - key: param_ICHARG
+    value: ICHARG = 2
+  - key: param_ISIF
+    value: ISIF = 3
+  - key: param_ISMEAR
+    value: ISMEAR = 0
+  - key: param_ISPIN
+    value: ISPIN = 1
+  - key: param_ISTART
+    value: ISTART = 0
+  - key: param_LCHARG
+    value: LCHARG = .FALSE.
+  - key: param_LWAVE
+    value: LWAVE = .FALSE.
+  - key: param_NELM
+    value: NELM = 100
+  - key: param_NELMIN
+    value: NELMIN = 5
+  - key: param_NFREE
+    value: NFREE = 2
+  - key: param_NSW
+    value: NSW = 200
+  - key: param_POTIM
+    value: POTIM = 0.015
+  - key: param_PREC
+    value: PREC = High
+  - key: param_SIGMA
+    value: SIGMA = 0.02
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: param_ALGO
+    criterion: INCAR sets ALGO = Normal
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EDIFF
+    criterion: INCAR sets EDIFF = 0.0001
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EDIFFG
+    criterion: INCAR sets EDIFFG = -0.05
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENCUT
+    criterion: INCAR sets ENCUT = 500
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_IBRION
+    criterion: INCAR sets IBRION = 6
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ICHARG
+    criterion: INCAR sets ICHARG = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISIF
+    criterion: INCAR sets ISIF = 3
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISMEAR
+    criterion: INCAR sets ISMEAR = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISPIN
+    criterion: INCAR sets ISPIN = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISTART
+    criterion: INCAR sets ISTART = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LCHARG
+    criterion: INCAR sets LCHARG = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LWAVE
+    criterion: INCAR sets LWAVE = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELM
+    criterion: INCAR sets NELM = 100
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELMIN
+    criterion: INCAR sets NELMIN = 5
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NFREE
+    criterion: INCAR sets NFREE = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSW
+    criterion: INCAR sets NSW = 200
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_POTIM
+    criterion: INCAR sets POTIM = 0.015
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PREC
+    criterion: INCAR sets PREC = High
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SIGMA
+    criterion: INCAR sets SIGMA = 0.02
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The generated INCAR is grounded in the provided task_spec.json data (material
+      system, calculation type, element order) rather than hallucinated. Judge solely from
+      the final answer and stated file content; do not fail because the tool-call log omits
+      MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: The agent produced the INCAR efficiently without unnecessary tool calls, redundant
+      queries, or irrelevant exploration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: IG_incar_009_20260404
+  capability: input_generation
+  domain: agnostic
+  intent: 'Generate VASP INCAR for DFPT dielectric constant calculation of C8H12HfO4. Compute
+    dielectric tensor and Born effective charges.
+
+    '
+  human_prompt_seed: '读取 `task_spec.json` 中的任务描述。为有机金属氧化物 C8H12HfO4 生成一个 DFPT(密度泛函微扰理论) 介电常数计算的
+    VASP INCAR。需要计算介电张量和 Born 有效电荷。 将完整的 INCAR 写入当前目录下的 `INCAR` 文件。
+
+    '
+  tags:
+  - vasp
+  - wf_inputs
+  data_files:
+  - key: task_spec
+    path: data/IG_incar_009/task_spec.json
+    oss_url: ''
+    description: Task specification for DFPT dielectric INCAR generation.
+  reference_answers:
+  - key: param_AGGAC
+    value: AGGAC = 0.0000
+  - key: param_EDIFF
+    value: EDIFF = 1.d-4
+  - key: param_ENCUT
+    value: ENCUT = 400
+  - key: param_GGA
+    value: GGA = ML
+  - key: param_IBRION
+    value: IBRION = 8
+  - key: param_ISMEAR
+    value: ISMEAR = 0
+  - key: param_LEPSILON
+    value: LEPSILON = .TRUE.
+  - key: param_LPEAD
+    value: LPEAD = .TRUE.
+  - key: param_LUSE_VDW
+    value: LUSE_VDW = .TRUE.
+  - key: param_NSW
+    value: NSW = 1
+  - key: param_PREC
+    value: PREC = Accurate
+  - key: param_SIGMA
+    value: SIGMA = 0.01
+  - key: param_ZAB_VDW
+    value: ZAB_VDW = -1.8867
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: param_AGGAC
+    criterion: INCAR sets AGGAC = 0.0000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EDIFF
+    criterion: INCAR sets EDIFF = 1.d-4
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENCUT
+    criterion: INCAR sets ENCUT = 400
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_GGA
+    criterion: INCAR sets GGA = ML
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_IBRION
+    criterion: INCAR sets IBRION = 8
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISMEAR
+    criterion: INCAR sets ISMEAR = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LEPSILON
+    criterion: INCAR sets LEPSILON = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LPEAD
+    criterion: INCAR sets LPEAD = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LUSE_VDW
+    criterion: INCAR sets LUSE_VDW = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSW
+    criterion: INCAR sets NSW = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PREC
+    criterion: INCAR sets PREC = Accurate
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SIGMA
+    criterion: INCAR sets SIGMA = 0.01
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ZAB_VDW
+    criterion: INCAR sets ZAB_VDW = -1.8867
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The generated INCAR is grounded in the provided task_spec.json data (material
+      system, calculation type, element order) rather than hallucinated. Judge solely from
+      the final answer and stated file content; do not fail because the tool-call log omits
+      MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: The agent produced the INCAR efficiently without unnecessary tool calls, redundant
+      queries, or irrelevant exploration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: IG_incar_010_20260404
+  capability: input_generation
+  domain: agnostic
+  intent: 'Generate VASP INCAR for spin-orbit coupling calculation of heavy-element halide
+    Br6H6Pb2S2. Pb SOC is significant.
+
+    '
+  human_prompt_seed: '读取 `task_spec.json` 中的任务描述。为含重元素 Pb 的卤化物 Br6H6Pb2S2 生成一个 自旋轨道耦合(SOC)计算的
+    VASP INCAR。Pb 的 SOC 效应显著，需要高精度设置。 将完整的 INCAR 写入当前目录下的 `INCAR` 文件。
+
+    '
+  tags:
+  - vasp
+  - phy_electronic
+  - phy_magnetism
+  data_files:
+  - key: task_spec
+    path: data/IG_incar_010/task_spec.json
+    oss_url: ''
+    description: Task specification for SOC INCAR generation.
+  reference_answers:
+  - key: param_ALGO
+    value: ALGO = N
+  - key: param_EDIFF
+    value: EDIFF = 0.0001
+  - key: param_ENCUT
+    value: ENCUT = 520
+  - key: param_EPSILON
+    value: EPSILON = 1
+  - key: param_GGA_COMPAT
+    value: GGA_COMPAT = .FALSE.
+  - key: param_IBRION
+    value: IBRION = 2
+  - key: param_ICHARG
+    value: ICHARG = 11
+  - key: param_IDIPOL
+    value: IDIPOL = 0
+  - key: param_ISIF
+    value: ISIF = 3
+  - key: param_ISMEAR
+    value: ISMEAR = 0
+  - key: param_ISTART
+    value: ISTART = 2
+  - key: param_ISYM
+    value: ISYM = 0
+  - key: param_KPAR
+    value: KPAR = 4
+  - key: param_LCHARG
+    value: LCHARG = .TRUE.
+  - key: param_LDIPOL
+    value: LDIPOL = .FALSE.
+  - key: param_LMAXMIX
+    value: LMAXMIX = 4
+  - key: param_LORBIT
+    value: LORBIT = 11
+  - key: param_LPLANE
+    value: LPLANE = .TRUE.
+  - key: param_LREAL
+    value: LREAL = .FALSE.
+  - key: param_LSCALU
+    value: LSCALU = .FALSE.
+  - key: param_LSORBIT
+    value: LSORBIT = .TRUE
+  - key: param_LVTOT
+    value: LVTOT = .FALSE.
+  - key: param_LWAVE
+    value: LWAVE = .FALSE.
+  - key: param_MAGMOM
+    value: MAGMOM = 0 0 2.2 0 0 2.2 0 0 2.2 0 0 2.2 0 0 2.2 0 0 2.2 0 0 2.2 0 0 2.2 0 0 2.2
+      0 0 2.2 0 0 2.2 0 0 2.2 0 0 2.2 0 0 2.2 0 0 2.2 0 0 2.2
+  - key: param_NBANDS
+    value: NBANDS = 98
+  - key: param_NCORE
+    value: NCORE = 28
+  - key: param_NELM
+    value: NELM = 60
+  - key: param_NELMIN
+    value: NELMIN = 2
+  - key: param_NSIM
+    value: NSIM = 4
+  - key: param_NSW
+    value: NSW = 0
+  - key: param_POTIM
+    value: POTIM = 0.5
+  - key: param_PREC
+    value: PREC = ACC
+  - key: param_PSTRESS
+    value: PSTRESS = 0
+  - key: param_SIGMA
+    value: SIGMA = 0.025
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: param_ALGO
+    criterion: INCAR sets ALGO = N
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EDIFF
+    criterion: INCAR sets EDIFF = 0.0001
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENCUT
+    criterion: INCAR sets ENCUT = 520
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EPSILON
+    criterion: INCAR sets EPSILON = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_GGA_COMPAT
+    criterion: INCAR sets GGA_COMPAT = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_IBRION
+    criterion: INCAR sets IBRION = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ICHARG
+    criterion: INCAR sets ICHARG = 11
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_IDIPOL
+    criterion: INCAR sets IDIPOL = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISIF
+    criterion: INCAR sets ISIF = 3
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISMEAR
+    criterion: INCAR sets ISMEAR = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISTART
+    criterion: INCAR sets ISTART = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISYM
+    criterion: INCAR sets ISYM = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_KPAR
+    criterion: INCAR sets KPAR = 4
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LCHARG
+    criterion: INCAR sets LCHARG = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LDIPOL
+    criterion: INCAR sets LDIPOL = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LMAXMIX
+    criterion: INCAR sets LMAXMIX = 4
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LORBIT
+    criterion: INCAR sets LORBIT = 11
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LPLANE
+    criterion: INCAR sets LPLANE = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LREAL
+    criterion: INCAR sets LREAL = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LSCALU
+    criterion: INCAR sets LSCALU = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LSORBIT
+    criterion: INCAR sets LSORBIT = .TRUE
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LVTOT
+    criterion: INCAR sets LVTOT = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LWAVE
+    criterion: INCAR sets LWAVE = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_MAGMOM
+    criterion: INCAR sets MAGMOM = 0 0 2.2 0 0 2.2 0 0 2.2 0 0 2.2 0 0 2.2 0 0 2.2 0 0 2.2
+      0 0 ...
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NBANDS
+    criterion: INCAR sets NBANDS = 98
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NCORE
+    criterion: INCAR sets NCORE = 28
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELM
+    criterion: INCAR sets NELM = 60
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELMIN
+    criterion: INCAR sets NELMIN = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSIM
+    criterion: INCAR sets NSIM = 4
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSW
+    criterion: INCAR sets NSW = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_POTIM
+    criterion: INCAR sets POTIM = 0.5
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PREC
+    criterion: INCAR sets PREC = ACC
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PSTRESS
+    criterion: INCAR sets PSTRESS = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SIGMA
+    criterion: INCAR sets SIGMA = 0.025
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The generated INCAR is grounded in the provided task_spec.json data (material
+      system, calculation type, element order) rather than hallucinated. Judge solely from
+      the final answer and stated file content; do not fail because the tool-call log omits
+      MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: The agent produced the INCAR efficiently without unnecessary tool calls, redundant
+      queries, or irrelevant exploration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: IG_incar_011_20260404
+  capability: input_generation
+  domain: agnostic
+  intent: 'Generate VASP INCAR for density of states calculation of ternary intermetallic
+    CdOs3Pt. Magnetic metal; needs PDOS.
+
+    '
+  human_prompt_seed: '读取 `task_spec.json` 中的任务描述。为三元金属间化合物 CdOs3Pt 生成一个 高精度态密度(DOS)计算的 VASP
+    INCAR。体系为磁性金属，需要投影态密度(PDOS)。 将完整的 INCAR 写入当前目录下的 `INCAR` 文件。
+
+    '
+  tags:
+  - vasp
+  - phy_electronic
+  data_files:
+  - key: task_spec
+    path: data/IG_incar_011/task_spec.json
+    oss_url: ''
+    description: Task specification for DOS INCAR generation.
+  reference_answers:
+  - key: param_ALGO
+    value: ALGO = Fast
+  - key: param_EDIFF
+    value: EDIFF = 1.00e-07
+  - key: param_EMAX
+    value: EMAX = 15.000000
+  - key: param_EMIN
+    value: EMIN = -15.000000
+  - key: param_ENAUG
+    value: ENAUG = 659.424000
+  - key: param_ENCUT
+    value: ENCUT = 520.000000
+  - key: param_IBRION
+    value: IBRION = -1
+  - key: param_ISMEAR
+    value: ISMEAR = -5
+  - key: param_ISPIN
+    value: ISPIN = 2
+  - key: param_ISYM
+    value: ISYM = 2
+  - key: param_LORBIT
+    value: LORBIT = 11
+  - key: param_MAGMOM
+    value: MAGMOM = 5*1.0000
+  - key: param_NPAR
+    value: NPAR = 2
+  - key: param_NSIM
+    value: NSIM = 1
+  - key: param_NSW
+    value: NSW = 0
+  - key: param_PREC
+    value: PREC = High
+  - key: param_PSTRESS
+    value: PSTRESS = 0.000000
+  - key: param_SYMPREC
+    value: SYMPREC = 1.00e-08
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: param_ALGO
+    criterion: INCAR sets ALGO = Fast
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EDIFF
+    criterion: INCAR sets EDIFF = 1.00e-07
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EMAX
+    criterion: INCAR sets EMAX = 15.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EMIN
+    criterion: INCAR sets EMIN = -15.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENAUG
+    criterion: INCAR sets ENAUG = 659.424000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENCUT
+    criterion: INCAR sets ENCUT = 520.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_IBRION
+    criterion: INCAR sets IBRION = -1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISMEAR
+    criterion: INCAR sets ISMEAR = -5
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISPIN
+    criterion: INCAR sets ISPIN = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISYM
+    criterion: INCAR sets ISYM = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LORBIT
+    criterion: INCAR sets LORBIT = 11
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_MAGMOM
+    criterion: INCAR sets MAGMOM = 5*1.0000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NPAR
+    criterion: INCAR sets NPAR = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSIM
+    criterion: INCAR sets NSIM = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSW
+    criterion: INCAR sets NSW = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PREC
+    criterion: INCAR sets PREC = High
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PSTRESS
+    criterion: INCAR sets PSTRESS = 0.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SYMPREC
+    criterion: INCAR sets SYMPREC = 1.00e-08
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The generated INCAR is grounded in the provided task_spec.json data (material
+      system, calculation type, element order) rather than hallucinated. Judge solely from
+      the final answer and stated file content; do not fail because the tool-call log omits
+      MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: The agent produced the INCAR efficiently without unnecessary tool calls, redundant
+      queries, or irrelevant exploration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: IG_incar_012_20260404
+  capability: input_generation
+  domain: agnostic
+  intent: 'Generate VASP INCAR for NEB transition state search with HSE06 of Prussian blue
+    analogue C24Fe8N24Na4. Fe magnetic, NUPDOWN=20.
+
+    '
+  human_prompt_seed: 读取 `task_spec.json` 中的任务描述。为普鲁士蓝类似物 C24Fe8N24Na4 生成一个 NEB(nudged elastic
+    band)+HSE06 过渡态搜索的 VASP INCAR。Fe 含磁性，需要固定总磁矩。将完整的 INCAR 写入当前目录下的 `INCAR` 文件。
+  tags:
+  - vasp
+  - hybrid_functional
+  - phy_magnetism
+  data_files:
+  - key: task_spec
+    path: data/IG_incar_012/task_spec.json
+    oss_url: ''
+    description: Task specification for NEB INCAR generation.
+  reference_answers:
+  - key: param_ALGO
+    value: ALGO = Conjugate
+  - key: param_EDIFF
+    value: EDIFF = 1e-04
+  - key: param_EDIFFG
+    value: EDIFFG = -1e-02
+  - key: param_ENCUT
+    value: ENCUT = 550
+  - key: param_GGA
+    value: GGA = PE
+  - key: param_HFSCREEN
+    value: HFSCREEN = 0.2
+  - key: param_IBRION
+    value: IBRION = 1
+  - key: param_ISIF
+    value: ISIF = 2
+  - key: param_ISMEAR
+    value: ISMEAR = 0
+  - key: param_ISPIN
+    value: ISPIN = 2
+  - key: param_ISTART
+    value: ISTART = 1
+  - key: param_ISYM
+    value: ISYM = 3
+  - key: param_LASPH
+    value: LASPH = .TRUE.
+  - key: param_LCHARG
+    value: LCHARG = .FALSE.
+  - key: param_LDAUPRINT
+    value: LDAUPRINT = 1
+  - key: param_LHFCALC
+    value: LHFCALC = .TRUE.
+  - key: param_LMAXMIX
+    value: LMAXMIX = 4
+  - key: param_LORBIT
+    value: LORBIT = 11
+  - key: param_LREAL
+    value: LREAL = Auto
+  - key: param_LWAVE
+    value: LWAVE = .TRUE.
+  - key: param_MAGMOM
+    value: MAGMOM = 4*5.0 4*0.0 24*0 24*0 4*0
+  - key: param_NELM
+    value: NELM = 300
+  - key: param_NFREE
+    value: NFREE = 15
+  - key: param_NSW
+    value: NSW = 500
+  - key: param_NUPDOWN
+    value: NUPDOWN = 20
+  - key: param_POTIM
+    value: POTIM = 0.02
+  - key: param_PREC
+    value: PREC = Normal
+  - key: param_SIGMA
+    value: SIGMA = 0.02
+  - key: param_SYSTEM
+    value: SYSTEM = VASPcalc
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: param_ALGO
+    criterion: INCAR sets ALGO = Conjugate
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EDIFF
+    criterion: INCAR sets EDIFF = 1e-04
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EDIFFG
+    criterion: INCAR sets EDIFFG = -1e-02
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENCUT
+    criterion: INCAR sets ENCUT = 550
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_GGA
+    criterion: INCAR sets GGA = PE
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_HFSCREEN
+    criterion: INCAR sets HFSCREEN = 0.2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_IBRION
+    criterion: INCAR sets IBRION = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISIF
+    criterion: INCAR sets ISIF = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISMEAR
+    criterion: INCAR sets ISMEAR = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISPIN
+    criterion: INCAR sets ISPIN = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISTART
+    criterion: INCAR sets ISTART = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISYM
+    criterion: INCAR sets ISYM = 3
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LASPH
+    criterion: INCAR sets LASPH = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LCHARG
+    criterion: INCAR sets LCHARG = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LDAUPRINT
+    criterion: INCAR sets LDAUPRINT = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LHFCALC
+    criterion: INCAR sets LHFCALC = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LMAXMIX
+    criterion: INCAR sets LMAXMIX = 4
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LORBIT
+    criterion: INCAR sets LORBIT = 11
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LREAL
+    criterion: INCAR sets LREAL = Auto
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LWAVE
+    criterion: INCAR sets LWAVE = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_MAGMOM
+    criterion: INCAR sets MAGMOM = 4*5.0 4*0.0 24*0 24*0 4*0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELM
+    criterion: INCAR sets NELM = 300
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NFREE
+    criterion: INCAR sets NFREE = 15
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSW
+    criterion: INCAR sets NSW = 500
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NUPDOWN
+    criterion: INCAR sets NUPDOWN = 20
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_POTIM
+    criterion: INCAR sets POTIM = 0.02
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PREC
+    criterion: INCAR sets PREC = Normal
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SIGMA
+    criterion: INCAR sets SIGMA = 0.02
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SYSTEM
+    criterion: INCAR sets SYSTEM = VASPcalc
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The generated INCAR is grounded in the provided task_spec.json data (material
+      system, calculation type, element order) rather than hallucinated. Judge solely from
+      the final answer and stated file content; do not fail because the tool-call log omits
+      MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: The agent produced the INCAR efficiently without unnecessary tool calls, redundant
+      queries, or irrelevant exploration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: IG_incar_013_20260404
+  capability: input_generation
+  domain: agnostic
+  intent: 'Generate VASP INCAR for surface relaxation of ternary carbide (Ta,V)2C surface
+    (C33O2Ta16V16). Fixed cell (ISIF=2), metallic.
+
+    '
+  human_prompt_seed: 读取 `task_spec.json` 中的任务描述。为三元碳化物表面 (Ta,V)2C (C33O2Ta16V16) 生成一个表面弛豫计算的
+    VASP INCAR。表面计算需要固定晶胞形状，体系为金属。将完整的 INCAR 写入当前目录下的 `INCAR` 文件。
+  tags:
+  - vasp
+  - phy_surface
+  - log_diagnosis
+  - phy_electronic
+  data_files:
+  - key: task_spec
+    path: data/IG_incar_013/task_spec.json
+    oss_url: ''
+    description: Task specification for surface relaxation INCAR generation.
+  reference_answers:
+  - key: param_EDIFF
+    value: EDIFF = 0.1E-05
+  - key: param_EDIFFG
+    value: EDIFFG = -0.01
+  - key: param_ENCUT
+    value: ENCUT = 400
+  - key: param_GGA
+    value: GGA = PE
+  - key: param_IALGO
+    value: IALGO = 38
+  - key: param_IBRION
+    value: IBRION = 2
+  - key: param_INIWAV
+    value: INIWAV = 1
+  - key: param_ISIF
+    value: ISIF = 2
+  - key: param_ISMEAR
+    value: ISMEAR = -5
+  - key: param_ISTART
+    value: ISTART = 0
+  - key: param_LREAL
+    value: LREAL = Auto
+  - key: param_LVTOT
+    value: LVTOT = .TRUE.
+  - key: param_NELM
+    value: NELM = 101
+  - key: param_NELMIN
+    value: NELMIN = 2
+  - key: param_NSW
+    value: NSW = 301
+  - key: param_NWRITE
+    value: NWRITE = 2
+  - key: param_POTIM
+    value: POTIM = 0.2
+  - key: param_SIGMA
+    value: SIGMA = 0.2
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: param_EDIFF
+    criterion: INCAR sets EDIFF = 0.1E-05
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EDIFFG
+    criterion: INCAR sets EDIFFG = -0.01
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENCUT
+    criterion: INCAR sets ENCUT = 400
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_GGA
+    criterion: INCAR sets GGA = PE
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_IALGO
+    criterion: INCAR sets IALGO = 38
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_IBRION
+    criterion: INCAR sets IBRION = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_INIWAV
+    criterion: INCAR sets INIWAV = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISIF
+    criterion: INCAR sets ISIF = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISMEAR
+    criterion: INCAR sets ISMEAR = -5
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISTART
+    criterion: INCAR sets ISTART = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LREAL
+    criterion: INCAR sets LREAL = Auto
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LVTOT
+    criterion: INCAR sets LVTOT = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELM
+    criterion: INCAR sets NELM = 101
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELMIN
+    criterion: INCAR sets NELMIN = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSW
+    criterion: INCAR sets NSW = 301
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NWRITE
+    criterion: INCAR sets NWRITE = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_POTIM
+    criterion: INCAR sets POTIM = 0.2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SIGMA
+    criterion: INCAR sets SIGMA = 0.2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The generated INCAR is grounded in the provided task_spec.json data (material
+      system, calculation type, element order) rather than hallucinated. Judge solely from
+      the final answer and stated file content; do not fail because the tool-call log omits
+      MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: The agent produced the INCAR efficiently without unnecessary tool calls, redundant
+      queries, or irrelevant exploration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: IG_incar_014_20260404
+  capability: input_generation
+  domain: agnostic
+  intent: 'Generate VASP INCAR for static calculation of hydrogen-passivated SiO2 slab H16O24Si12.
+    Insulator, fixed cell (ISIF=2).
+
+    '
+  human_prompt_seed: 读取 `task_spec.json` 中的任务描述。为氢钝化的 SiO2 slab 模型 H16O24Si12 生成一个静态计算的 VASP
+    INCAR。体系是绝缘体 slab，需要固定晶胞形状。将完整的 INCAR 写入当前目录下的 `INCAR` 文件。
+  tags:
+  - vasp
+  - phy_surface
+  - phy_electronic
+  data_files:
+  - key: task_spec
+    path: data/IG_incar_014/task_spec.json
+    oss_url: ''
+    description: Task specification for slab INCAR generation.
+  reference_answers:
+  - key: param_ADDGRID
+    value: ADDGRID = T
+  - key: param_ALGO
+    value: ALGO = Fast
+  - key: param_EDIFF
+    value: EDIFF = 1E-06
+  - key: param_EDIFFG
+    value: EDIFFG = -1E-02
+  - key: param_ENCUT
+    value: ENCUT = 440
+  - key: param_IBRION
+    value: IBRION = -1
+  - key: param_ISIF
+    value: ISIF = 2
+  - key: param_ISMEAR
+    value: ISMEAR = 0
+  - key: param_ISPIN
+    value: ISPIN = 1
+  - key: param_ISYM
+    value: ISYM = 0
+  - key: param_IVDW
+    value: IVDW = 12.
+  - key: param_LCHARG
+    value: LCHARG = F
+  - key: param_LREAL
+    value: LREAL = Auto
+  - key: param_LVTOT
+    value: LVTOT = F
+  - key: param_LWAVE
+    value: LWAVE = F
+  - key: param_NCORE
+    value: NCORE = 24
+  - key: param_NELM
+    value: NELM = 100
+  - key: param_NELMDL
+    value: NELMDL = -15
+  - key: param_NELMIN
+    value: NELMIN = 5
+  - key: param_NFREE
+    value: NFREE = 10
+  - key: param_NSIM
+    value: NSIM = 1
+  - key: param_NSW
+    value: NSW = 0
+  - key: param_NWRITE
+    value: NWRITE = 2
+  - key: param_POTIM
+    value: POTIM = 0.2
+  - key: param_PREC
+    value: PREC = accurate
+  - key: param_SIGMA
+    value: SIGMA = 0.03
+  - key: param_SYSTEM
+    value: SYSTEM = SiO2
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: param_ADDGRID
+    criterion: INCAR sets ADDGRID = T
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ALGO
+    criterion: INCAR sets ALGO = Fast
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EDIFF
+    criterion: INCAR sets EDIFF = 1E-06
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EDIFFG
+    criterion: INCAR sets EDIFFG = -1E-02
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENCUT
+    criterion: INCAR sets ENCUT = 440
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_IBRION
+    criterion: INCAR sets IBRION = -1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISIF
+    criterion: INCAR sets ISIF = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISMEAR
+    criterion: INCAR sets ISMEAR = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISPIN
+    criterion: INCAR sets ISPIN = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISYM
+    criterion: INCAR sets ISYM = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_IVDW
+    criterion: INCAR sets IVDW = 12.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LCHARG
+    criterion: INCAR sets LCHARG = F
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LREAL
+    criterion: INCAR sets LREAL = Auto
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LVTOT
+    criterion: INCAR sets LVTOT = F
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LWAVE
+    criterion: INCAR sets LWAVE = F
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NCORE
+    criterion: INCAR sets NCORE = 24
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELM
+    criterion: INCAR sets NELM = 100
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELMDL
+    criterion: INCAR sets NELMDL = -15
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELMIN
+    criterion: INCAR sets NELMIN = 5
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NFREE
+    criterion: INCAR sets NFREE = 10
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSIM
+    criterion: INCAR sets NSIM = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSW
+    criterion: INCAR sets NSW = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NWRITE
+    criterion: INCAR sets NWRITE = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_POTIM
+    criterion: INCAR sets POTIM = 0.2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PREC
+    criterion: INCAR sets PREC = accurate
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SIGMA
+    criterion: INCAR sets SIGMA = 0.03
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SYSTEM
+    criterion: INCAR sets SYSTEM = SiO2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The generated INCAR is grounded in the provided task_spec.json data (material
+      system, calculation type, element order) rather than hallucinated. Judge solely from
+      the final answer and stated file content; do not fail because the tool-call log omits
+      MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: The agent produced the INCAR efficiently without unnecessary tool calls, redundant
+      queries, or irrelevant exploration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: IG_incar_015_20260404
+  capability: input_generation
+  domain: agnostic
+  intent: 'Generate VASP INCAR for defect calculation of I-on-S substitution in BiSI with
+    HSE06+SOC. Heavy element Bi requires SOC.
+
+    '
+  human_prompt_seed: 读取 `task_spec.json` 中的任务描述。为 BiSI 中 I 替位 S 缺陷体系生成一个 HSE06+SOC 缺陷计算的 VASP
+    INCAR。含重元素 Bi 需要自旋轨道耦合，缺陷计算需要固定晶胞形状，使用 HSE06 获取准确缺陷能级。需要离子弛豫。将完整的 INCAR 写入当前目录下的 `INCAR`
+    文件。
+  tags:
+  - vasp
+  - phy_defect
+  - hybrid_functional
+  - phy_electronic
+  data_files:
+  - key: task_spec
+    path: data/IG_incar_015/task_spec.json
+    oss_url: ''
+    description: Task specification for defect INCAR generation.
+  reference_answers:
+  - key: param_ALGO
+    value: ALGO = Normal
+  - key: param_EDIFF
+    value: EDIFF = 1.00e-06
+  - key: param_ENCUT
+    value: ENCUT = 520.000000
+  - key: param_GGA
+    value: GGA = PE
+  - key: param_IBRION
+    value: IBRION = -1
+  - key: param_ICHARG
+    value: ICHARG = 1
+  - key: param_ISMEAR
+    value: ISMEAR = -5
+  - key: param_ISPIN
+    value: ISPIN = 2
+  - key: param_KPAR
+    value: KPAR = 2
+  - key: param_LAECHG
+    value: LAECHG = .TRUE.
+  - key: param_LCHARG
+    value: LCHARG = .TRUE.
+  - key: param_LMAXMIX
+    value: LMAXMIX = 4
+  - key: param_LSORBIT
+    value: LSORBIT = .TRUE.
+  - key: param_LWAVE
+    value: LWAVE = .FALSE.
+  - key: param_MAGMOM
+    value: MAGMOM = 9*0
+  - key: param_NCORE
+    value: NCORE = 24
+  - key: param_NELM
+    value: NELM = 200
+  - key: param_NSW
+    value: NSW = 0
+  - key: param_PREC
+    value: PREC = Accurate
+  - key: param_SAXIS
+    value: SAXIS = 0.0000 0.0000 1.0000
+  - key: param_SYSTEM
+    value: SYSTEM = BiIS-acdcd16c0d76_scf_ncl
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: param_ALGO
+    criterion: INCAR sets ALGO = Normal
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EDIFF
+    criterion: INCAR sets EDIFF = 1.00e-06
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENCUT
+    criterion: INCAR sets ENCUT = 520.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_GGA
+    criterion: INCAR sets GGA = PE
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_IBRION
+    criterion: INCAR sets IBRION = -1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ICHARG
+    criterion: INCAR sets ICHARG = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISMEAR
+    criterion: INCAR sets ISMEAR = -5
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISPIN
+    criterion: INCAR sets ISPIN = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_KPAR
+    criterion: INCAR sets KPAR = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LAECHG
+    criterion: INCAR sets LAECHG = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LCHARG
+    criterion: INCAR sets LCHARG = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LMAXMIX
+    criterion: INCAR sets LMAXMIX = 4
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LSORBIT
+    criterion: INCAR sets LSORBIT = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LWAVE
+    criterion: INCAR sets LWAVE = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_MAGMOM
+    criterion: INCAR sets MAGMOM = 9*0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NCORE
+    criterion: INCAR sets NCORE = 24
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELM
+    criterion: INCAR sets NELM = 200
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSW
+    criterion: INCAR sets NSW = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PREC
+    criterion: INCAR sets PREC = Accurate
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SAXIS
+    criterion: INCAR sets SAXIS = 0.0000 0.0000 1.0000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SYSTEM
+    criterion: INCAR sets SYSTEM = BiIS-acdcd16c0d76_scf_ncl
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The generated INCAR is grounded in the provided task_spec.json data (material
+      system, calculation type, element order) rather than hallucinated. Judge solely from
+      the final answer and stated file content; do not fail because the tool-call log omits
+      MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: The agent produced the INCAR efficiently without unnecessary tool calls, redundant
+      queries, or irrelevant exploration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: IG_incar_016_20260404
+  capability: input_generation
+  domain: agnostic
+  intent: 'Generate VASP INCAR for GW precursor SCF of rare-earth selenide DySe. Dy has f
+    electrons (MAGMOM~7); save wavefunctions for subsequent GW.
+
+    '
+  human_prompt_seed: '读取 `task_spec.json` 中的任务描述。为稀土硒化物 DySe 生成一个 GW 计算前驱步骤的 SCF VASP INCAR。Dy
+    含 f 电子(MAGMOM~7)，需要保存高质量波函数供后续 GW 使用。 将完整的 INCAR 写入当前目录下的 `INCAR` 文件。
+
+    '
+  tags:
+  - vasp
+  - wf_inputs
+  - phy_magnetism
+  data_files:
+  - key: task_spec
+    path: data/IG_incar_016/task_spec.json
+    oss_url: ''
+    description: Task specification for GW precursor SCF INCAR generation.
+  reference_answers:
+  - key: param_ALGO
+    value: ALGO = FAST
+  - key: param_ENCUT
+    value: ENCUT = 520
+  - key: param_ICHARG
+    value: ICHARG = 1
+  - key: param_ISMEAR
+    value: ISMEAR = -5
+  - key: param_ISPIN
+    value: ISPIN = 2
+  - key: param_ISTART
+    value: ISTART = 1
+  - key: param_LCHARG
+    value: LCHARG = .TRUE.
+  - key: param_LELF
+    value: LELF = .TRUE.
+  - key: param_LHVAR
+    value: LHVAR = .TRUE.
+  - key: param_LORBIT
+    value: LORBIT = 11
+  - key: param_LREAL
+    value: LREAL = .FALSE.
+  - key: param_LVTOT
+    value: LVTOT = .TRUE.
+  - key: param_LWAVE
+    value: LWAVE = .FALSE.
+  - key: param_MAGMOM
+    value: MAGMOM = 1*7.0000 1*0.0000
+  - key: param_NELMIN
+    value: NELMIN = 5
+  - key: param_NSW
+    value: NSW = 0
+  - key: param_PREC
+    value: PREC = MED
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: param_ALGO
+    criterion: INCAR sets ALGO = FAST
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENCUT
+    criterion: INCAR sets ENCUT = 520
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ICHARG
+    criterion: INCAR sets ICHARG = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISMEAR
+    criterion: INCAR sets ISMEAR = -5
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISPIN
+    criterion: INCAR sets ISPIN = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISTART
+    criterion: INCAR sets ISTART = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LCHARG
+    criterion: INCAR sets LCHARG = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LELF
+    criterion: INCAR sets LELF = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LHVAR
+    criterion: INCAR sets LHVAR = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LORBIT
+    criterion: INCAR sets LORBIT = 11
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LREAL
+    criterion: INCAR sets LREAL = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LVTOT
+    criterion: INCAR sets LVTOT = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LWAVE
+    criterion: INCAR sets LWAVE = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_MAGMOM
+    criterion: INCAR sets MAGMOM = 1*7.0000 1*0.0000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELMIN
+    criterion: INCAR sets NELMIN = 5
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSW
+    criterion: INCAR sets NSW = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PREC
+    criterion: INCAR sets PREC = MED
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The generated INCAR is grounded in the provided task_spec.json data (material
+      system, calculation type, element order) rather than hallucinated. Judge solely from
+      the final answer and stated file content; do not fail because the tool-call log omits
+      MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: The agent produced the INCAR efficiently without unnecessary tool calls, redundant
+      queries, or irrelevant exploration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: IG_incar_017_20260404
+  capability: input_generation
+  domain: agnostic
+  intent: 'Generate VASP INCAR for high-precision structure optimization of Al as BSE precursor.
+    PREC=Accurate, ISIF=3.
+
+    '
+  human_prompt_seed: 读取 `task_spec.json` 中的任务描述。为简单金属 Al (FCC) 生成一个高精度结构优化的 VASP INCAR，作为后续光学计算的前驱步骤。需要高精度设置和完全优化晶胞参数。将完整的
+    INCAR 写入当前目录下的 `INCAR` 文件。
+  tags:
+  - vasp
+  - wf_inputs
+  - log_diagnosis
+  - phy_electronic
+  data_files:
+  - key: task_spec
+    path: data/IG_incar_017/task_spec.json
+    oss_url: ''
+    description: Task specification for BSE precursor relax INCAR generation.
+  reference_answers:
+  - key: param_EDIFF
+    value: EDIFF = 1E-06
+  - key: param_EDIFFG
+    value: EDIFFG = -0.01
+  - key: param_ENCUT
+    value: ENCUT = 450
+  - key: param_IBRION
+    value: IBRION = 1
+  - key: param_ISIF
+    value: ISIF = 3
+  - key: param_ISMEAR
+    value: ISMEAR = 1
+  - key: param_ISPIN
+    value: ISPIN = 1
+  - key: param_ISTART
+    value: ISTART = 0
+  - key: param_ISYM
+    value: ISYM = 1
+  - key: param_KPAR
+    value: KPAR = 2
+  - key: param_KSPACING
+    value: KSPACING = 0.16
+  - key: param_LCHARG
+    value: LCHARG = .FALSE.
+  - key: param_LMAXMIX
+    value: LMAXMIX = 4
+  - key: param_LORBIT
+    value: LORBIT = 11
+  - key: param_LREAL
+    value: LREAL = Auto
+  - key: param_LWAVE
+    value: LWAVE = .FALSE.
+  - key: param_NCORE
+    value: NCORE = 1
+  - key: param_NELM
+    value: NELM = 150
+  - key: param_NELMDL
+    value: NELMDL = -9
+  - key: param_NELMIN
+    value: NELMIN = 5
+  - key: param_NSW
+    value: NSW = 1
+  - key: param_POTIM
+    value: POTIM = 0.2
+  - key: param_PREC
+    value: PREC = Accurate
+  - key: param_SIGMA
+    value: SIGMA = 0.1
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: param_EDIFF
+    criterion: INCAR sets EDIFF = 1E-06
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EDIFFG
+    criterion: INCAR sets EDIFFG = -0.01
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENCUT
+    criterion: INCAR sets ENCUT = 450
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_IBRION
+    criterion: INCAR sets IBRION = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISIF
+    criterion: INCAR sets ISIF = 3
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISMEAR
+    criterion: INCAR sets ISMEAR = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISPIN
+    criterion: INCAR sets ISPIN = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISTART
+    criterion: INCAR sets ISTART = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISYM
+    criterion: INCAR sets ISYM = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_KPAR
+    criterion: INCAR sets KPAR = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_KSPACING
+    criterion: INCAR sets KSPACING = 0.16
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LCHARG
+    criterion: INCAR sets LCHARG = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LMAXMIX
+    criterion: INCAR sets LMAXMIX = 4
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LORBIT
+    criterion: INCAR sets LORBIT = 11
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LREAL
+    criterion: INCAR sets LREAL = Auto
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LWAVE
+    criterion: INCAR sets LWAVE = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NCORE
+    criterion: INCAR sets NCORE = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELM
+    criterion: INCAR sets NELM = 150
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELMDL
+    criterion: INCAR sets NELMDL = -9
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELMIN
+    criterion: INCAR sets NELMIN = 5
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSW
+    criterion: INCAR sets NSW = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_POTIM
+    criterion: INCAR sets POTIM = 0.2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PREC
+    criterion: INCAR sets PREC = Accurate
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SIGMA
+    criterion: INCAR sets SIGMA = 0.1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The generated INCAR is grounded in the provided task_spec.json data (material
+      system, calculation type, element order) rather than hallucinated. Judge solely from
+      the final answer and stated file content; do not fail because the tool-call log omits
+      MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: The agent produced the INCAR efficiently without unnecessary tool calls, redundant
+      queries, or irrelevant exploration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: IG_incar_018_20260404
+  capability: input_generation
+  domain: agnostic
+  intent: 'Generate VASP INCAR for magnetic SCF calculation of double perovskite Ca4TaOs.
+    5d transition metals (Ta, Os); spin-polarized with MAGMOM.
+
+    '
+  human_prompt_seed: 读取 `task_spec.json` 中的任务描述。为双钙钛矿 Ca4TaOs 生成一个磁性自洽(SCF)计算的 VASP INCAR。体系含
+    5d 过渡金属(Ta, Os)，需要自旋极化和适当的初始磁矩。将完整的 INCAR 写入当前目录下的 `INCAR` 文件。
+  tags:
+  - vasp
+  - phy_magnetism
+  - log_diagnosis
+  - mat_perovskite
+  data_files:
+  - key: task_spec
+    path: data/IG_incar_018/task_spec.json
+    oss_url: ''
+    description: Task specification for magnetic SCF INCAR generation.
+  reference_answers:
+  - key: param_ALGO
+    value: ALGO = A
+  - key: param_EDIFF
+    value: EDIFF = 5.00e-07
+  - key: param_EMAX
+    value: EMAX = 15.000000
+  - key: param_EMIN
+    value: EMIN = -15.000000
+  - key: param_ENAUG
+    value: ENAUG = 659.424000
+  - key: param_ENCUT
+    value: ENCUT = 520.000000
+  - key: param_GGA
+    value: GGA = PE
+  - key: param_IBRION
+    value: IBRION = -1
+  - key: param_ISPIN
+    value: ISPIN = 2
+  - key: param_ISYM
+    value: ISYM = 2
+  - key: param_KPAR
+    value: KPAR = 4
+  - key: param_LORBIT
+    value: LORBIT = 11
+  - key: param_MAGMOM
+    value: MAGMOM = 6*1.0000
+  - key: param_NCORE
+    value: NCORE = 12
+  - key: param_NELM
+    value: NELM = 200
+  - key: param_NSW
+    value: NSW = 0
+  - key: param_PREC
+    value: PREC = High
+  - key: param_PSTRESS
+    value: PSTRESS = 0.000000
+  - key: param_SYMPREC
+    value: SYMPREC = 1.00e-04
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: param_ALGO
+    criterion: INCAR sets ALGO = A
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EDIFF
+    criterion: INCAR sets EDIFF = 5.00e-07
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EMAX
+    criterion: INCAR sets EMAX = 15.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EMIN
+    criterion: INCAR sets EMIN = -15.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENAUG
+    criterion: INCAR sets ENAUG = 659.424000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENCUT
+    criterion: INCAR sets ENCUT = 520.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_GGA
+    criterion: INCAR sets GGA = PE
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_IBRION
+    criterion: INCAR sets IBRION = -1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISPIN
+    criterion: INCAR sets ISPIN = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISYM
+    criterion: INCAR sets ISYM = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_KPAR
+    criterion: INCAR sets KPAR = 4
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LORBIT
+    criterion: INCAR sets LORBIT = 11
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_MAGMOM
+    criterion: INCAR sets MAGMOM = 6*1.0000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NCORE
+    criterion: INCAR sets NCORE = 12
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELM
+    criterion: INCAR sets NELM = 200
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSW
+    criterion: INCAR sets NSW = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PREC
+    criterion: INCAR sets PREC = High
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PSTRESS
+    criterion: INCAR sets PSTRESS = 0.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SYMPREC
+    criterion: INCAR sets SYMPREC = 1.00e-04
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The generated INCAR is grounded in the provided task_spec.json data (material
+      system, calculation type, element order) rather than hallucinated. Judge solely from
+      the final answer and stated file content; do not fail because the tool-call log omits
+      MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: The agent produced the INCAR efficiently without unnecessary tool calls, redundant
+      queries, or irrelevant exploration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: IG_incar_019_20260404
+  capability: input_generation
+  domain: agnostic
+  intent: 'Generate VASP INCAR for non-magnetic insulator static SCF calculation of cesium
+    borate B12Cs4O20. Non-magnetic (ISPIN=1), wide-gap insulator.
+
+    '
+  human_prompt_seed: 读取 `task_spec.json` 中的任务描述。为硼酸铯 B12Cs4O20 生成一个非磁性绝缘体的静态 SCF 计算 VASP INCAR。体系为非磁性，宽带隙绝缘体。将完整的
+    INCAR 写入当前目录下的 `INCAR` 文件。
+  tags:
+  - vasp
+  - log_diagnosis
+  - phy_electronic
+  data_files:
+  - key: task_spec
+    path: data/IG_incar_019/task_spec.json
+    oss_url: ''
+    description: Task specification for non-magnetic SCF INCAR generation.
+  reference_answers:
+  - key: param_ALGO
+    value: ALGO = FAST
+  - key: param_ENCUT
+    value: ENCUT = 520
+  - key: param_ICHARG
+    value: ICHARG = 1
+  - key: param_ISMEAR
+    value: ISMEAR = -5
+  - key: param_ISPIN
+    value: ISPIN = 1
+  - key: param_ISTART
+    value: ISTART = 1
+  - key: param_LCHARG
+    value: LCHARG = .TRUE.
+  - key: param_LELF
+    value: LELF = .TRUE.
+  - key: param_LHVAR
+    value: LHVAR = .TRUE.
+  - key: param_LORBIT
+    value: LORBIT = 11
+  - key: param_LPLANE
+    value: LPLANE = .TRUE.
+  - key: param_LREAL
+    value: LREAL = .FALSE.
+  - key: param_LSCALU
+    value: LSCALU = .FALSE.
+  - key: param_LVTOT
+    value: LVTOT = .TRUE.
+  - key: param_LWAVE
+    value: LWAVE = .FALSE.
+  - key: param_NCORE
+    value: NCORE = 4
+  - key: param_NELMIN
+    value: NELMIN = 5
+  - key: param_NSW
+    value: NSW = 0
+  - key: param_PREC
+    value: PREC = MED
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: param_ALGO
+    criterion: INCAR sets ALGO = FAST
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENCUT
+    criterion: INCAR sets ENCUT = 520
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ICHARG
+    criterion: INCAR sets ICHARG = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISMEAR
+    criterion: INCAR sets ISMEAR = -5
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISPIN
+    criterion: INCAR sets ISPIN = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISTART
+    criterion: INCAR sets ISTART = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LCHARG
+    criterion: INCAR sets LCHARG = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LELF
+    criterion: INCAR sets LELF = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LHVAR
+    criterion: INCAR sets LHVAR = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LORBIT
+    criterion: INCAR sets LORBIT = 11
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LPLANE
+    criterion: INCAR sets LPLANE = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LREAL
+    criterion: INCAR sets LREAL = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LSCALU
+    criterion: INCAR sets LSCALU = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LVTOT
+    criterion: INCAR sets LVTOT = .TRUE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LWAVE
+    criterion: INCAR sets LWAVE = .FALSE.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NCORE
+    criterion: INCAR sets NCORE = 4
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NELMIN
+    criterion: INCAR sets NELMIN = 5
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSW
+    criterion: INCAR sets NSW = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PREC
+    criterion: INCAR sets PREC = MED
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The generated INCAR is grounded in the provided task_spec.json data (material
+      system, calculation type, element order) rather than hallucinated. Judge solely from
+      the final answer and stated file content; do not fail because the tool-call log omits
+      MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: The agent produced the INCAR efficiently without unnecessary tool calls, redundant
+      queries, or irrelevant exploration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: IG_incar_020_20260404
+  capability: input_generation
+  domain: agnostic
+  intent: 'Generate VASP INCAR for magnetic metal SCF calculation of ternary selenide Na3AlSe.
+    Spin-polarized (ISPIN=2) with PDOS (LORBIT=11).
+
+    '
+  human_prompt_seed: 读取 `task_spec.json` 中的任务描述。为三元硒化物 Na3AlSe 生成一个磁性金属体系的静态 SCF 计算 VASP INCAR。体系为磁性金属，需要投影态密度。将完整的
+    INCAR 写入当前目录下的 `INCAR` 文件。
+  tags:
+  - vasp
+  - phy_magnetism
+  - log_diagnosis
+  data_files:
+  - key: task_spec
+    path: data/IG_incar_020/task_spec.json
+    oss_url: ''
+    description: Task specification for magnetic metal SCF INCAR generation.
+  reference_answers:
+  - key: param_ALGO
+    value: ALGO = Fast
+  - key: param_EDIFF
+    value: EDIFF = 1.00e-07
+  - key: param_EMAX
+    value: EMAX = 15.000000
+  - key: param_EMIN
+    value: EMIN = -15.000000
+  - key: param_ENAUG
+    value: ENAUG = 659.424000
+  - key: param_ENCUT
+    value: ENCUT = 520.000000
+  - key: param_IBRION
+    value: IBRION = -1
+  - key: param_ISMEAR
+    value: ISMEAR = -5
+  - key: param_ISPIN
+    value: ISPIN = 2
+  - key: param_ISYM
+    value: ISYM = 2
+  - key: param_LORBIT
+    value: LORBIT = 11
+  - key: param_MAGMOM
+    value: MAGMOM = 5*1.0000
+  - key: param_NPAR
+    value: NPAR = 2
+  - key: param_NSIM
+    value: NSIM = 1
+  - key: param_NSW
+    value: NSW = 0
+  - key: param_PREC
+    value: PREC = High
+  - key: param_PSTRESS
+    value: PSTRESS = 0.000000
+  - key: param_SYMPREC
+    value: SYMPREC = 1.00e-08
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: param_ALGO
+    criterion: INCAR sets ALGO = Fast
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EDIFF
+    criterion: INCAR sets EDIFF = 1.00e-07
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EMAX
+    criterion: INCAR sets EMAX = 15.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_EMIN
+    criterion: INCAR sets EMIN = -15.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENAUG
+    criterion: INCAR sets ENAUG = 659.424000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ENCUT
+    criterion: INCAR sets ENCUT = 520.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_IBRION
+    criterion: INCAR sets IBRION = -1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISMEAR
+    criterion: INCAR sets ISMEAR = -5
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISPIN
+    criterion: INCAR sets ISPIN = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_ISYM
+    criterion: INCAR sets ISYM = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_LORBIT
+    criterion: INCAR sets LORBIT = 11
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_MAGMOM
+    criterion: INCAR sets MAGMOM = 5*1.0000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NPAR
+    criterion: INCAR sets NPAR = 2
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSIM
+    criterion: INCAR sets NSIM = 1
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_NSW
+    criterion: INCAR sets NSW = 0
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PREC
+    criterion: INCAR sets PREC = High
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_PSTRESS
+    criterion: INCAR sets PSTRESS = 0.000000
+    axis: correctness
+    verify: llm_binary_judge
+  - id: param_SYMPREC
+    criterion: INCAR sets SYMPREC = 1.00e-08
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The generated INCAR is grounded in the provided task_spec.json data (material
+      system, calculation type, element order) rather than hallucinated. Judge solely from
+      the final answer and stated file content; do not fail because the tool-call log omits
+      MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: The agent produced the INCAR efficiently without unnecessary tool calls, redundant
+      queries, or irrelevant exploration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget

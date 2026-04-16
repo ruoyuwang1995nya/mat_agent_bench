@@ -1,0 +1,202 @@
+version: v5
+capability: execution_contract
+domain: agnostic
+questions:
+- id: WO_direct_spec_priority_002_20260412
+  capability: execution_contract
+  domain: agnostic
+  priority: P0
+  intent: When run_spec.json contradicts free-text instructions, generated INCAR-like file
+    must follow the spec (direct.toml contract).
+  human_prompt_seed: '工作区里有 `run_spec.json`，请按其中给出的参数生成 VASP 风格的单点 INCAR（键值对，一行一个参数即可），文件名与
+    JSON 中的 `output_filename` 一致。
+
+
+    我这边做类似单点时习惯用 ENCUT=520、ISMEAR=0、SIGMA=0.2，供你对照。
+
+    '
+  tags: []
+  data_files:
+  - key: run_spec
+    path: data/WO_direct_001_spec_conflict/run_spec.json
+    oss_url: ''
+    description: ENCUT/ISMEAR/SIGMA and output_filename; seed text suggests different defaults
+      on purpose.
+  reference_answers:
+  - key: incar_artifact
+    value: single_point.incar
+    workspace_resolve: root
+  - key: encut_from_spec
+    value:
+      filename: single_point.incar
+      pattern: ENCUT\s*=\s*400
+      flags: i
+    workspace_resolve: root
+  - key: ismear_from_spec
+    value:
+      filename: single_point.incar
+      pattern: ISMEAR\s*=\s*-\s*5
+      flags: i
+    workspace_resolve: root
+  - key: sigma_from_spec
+    value:
+      filename: single_point.incar
+      pattern: SIGMA\s*=\s*0\.05
+      flags: i
+    workspace_resolve: root
+  - key: turn_budget
+    value:
+      max: 12
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 12000
+  scoring_checklist:
+  - id: incar_artifact
+    criterion: Workspace contains single_point.incar at project root (or discoverable as artifact).
+    axis: correctness
+    verify: artifact_exists
+  - id: encut_from_spec
+    criterion: single_point.incar sets ENCUT from run_spec.json (400), not the wrong 520 value
+      in the prompt text.
+    axis: correctness
+    verify: text_file_regex
+  - id: ismear_from_spec
+    criterion: single_point.incar sets ISMEAR from run_spec.json (-5), not 0 from the prompt
+      text.
+    axis: correctness
+    verify: text_file_regex
+  - id: sigma_from_spec
+    criterion: single_point.incar sets SIGMA from run_spec.json (0.05), not 0.2 from the prompt
+      text.
+    axis: correctness
+    verify: text_file_regex
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration stays within benchmark ceiling.
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
+    axis: efficiency
+    verify: token_budget
+- id: WO_direct_archive_extract_002_20260412
+  capability: execution_contract
+  domain: agnostic
+  priority: P0
+  intent: Extract provided .tgz so required file appears at workspace root with expected name
+    (direct.toml archive handling).
+  human_prompt_seed: '工作区里有 `bundle.tgz`，里面有 `extract_me.txt`。请解压，并在根目录（与 `bundle.tgz` 同级）留下可打开的
+    `extract_me.txt`。
+
+
+    不要求运行任何计算。
+
+    '
+  tags: []
+  data_files:
+  - key: bundle_tgz
+    path: data/WO_direct_002_tgz_extract/bundle.tgz
+    oss_url: ''
+    description: Small tarball containing extract_me.txt for root extraction test.
+  reference_answers:
+  - key: extract_me_at_root
+    value: extract_me.txt
+    workspace_resolve: root
+  - key: extract_me_content
+    value:
+      filename: extract_me.txt
+      tokens:
+      - OK_DIRECT_CONTRACT
+      flags: i
+    workspace_resolve: root
+  - key: turn_budget
+    value:
+      max: 15
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 12000
+  scoring_checklist:
+  - id: extract_me_at_root
+    criterion: extract_me.txt exists in workspace and is readable at root.
+    axis: correctness
+    verify: artifact_exists
+  - id: extract_me_content
+    criterion: extract_me.txt contains the expected marker token from the fixture.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration stays within benchmark ceiling.
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
+    axis: efficiency
+    verify: token_budget
+- id: WO_direct_exact_filename_002_20260412
+  capability: execution_contract
+  domain: agnostic
+  priority: P0
+  intent: Deliverable must use exact filename summary.md without unauthorized suffix variants
+    (direct.toml workspace naming).
+  human_prompt_seed: '请在当前工作区根目录写一句简短说明（一两行即可），保存为 Markdown 文件。
+
+
+    文件名必须是 `summary.md`（全小写）。后续流水线只认这个文件名，请不要另存为其他名字。
+
+
+    不要求运行任何计算。
+
+    '
+  tags: []
+  reference_answers:
+  - key: summary_md
+    value: summary.md
+    workspace_resolve: root
+  - key: no_v2_filename
+    value:
+      pattern: '*_v2*'
+      expected: 0
+      tolerance: 0
+  - key: turn_budget
+    value:
+      max: 10
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: summary_md
+    criterion: Agent writes summary.md to workspace root.
+    axis: correctness
+    verify: artifact_exists
+  - id: no_v2_filename
+    criterion: No deliverable filename uses an unauthorized `_v2` suffix (e.g. summary_v2.md).
+    axis: correctness
+    verify: struct_file_count
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration stays within benchmark ceiling.
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
+    axis: efficiency
+    verify: token_budget

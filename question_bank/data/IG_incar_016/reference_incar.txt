@@ -1,0 +1,44 @@
+# ===========================================================================
+# NOMAD VASP INCAR - Real calculation data
+# ===========================================================================
+# Entry ID: --F6IVaD60yd9ECf6Eg189u3jMZT
+# URL: https://nomad-lab.eu/prod/v1/gui/entry/id/--F6IVaD60yd9ECf6Eg189u3jMZT
+# Mainfile: oqmd/binaries/L1_0/Dy_Se/static/vasprun.xml
+# Fetched: 2026-04-01
+# ===========================================================================
+# NOTE: This OQMD static calculation sets LWAVE=.FALSE., which is standard
+# for routine SCF. However, for a GW precursor the scoring checklist
+# correctly requires LWAVE=.TRUE. to preserve wavefunctions for the
+# subsequent GW step. The agent should set LWAVE=.TRUE. even though this
+# same-system NOMAD reference does not.
+# ===========================================================================
+
+#= General Settings =#
+  PREC = MED
+  ISTART = 1
+  ICHARG = 1
+ ISPIN = 2
+  MAGMOM = 1*7.0000 1*0.0000
+#= Parallelization =#
+
+#= Ionic Relaxation Settings =#
+  NSW = 0
+
+#= Electronic Relxation Settings =#
+  ENCUT = 520
+  NELMIN = 5
+  LREAL = .FALSE.
+  ALGO = FAST
+
+#= Write flags =#
+  LCHARG = .TRUE.
+  LWAVE = .FALSE.
+  LELF = .TRUE.
+  LHVAR = .TRUE.
+  LVTOT = .TRUE.
+
+#= DOS =#
+  ISMEAR = -5
+
+#= Uncategorized/OQMD codes  =#
+  LORBIT = 11

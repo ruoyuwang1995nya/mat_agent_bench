@@ -1,0 +1,13 @@
+{
+  "critical_params": {
+    "IBRION": -1,
+    "ICHARG": 11,
+    "ISMEAR": -1,
+    "LORBIT": 11,
+    "NSW": 0
+  },
+  "description": "为 Lu4N4 体系生成能带结构计算的 VASP INCAR。这是一个非自洽计算，需要从前一步 SCF 计算中读取电荷密度，沿高对称路径计算能带。",
+  "formula": "Lu4N4",
+  "material_context": "Lu4N4 是稀土氮化物，非磁性绝缘体。能带计算需要设置 ICHARG=11 读取已有电荷密度。",
+  "task": "band_structure"
+}

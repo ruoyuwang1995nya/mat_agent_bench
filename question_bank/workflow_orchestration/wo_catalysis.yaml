@@ -1,0 +1,455 @@
+version: v5
+capability: workflow_orchestration
+domain: catalysis
+questions:
+- id: WO_elec_006_20260411v2
+  capability: workflow_orchestration
+  domain: catalysis
+  intent: Mock surface energy for Fe BCC(110) with BSSE-aware workflow; compare sigma to VASP
+    reference using provided energies and area.
+  human_prompt_seed: '计算 Fe BCC(110) 表面能（ABACUS LCAO 场景，含 BSSE 校正思路）：从结构数据库或模板获取 Fe BCC 体相（a≈2.87
+    Å），切出 (110) slab（建议至少 6 层原子、约 15 Å 真空）。说明在 LCAO 基组下需要在两侧真空添加 empty Fe 层以降低 BSSE。使用以下 mock
+    单点能量（单位 eV，已对应 BSSE 校正后的 slab SCF）：E_bulk = -230929.72（体相参考），E_slab = -230919.46，单侧截面积
+    A = 34.09 Å²。按 σ = (E_slab − E_bulk) / (2A) 计算表面能，换算为 J/m²（1 eV/Å² = 16.021766 J/m²），并与
+    VASP 参考值约 2.412 J/m² 对比。全程不要提交真实 DFT 计算。
+
+    '
+  tags:
+  - abacus
+  - bsse
+  - phy_surface
+  - log_diagnosis
+  data_files: []
+  reference_answers:
+  - key: sigma_J_m2
+    value: 2.411
+    tolerance: 0.12
+  - key: required_fields
+    value:
+    - sigma_J_m2
+    - formula
+    - bsse_note
+    - vasp_compare
+  - key: turn_budget
+    value:
+      max: 12
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: sigma_J_m2
+    criterion: Surface energy sigma in J/m^2 matches mock-data calculation within tolerance
+      (~2.41 J/m^2).
+    axis: correctness
+    verify: numerical_range
+  - id: required_fields
+    criterion: Report states sigma in J/m^2, shows sigma=(E_slab-E_bulk)/(2A), notes BSSE
+      empty-layer rationale, and compares to VASP ~2.412 J/m^2.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: Numeric sigma is computed from the given mock E_bulk, E_slab, and A; no invented
+      energies. Judge solely from the final answer; do not fail because the tool-call log
+      omits MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical structure tool calls with the same parameters.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: Workflow (fetch/build slab → apply formula with mock energies → report) avoids
+      redundant intermediate rebuilds.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: WO_elec_007_20260411v1
+  capability: workflow_orchestration
+  domain: catalysis
+  intent: Compute Pd(111) work function with ABACUS under a z-direction vacuum setup and summarize
+    key computational settings and output.
+  human_prompt_seed: "计算 Pd(111) 表面功函数（Mock版）：\n1. 先 query/检索 Pd 体相与 Pd(111) slab 建模所需输入文件，并确认真空方向约束；\n\
+    2. 列出关键设置（exchange-correlation functional、计算模式、真空方向、是否弛豫）；\n3. 不做真实 ABACUS 计算，使用以下 mock\
+    \ 结果：\n   - work_function_eV = 5.43\n   - vacuum_direction = z\n   - functional = PBE\n\
+    \   - calculation_mode = SCF\n4. 基于以上数值完成后处理与结论解释。\n\n请完成以下交付：\n1) `pd111_work_function.json`：至少包含\
+    \ `input_files`, `work_function_eV`, `vacuum_direction`, `functional`, `calculation_mode`,\
+    \ `notes`；\n2) `pd111_work_function_report.md`：说明 query 输入梳理、mock 后处理流程和结果解读。\n\n最终回答需明确给出功函数数值（eV）并确认\
+    \ vacuum_direction=z。\n"
+  tags:
+  - phy_electronic
+  - phy_surface
+  - abacus
+  - meta_userlog
+  data_files: []
+  reference_answers:
+  - key: wf_json_artifact
+    value: pd111_work_function.json
+  - key: wf_report_artifact
+    value: pd111_work_function_report.md
+  - key: wf_required_tokens
+    value:
+      filename: pd111_work_function.json
+      tokens:
+      - work_function_eV
+      - vacuum_direction
+      - z
+      - functional
+      - calculation_mode
+      flags: i
+  - key: report_required_tokens
+    value:
+      filename: pd111_work_function_report.md
+      tokens:
+      - Pd(111)
+      - work function
+      - ABACUS
+      - z
+      - 不确定性
+      flags: i
+  - key: wf_value_mock
+    value: 5.43
+    tolerance: 0.3
+  - key: turn_budget
+    value:
+      max: 18
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 9000
+  scoring_checklist:
+  - id: wf_json_artifact
+    criterion: Agent writes `pd111_work_function.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: wf_report_artifact
+    criterion: Agent writes `pd111_work_function_report.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: wf_required_tokens
+    criterion: JSON output includes work-function value and explicit z-direction vacuum setting.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: report_required_tokens
+    criterion: Report explains setup rationale and output interpretation with uncertainty
+      caveats.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: wf_value_mock
+    criterion: Final answer includes a mock work-function value near 5.43 eV.
+    axis: correctness
+    verify: numerical_range
+  - id: grounding_source
+    criterion: The final answer is grounded in generated work-function artifacts and does
+      not fabricate unsupported setup or result details.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical tool calls with the same parameter set.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: CR_WO_Ag_adsorption_20260412
+  capability: workflow_orchestration
+  domain: catalysis
+  intent: Compute adsorption energies of six adsorbates on Ag(001) and Ag(011) at on-top sites
+    using MLIP/calculator with consistent energy reference per doc 3.2.1.
+  human_prompt_seed: '对 Ag 体相切出 (001) 与 (011) 两个表面；分别计算 H、CO、COOH、CO2、HCOO、HCOOH 六种吸附质在 on-top
+    位点的吸附能。 使用 DP（或题目环境要求的等效势/计算器），并统一气相分子与体相/slab 的能量零点（说明 E_ads 定义与参考态）。 以表格汇总各体系吸附能（eV），并注明是否包含
+    ZPE/熵校正（若未做，需明确写「仅电子能」）。
+
+    '
+  tags:
+  - catalysis_lab
+  - phy_surface
+  - code_mlip
+  - wf_batch
+  data_files: []
+  reference_answers:
+  - key: turn_budget
+    value:
+      max: 35
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 85000
+  scoring_checklist:
+  - id: workflow_setup
+    criterion: 'Agent demonstrates correct computational approach: (a) builds or references
+      Ag bulk structure, (b) cuts or describes cutting (001) and (011) surface slabs, (c)
+      prepares or scripts adsorbate-slab structures for the six adsorbates (H, CO, COOH, CO2,
+      HCOO, HCOOH), and (d) uses an MLIP/DP calculator or submits remote Bohrium computation
+      jobs. A well-structured script, code, or submitted computation jobs satisfying these
+      elements counts as pass even if final numerical results are not yet available (e.g.
+      due to wall-clock timeout).'
+    axis: correctness
+    verify: llm_binary_judge
+  - id: coverage_table
+    criterion: '结果覆盖 Ag(001) 与 Ag(011)，六种吸附质（H, CO, COOH, CO2, HCOO, HCOOH），on-top 位点；给出吸附能数值表并定义能量参考（slab、气相）。NOTE:
+      具体使用哪种计算器（DP、MACE-MP、或其他 MLIP）不是本条评判标准——只要结果覆盖齐全、参考态定义清楚即可。若答案中表格包含 markdown 分隔线（如 |:---:|），这是格式标记，不是截断。Judge
+      on coverage completeness and reference definition only.'
+    axis: correctness
+    verify: llm_binary_judge
+    weight: 2.0
+  - id: grounding_workflow
+    criterion: 从 Agent 的产物（脚本、代码、已提交的 Bohrium 计算任务、或最终叙述/表格）中能看出从体相/表面到吸附结构的合理计算链条。若有最终表格，则叙述与数值需自洽；若仅有脚本或计算作业提交记录，则代码逻辑须体现合理的结构构建与能量计算流程。未凭空列出与实际步骤无关的数值。
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling.
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within a generous benchmark ceiling.
+    axis: efficiency
+    verify: token_budget
+- id: WO_elec_005_20260404
+  capability: workflow_orchestration
+  domain: catalysis
+  intent: 'Compute CO adsorption energy on Ag(001): build slab, place molecule, use mock energies,
+    calculate E_ads.'
+  human_prompt_seed: "计算CO在Ag(001)表面的吸附能：\n1. 获取Ag FCC体相结构（a=4.085 Å），切出(001)表面slab（4层，15\
+    \ Å真空，3×3扩胞）；\n2. 构建气相CO分子（键长约1.128 Å）；\n3. 在slab顶层ontop位点放置CO分子（C端朝下，初始距离~2.0 Å）构建吸附结构；\n\
+    4. 使用以下mock能量值（模拟DPA弛豫结果）：\n   - E_slab = -108.45 eV\n   - E_CO = -12.85 eV\n   - E_adsorbed\
+    \ = -121.50 eV\n5. 按公式 E_ads = E(adsorbed) - E(slab) - E(CO) 计算吸附能；\n6. 输出吸附能(eV)及三个结构的能量值。\n"
+  tags:
+  - chem_co2rr
+  - phy_surface
+  priority: P0
+  data_files: []
+  reference_answers:
+  - key: adsorption_energy_eV
+    value: -0.2
+    tolerance: 0.5
+  - key: required_fields
+    value:
+    - E_slab
+    - E_molecule
+    - E_adsorbed
+    - E_ads
+    - adsorption_site
+  - key: turn_budget
+    value:
+      max: 18
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: adsorption_energy_eV
+    criterion: Adsorption energy is computed correctly from mock energies (~-0.2 eV).
+    axis: correctness
+    verify: numerical_range
+  - id: required_fields
+    criterion: Report includes bare slab energy, isolated molecule energy, adsorbed system
+      energy, and adsorption energy.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: Adsorption energy computed with specified mock energies; structures built with
+      physically correct parameters (lattice constant, bond length, slab geometry). Judge
+      solely from the final answer; do not fail because the tool-call log omits MCP, web_search,
+      or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: Adsorption energy workflow (build slab → build molecule → place adsorbate →
+      compute with mock values) completes without redundant steps.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration does not exceed benchmark ceiling.
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling.
+    axis: efficiency
+    verify: token_budget
+- id: WO_struct_001_20260404
+  capability: workflow_orchestration
+  domain: catalysis
+  intent: Calculate surface energy of MgO(100) by constructing slab models and comparing with
+    bulk.
+  human_prompt_seed: '计算 MgO(100) 的表面能：从数据库获取 MgO 岩盐结构， 先优化体相并获取单原子能量，然后切出 (100) 表面 slab（至少
+    5 层）， 加 15 A 真空，优化 slab，按公式 gamma = (E_slab - N * E_bulk) / (2 * A) 计算表面能。 输出表面能 (J/m2)
+    和计算过程中的关键能量值。
+
+    '
+  tags:
+  - phy_surface
+  data_files: []
+  reference_answers:
+  - key: surface_energy_J_m2
+    value: 1.25
+    tolerance: 0.35
+  - key: required_fields
+    value:
+    - E_bulk_per_atom
+    - E_slab
+    - surface_area
+    - surface_energy
+    - convergence_check
+  - key: turn_budget
+    value: &wo_cat_struct_id001
+      max: 18
+  - key: duration_budget
+    value: &wo_cat_struct_id002
+      max: 7200000
+  - key: token_budget_total
+    value: &wo_cat_struct_id003
+      max: 8000
+  scoring_checklist:
+  - id: surface_energy_J_m2
+    criterion: Surface energy is in expected range.
+    axis: correctness
+    verify: numerical_range
+  - id: required_fields
+    criterion: Report includes bulk energy per atom, slab total energy, surface area, computed
+      surface energy, and convergence check.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: Surface energy is computed from stated bulk and slab total energies and area;
+      formula inputs are traceable in the report rather than asserted without energy provenance.
+      Judge solely from the final answer; do not fail because the tool-call log omits MCP,
+      web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: Slab construction and relaxation are not repeated with identical parameters.
+    axis: efficiency
+    verify: no_retries
+  - id: efficiency_judge
+    criterion: Surface energy workflow (bulk opt → slab build → slab opt → formula) is executed
+      in a linear pipeline.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: WO_struct_002_20260404
+  capability: workflow_orchestration
+  domain: catalysis
+  intent: 'Calculate vacancy formation energy: build perfect and defective supercells, compute
+    energies, derive formation energy.'
+  human_prompt_seed: '计算 MgO 中 O 空位的形成能：从数据库获取 MgO 岩盐结构， 构建 2x2x2 超胞作为 perfect cell，再在超胞中移除一个
+    O 原子构建 defective cell， 分别优化两个结构，按 E_f = E_defective - E_perfect + mu_O 计算空位形成能。 输出形成能
+    (eV) 和计算表达式。
+
+    '
+  tags:
+  - phy_defect
+  - wf_postprocess
+  - phy_surface
+  priority: P0
+  data_files: []
+  reference_answers:
+  - key: formation_energy_eV
+    value: 7.5
+    tolerance: 1.5
+  - key: required_fields
+    value:
+    - E_defective
+    - E_perfect
+    - chemical_potential
+    - formation_energy
+  - key: turn_budget
+    value: *wo_cat_struct_id001
+  - key: duration_budget
+    value: *wo_cat_struct_id002
+  - key: token_budget_total
+    value: *wo_cat_struct_id003
+  scoring_checklist:
+  - id: formation_energy_eV
+    criterion: Vacancy formation energy is in tolerance.
+    axis: correctness
+    verify: numerical_range
+  - id: required_fields
+    criterion: Report includes defective/perfect cell energies, chemical potential definition,
+      and formation energy formula.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: Formation energy is computed from stated perfect and defective total energies
+      with an explicit chemical potential; numbers are tied to the reported structures rather
+      than invented. Judge solely from the final answer; do not fail because the tool-call
+      log omits MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: Defect construction and relaxation are not repeated with identical parameters.
+    axis: efficiency
+    verify: no_retries
+  - id: efficiency_judge
+    criterion: Vacancy formation energy workflow (build → optimize × 2 → formula) is executed
+      without redundant steps.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget

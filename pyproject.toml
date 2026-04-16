@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mat-bench"
+version = "0.1.0"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.0",
+    "pyyaml>=6.0",
+    "openai>=1.10.0",
+]
+
+[project.optional-dependencies]
+validators = ["pymatgen>=2024.1.1"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+mat-bench = "mat_bench.cli:main"
+
+[tool.setuptools]
+packages = { find = { include = ["mat_bench", "mat_bench.*"] } }

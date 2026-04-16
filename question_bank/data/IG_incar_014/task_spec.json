@@ -1,0 +1,13 @@
+{
+  "critical_params": {
+    "IBRION": -1,
+    "ISIF": 2,
+    "ISMEAR": 0,
+    "NSW": 0,
+    "PREC": "Accurate"
+  },
+  "description": "为 SiO2 表面 slab 模型(含氢钝化) H16O24Si12 生成静态计算的 VASP INCAR。",
+  "formula": "H16O24Si12",
+  "material_context": "H16O24Si12 是氢钝化的 SiO2 slab 模型，绝缘体。Slab 计算需要 ISIF=2(固定晶胞)，ISMEAR=0(高斯展宽适合绝缘体)，可使用 LREAL=Auto 加速大体系计算。",
+  "task": "slab_calculation"
+}

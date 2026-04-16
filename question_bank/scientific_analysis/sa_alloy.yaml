@@ -1,0 +1,183 @@
+version: v5
+capability: scientific_analysis
+domain: alloy
+questions:
+- id: WO_general_steel_008_20260411v1
+  capability: scientific_analysis
+  domain: alloy
+  intent: Analyze Ni-content variation in duplex stainless-steel composition and summarize
+    tensile-strength prediction trends.
+  human_prompt_seed: '研究 2209/ER2209 近似成分中 Ni 含量变化对抗拉强度预测的影响。
+
+    请输出： 1) `duplex_ni_tensile_predictions.json`：至少包含 `formula`, `ni_content`, `predicted_uts`,
+    `trend_label`； 2) `duplex_ni_tensile_analysis.md`：说明 Ni 含量变化导致强度变化的机理解释与不确定性。
+
+    最终回答请给出“Ni 含量变化-强度变化”的总体趋势判断。'
+  tags:
+  - meta_userlog
+  - phy_elastic
+  - mat_hea
+  data_files: []
+  reference_answers:
+  - key: tensile_json
+    value: duplex_ni_tensile_predictions.json
+  - key: analysis_md
+    value: duplex_ni_tensile_analysis.md
+  - key: tensile_tokens
+    value:
+      filename: duplex_ni_tensile_predictions.json
+      tokens:
+      - formula
+      - ni_content
+      - predicted_uts
+      - trend_label
+      flags: i
+  - key: analysis_tokens
+    value:
+      filename: duplex_ni_tensile_analysis.md
+      tokens:
+      - Ni
+      - 抗拉强度
+      - 相比例
+      - 不确定性
+      flags: i
+  - key: turn_budget
+    value:
+      max: 10
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: tensile_json
+    criterion: Agent writes `duplex_ni_tensile_predictions.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: analysis_md
+    criterion: Agent writes `duplex_ni_tensile_analysis.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: tensile_tokens
+    criterion: Prediction JSON includes required composition-strength fields.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: analysis_tokens
+    criterion: Analysis document explains Ni-strength trend with uncertainty caveats.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: grounding_source
+    criterion: Deliverables are grounded in generated prediction artifacts and avoid unsupported
+      metallurgy claims.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical tool calls with the same parameter set.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
+    axis: efficiency
+    verify: token_budget
+- id: WO_general_hea_005_20260411v1
+  capability: scientific_analysis
+  domain: alloy
+  intent: Evaluate phase-formation tendency of AlCr0.8CoFeNi HEA using descriptor calculations,
+    binary-phase cues, and solid-solution prediction.
+  human_prompt_seed: '请评估 AlCr0.8CoFeNi 高熵合金是否易形成固溶体，并给出可能结构趋势。
+
+    要求覆盖： - VEC、混合焓、混合熵等关键描述符； - 二元形成能/相图信息的归纳； - 固溶体形成判断与可能晶体结构。
+
+    请输出： 1) `hea_alcr0.8cofeni_kb_summary.json`（至少包含 `vec`, `mixing_enthalpy`, `mixing_entropy`,
+    `binary_energy_summary`, `solid_solution_prediction`, `possible_structure`）； 2) `hea_alcr0.8cofeni_kb_report.md`（说明判据来源、结论与不确定性）。'
+  tags:
+  - meta_userlog
+  - mat_hea
+  - wf_postprocess
+  - meta_literature
+  data_files: []
+  reference_answers:
+  - key: hea_json
+    value: hea_alcr0.8cofeni_kb_summary.json
+  - key: hea_report
+    value: hea_alcr0.8cofeni_kb_report.md
+  - key: hea_required_tokens
+    value:
+      filename: hea_alcr0.8cofeni_kb_summary.json
+      tokens:
+      - vec
+      - mixing_enthalpy
+      - mixing_entropy
+      - binary_energy_summary
+      - solid_solution_prediction
+      - possible_structure
+      flags: i
+  - key: hea_report_tokens
+    value:
+      filename: hea_alcr0.8cofeni_kb_report.md
+      tokens:
+      - AlCr0.8CoFeNi
+      - VEC
+      - 混合焓
+      - 混合熵
+      - 固溶体
+      - 不确定性
+      flags: i
+  - key: turn_budget
+    value:
+      max: 10
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: hea_json
+    criterion: Agent writes `hea_alcr0.8cofeni_kb_summary.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: hea_report
+    criterion: Agent writes `hea_alcr0.8cofeni_kb_report.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: hea_required_tokens
+    criterion: Summary JSON includes required HEA descriptor and prediction fields.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: hea_report_tokens
+    criterion: Report explains rationale and uncertainty caveats for the solid-solution prediction.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: grounding_source
+    criterion: Deliverables are grounded in generated HEA-analysis artifacts and avoid unsupported
+      phase claims.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical tool calls with the same parameter set.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
+    axis: efficiency
+    verify: token_budget

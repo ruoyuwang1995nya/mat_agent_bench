@@ -1,0 +1,29 @@
+# ===========================================================================
+# NOMAD VASP INCAR - Real calculation data
+# ===========================================================================
+# Entry ID: --39velwKt7anHJE2z2Y5HBu3PF8
+# URL: https://nomad-lab.eu/prod/v1/gui/entry/id/--39velwKt7anHJE2z2Y5HBu3PF8
+# Mainfile: binaries_input/PBE/Low/4/71_Lu/POTCAR/band_structure/vasprun.xml
+# Fetched: 2026-04-01
+# ===========================================================================
+
+INCAR created by Atomic Simulation Environment
+ EMAX = 10.000000
+ EMIN = -20.000000
+ SIGMA = 0.100000
+ EDIFF = 1.00e-10
+ PREC = Low
+ ISYM = 0
+ ISPIN = 1
+ ISMEAR = -1
+ NWRITE = 3
+ ICHARG = 11
+ NELM = 800
+ NEDOS = 1000
+ LORBIT = 11
+ NSW = 0
+ IBRION = -1
+ ISIF = 2
+ LCHARG = .TRUE.
+ LWAVE = .FALSE.
+ LVTOT = .TRUE.

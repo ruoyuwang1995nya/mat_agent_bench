@@ -1,0 +1,40 @@
+# ===========================================================================
+# NOMAD VASP INCAR - Real calculation data
+# ===========================================================================
+# Entry ID: ---4koEySUyRp7VIHjPrYgb5lGQf
+# URL: https://nomad-lab.eu/prod/v1/gui/entry/id/---4koEySUyRp7VIHjPrYgb5lGQf
+# Mainfile: home/rosendo/Desktop/NOMAD-calcs/Carbides-ternary-VASP-II/Ta-V/001-surface/vvc-new/continue/vasprun.xml
+# Fetched: 2026-04-01
+# ===========================================================================
+# NOTE: This real NOMAD INCAR uses ISMEAR=-5 (tetrahedron method), which is
+# technically inappropriate for ionic relaxation of a metallic system.
+# The scoring checklist intentionally requires ISMEAR=1 or 2 (Methfessel-
+# Paxton), reflecting best practice. This reference-vs-checklist discrepancy
+# tests whether the agent follows physical best practices rather than
+# blindly copying existing (possibly suboptimal) parameter choices.
+# ===========================================================================
+
+IBRION =  2
+POTIM  =  0.2
+EDIFFG =  -0.01
+NSW    =  301
+
+EDIFF  =  0.1E-05
+ISMEAR =  -5
+SIGMA  =  0.2
+
+LREAL  =  Auto
+
+NWRITE =  2
+NELM   =  101
+NELMIN =  2
+ENCUT  =  400
+IALGO  =  38
+ISIF = 2
+
+ISTART =  0
+INIWAV =  1
+
+GGA    =  PE
+
+LVTOT = .TRUE.

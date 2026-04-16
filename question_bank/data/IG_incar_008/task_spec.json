@@ -1,0 +1,13 @@
+{
+  "critical_params": {
+    "IBRION": 6,
+    "ISIF": 3,
+    "ISMEAR": 0,
+    "NFREE": 2,
+    "POTIM": 0.015
+  },
+  "description": "为钙钛矿 BaZrO3 生成弹性常数计算的 VASP INCAR。使用有限差分法计算弹性张量。",
+  "formula": "BaZrO3",
+  "material_context": "BaZrO3 是立方钙钛矿氧化物，非磁性绝缘体。弹性常数计算需要 IBRION=6(有限差分)，ISIF=3(应力-应变关系)，NFREE=2(正负位移)，POTIM 设定位移幅度(通常 0.015 A)。",
+  "task": "elastic_constants"
+}

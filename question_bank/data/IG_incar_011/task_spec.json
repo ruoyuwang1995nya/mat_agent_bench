@@ -1,0 +1,13 @@
+{
+  "critical_params": {
+    "EDIFF": 1e-07,
+    "IBRION": -1,
+    "ISMEAR": -5,
+    "LORBIT": 11,
+    "NSW": 0
+  },
+  "description": "为三元金属间化合物 CdOs3Pt 生成态密度(DOS)计算的 VASP INCAR。需要高精度的态密度计算。",
+  "formula": "CdOs3Pt",
+  "material_context": "CdOs3Pt 是含 5d 过渡金属(Os, Pt)的金属间化合物，磁性金属体系。DOS 计算需要 LORBIT=11 输出投影态密度，ISMEAR=-5(四面体方法)适合精确 DOS，NSW=0 静态计算。",
+  "task": "density_of_states"
+}

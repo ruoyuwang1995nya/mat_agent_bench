@@ -1,0 +1,39 @@
+# ===========================================================================
+# NOMAD VASP INCAR - Real calculation data
+# ===========================================================================
+# Entry ID: -3ZGhy7TTrJ0lw_ARYVCu8EeTnbo
+# URL: https://nomad-lab.eu/prod/v1/gui/entry/id/-3ZGhy7TTrJ0lw_ARYVCu8EeTnbo
+# Mainfile: data20180131/elastic/597fff297a4aed90672fecab/vasprun.xml
+# Fetched: 2026-04-01
+# ===========================================================================
+
+# Basic
+PREC = High
+ISPIN = 1
+
+# Initialization
+ISTART = 0
+ICHARG = 2
+
+# Electronic relaxation
+ENCUT = 500
+NELMIN = 5
+NELM = 100
+ALGO = Normal
+EDIFF = 0.0001
+
+# Ionic relaxation
+IBRION = 6
+ISIF = 3
+NFREE = 2
+POTIM = 0.015
+NSW = 200
+EDIFFG = -0.05
+
+# Density of states related
+ISMEAR = 0
+SIGMA = 0.02
+
+# Output
+LCHARG = .FALSE.
+LWAVE = .FALSE.

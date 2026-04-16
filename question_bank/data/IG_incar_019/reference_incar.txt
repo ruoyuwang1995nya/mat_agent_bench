@@ -1,0 +1,41 @@
+# ===========================================================================
+# NOMAD VASP INCAR - Real calculation data
+# ===========================================================================
+# Entry ID: --0IDLLJdpos7FrdyNXJnVmfwDB7
+# URL: https://nomad-lab.eu/prod/v1/gui/entry/id/--0IDLLJdpos7FrdyNXJnVmfwDB7
+# Mainfile: oqmd/icsd/2081/static/vasprun.xml
+# Fetched: 2026-04-01
+# ===========================================================================
+
+#= General Settings =#
+  PREC = MED
+  ISTART = 1
+  ICHARG = 1
+  ISPIN = 1
+
+#= Parallelization =#
+  LPLANE = .TRUE.
+  NCORE = 4
+  LSCALU = .FALSE.
+
+#= Ionic Relaxation Settings =#
+  NSW = 0
+
+#= Electronic Relxation Settings =#
+  ENCUT = 520
+  NELMIN = 5
+  LREAL = .FALSE.
+  ALGO = FAST
+
+#= Write flags =#
+  LCHARG = .TRUE.
+  LWAVE = .FALSE.
+  LELF = .TRUE.
+  LHVAR = .TRUE.
+  LVTOT = .TRUE.
+
+#= DOS =#
+  ISMEAR = -5
+
+#= Uncategorized/OQMD codes  =#
+  LORBIT = 11

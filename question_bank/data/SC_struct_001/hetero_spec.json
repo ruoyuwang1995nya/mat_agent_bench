@@ -1,0 +1,22 @@
+{
+  "expected_mismatch_percent": 1.6,
+  "layer_1": {
+    "lattice_a": 2.46,
+    "material": "graphene"
+  },
+  "layer_2": {
+    "lattice_a": 2.5,
+    "material": "h-BN"
+  },
+  "requirements": {
+    "interlayer_distance_A": 3.35,
+    "mismatch_limit_percent": 2.0,
+    "output_formats": [
+      "POSCAR",
+      "CIF"
+    ],
+    "stacking": "AB_Bernal",
+    "vacuum_A": 15.0
+  },
+  "task": "build_heterostructure"
+}

@@ -1,0 +1,14 @@
+{
+  "critical_params": {
+    "HFSCREEN": 0.2,
+    "IBRION": 2,
+    "ISIF": 2,
+    "ISPIN": 2,
+    "LHFCALC": "True",
+    "LSORBIT": "True"
+  },
+  "description": "为 BiSI 中 I 替位 S 缺陷体系生成缺陷计算的 VASP INCAR。使用 HSE06+SOC 进行高精度缺陷计算。",
+  "formula": "BiSI_with_substitution",
+  "material_context": "BiSI 中 I-on-S 替位缺陷，含重元素 Bi(需要 SOC)。缺陷计算需要 ISIF=2(固定晶胞)，HSE06(LHFCALC=.TRUE., HFSCREEN=0.2)获取准确缺陷能级，LSORBIT=.TRUE. 开启自旋轨道耦合。",
+  "task": "defect_calculation"
+}

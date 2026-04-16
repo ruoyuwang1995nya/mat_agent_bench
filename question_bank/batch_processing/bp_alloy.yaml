@@ -1,0 +1,115 @@
+version: v5
+capability: batch_processing
+domain: alloy
+questions:
+- id: BP_struct_003_20260412
+  capability: batch_processing
+  domain: alloy
+  intent: Generate 5 VASP INCAR input files for Al ENCUT convergence test (280, 300, 320,
+    340, 360 eV). All other parameters (k-mesh, ISMEAR, SIGMA, NSW) must remain strictly constant
+    across the 5 files. Focus is on correct input preparation and variable control, not on
+    submitting or running calculations.
+  human_prompt_seed: '从 `convergence_encut.json` 读取收敛测试配置。为铝（Al）的 ENCUT 收敛测试生成 5 个 VASP INCAR
+    输入文件，ENCUT 分别为：280, 300, 320, 340, 360 eV。
+
+    严格要求： 1. k-point 网格在所有 5 个计算中固定为 8x8x8（通过 KPOINTS 文件或 INCAR 均可） 2. ISMEAR=1, SIGMA=0.1
+    在所有 INCAR 中完全相同 3. NSW=0（单点计算设定） 4. 除 ENCUT 外，其他所有 VASP 参数在 5 个文件中保持一致
+
+    输出 5 个 INCAR 文件，文件名包含 ENCUT 值（如 INCAR_ENCUT280）。不需要提交计算，只需生成正确的输入文件。
+
+    关键考察点： 1. ENCUT 在 5 个文件中按顺序变化，且为唯一变量 2. 所有非扫描参数在 5 个文件中完全一致 3. INCAR 格式正确、参数无遗漏
+
+    '
+  tags:
+  - wf_batch
+  - wf_sweep
+  - wf_inputs
+  priority: P0
+  data_files:
+  - key: convergence_encut
+    path: data/BP_struct_003/convergence_encut.json
+    oss_url: ''
+    description: ENCUT convergence test configuration for Al.
+  reference_answers:
+  - key: incar_files_count
+    value: 5
+    tolerance: 0.0
+  - key: encut_sweep_values
+    value: 280, 300, 320, 340, 360
+  - key: kpoint_mesh_constant
+    value: 8 8 8
+  - key: electronic_params_frozen
+    value:
+      ISMEAR: 1
+      SIGMA: 0.1
+      NSW: 0
+  - key: incar_format_valid
+    value: VASP INCAR key=value format
+  - key: single_variable_control
+    value: Only ENCUT differs across the 5 files (SYSTEM tag and comment lines may also vary
+      as they are cosmetic, not computational)
+  - key: grounding_config_used
+    value: Parameters from convergence_encut.json
+  - key: turn_budget
+    value: &id001
+      max: 20
+  - key: duration_budget
+    value: &id002
+      max: 7200000
+  - key: token_budget_total
+    value: &id003
+      max: 35000
+  scoring_checklist:
+  - id: incar_files_count
+    criterion: Exactly 5 INCAR files are generated, one per ENCUT value.
+    axis: correctness
+    verify: numerical_range
+  - id: encut_sweep_values
+    criterion: The 5 INCAR files contain ENCUT values 280, 300, 320, 340, 360 eV respectively,
+      and ENCUT is the only computational parameter that differs across files. Cosmetic fields
+      such as SYSTEM tags, comment lines, or filename references may also vary and should
+      not be counted as violations.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: kpoint_mesh_constant
+    criterion: K-point mesh (8×8×8 Gamma-centered) is consistently applied to all 5 calculations—either
+      via a companion KPOINTS file or via KSPACING/KGAMMA tags in INCAR.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: electronic_params_frozen
+    criterion: ISMEAR=1, SIGMA=0.1, NSW=0 are identical across all 5 INCAR files.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: incar_format_valid
+    criterion: All 5 files follow valid VASP INCAR key=value syntax with no missing required
+      parameters.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: single_variable_control
+    criterion: Comparing any two of the 5 INCAR files, ENCUT is the only computational parameter
+      that differs. All other computational parameters (ISMEAR, SIGMA, NSW, EDIFF, PREC, etc.)
+      are identical. Cosmetic differences in SYSTEM tags, comment lines, or first-line labels
+      are acceptable.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: grounding_config_used
+    criterion: 'Parameter values in the generated INCAR files match the convergence_encut.json
+      config exactly: k-mesh 8×8×8, ISMEAR=1, SIGMA=0.1, NSW=0, IBRION=-1, ALGO=Fast, ENCUT
+      sweep [280, 300, 320, 340, 360] eV. The answer or files must show these values were
+      derived from reading the JSON file, not invented independently.'
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget

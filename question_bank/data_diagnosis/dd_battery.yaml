@@ -1,0 +1,73 @@
+version: v5
+capability: data_diagnosis
+domain: battery
+questions:
+- id: DD_general_003_20260404
+  capability: data_diagnosis
+  domain: battery
+  intent: Diagnose relaxation non-convergence caused by EDIFF being too loose relative to
+    EDIFFG.
+  human_prompt_seed: '读取 `case_bundle.json`，其中包含一个 LiCoO2 弛豫计算的 INCAR 参数和离子步摘录。 200 步 NSW
+    用完仍未收敛，力在 0.019-0.022 eV/A 之间振荡，且每步 SCF 仅 3 步就收敛了。 请诊断根本原因，并给出修复方案。
+
+    '
+  tags:
+  - log_diagnosis
+  data_files:
+  - key: case_bundle
+    path: data/DD_general_003/case_bundle.json
+    oss_url: ''
+    description: 'VASP input/output bundle: LiCoO2 relax with EDIFF=1E-3, force oscillates.'
+  reference_answers:
+  - key: root_cause
+    value: ediff_too_loose_for_relax
+  - key: required_fields
+    value:
+    - root_cause
+    - evidence
+    - fix_EDIFF
+    - ediff_ediffg_rule
+  - key: turn_budget
+    value: &id001
+      max: 8
+  - key: duration_budget
+    value: &id002
+      max: 7200000
+  - key: token_budget_total
+    value: &id003
+      max: 8000
+  scoring_checklist:
+  - id: root_cause
+    criterion: Correctly identifies EDIFF too loose (1E-3 causing force noise in LiCoO2 relax)
+      as root cause.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: required_fields
+    criterion: Explains force noise mechanism from loose EDIFF, and recommends tightening
+      EDIFF to 1E-5 or 1E-6.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_evidence
+    criterion: Diagnosis references specific values from the case_bundle.json (EDIFF=1E-3,
+      force oscillation range, rapid SCF convergence pattern).
+    axis: grounding
+    verify: llm_binary_judge
+  - id: efficiency_judge
+    criterion: Agent reaches diagnosis without redundant tool calls beyond reading the provided
+      bundle.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget

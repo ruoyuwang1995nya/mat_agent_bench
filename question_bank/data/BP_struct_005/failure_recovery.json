@@ -1,0 +1,54 @@
+{
+  "description": "Given a scenario where 5 structure calculations fail due to bad input geometry, demonstrate controlled recovery by repairing only the geometry (run geometry optimization first) while freezing all other calculation parameters (k-points, ISMEAR, SIGMA, ENCUT). This tests whether the agent can isolate and fix only the root-cause parameter without modifying non-causal ones.",
+  "frozen_parameters": {
+    "ALGO": "Normal",
+    "ENCUT": 520,
+    "ISMEAR": 1,
+    "NSW": 0,
+    "SIGMA": 0.1,
+    "k_point_mesh": "6 6 6"
+  },
+  "initial_batch": [
+    {
+      "id": "calc_001",
+      "initial_issue": "Atoms too close (bad POSCAR)",
+      "material": "TiO2",
+      "required_fix": "run geometry pre-relaxation"
+    },
+    {
+      "id": "calc_002",
+      "initial_issue": "Negative lattice vector",
+      "material": "ZnO",
+      "required_fix": "reconstruct lattice"
+    },
+    {
+      "id": "calc_003",
+      "initial_issue": "Broken symmetry",
+      "material": "MgO",
+      "required_fix": "apply spacegroup symmetry"
+    },
+    {
+      "id": "calc_004",
+      "initial_issue": "Duplicate atoms",
+      "material": "Al2O3",
+      "required_fix": "remove duplicates"
+    },
+    {
+      "id": "calc_005",
+      "initial_issue": "Distorted cell",
+      "material": "SiO2",
+      "required_fix": "relax cell parameters"
+    }
+  ],
+  "modification_rules": {
+    "allowed_to_modify": "Only structure geometry, lattice, symmetry-related inputs",
+    "forbidden_to_modify": "k-point settings, electronic smearing, plane-wave cutoff, any solver settings"
+  },
+  "success_criteria": [
+    "All 5 structures converge after repair",
+    "Each uses the same frozen k-point and solver settings",
+    "Only geometry-related steps appear between failure and success",
+    "No redundant re-tuning of electronic parameters"
+  ],
+  "task": "batch_failure_recovery_parameter_frozen"
+}

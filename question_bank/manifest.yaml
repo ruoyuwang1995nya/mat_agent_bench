@@ -1,0 +1,197 @@
+# manifest.yaml — MATTER v5 Question Bank Registry
+# Lists all MCP tools referenced by any question, plus bank file index.
+# Each bank file: `<capability>/<xx>_<domain>.yaml` — `xx` = 两字母简写；无法归入业务线时 `domain` 为 `agnostic`。
+version: "v5"
+
+tools:
+  # --- Structure database (MCP mat_struct_db) ---
+  mat_struct_db_fetch_structures_from_db:
+    server: "mat_struct_db"
+    category: "structure_retrieval"
+
+  # --- Structure construction (MCP mat_sg) ---
+  mat_sg_generate_ordered_replicas:
+    server: "mat_sg"
+    category: "structure_construction"
+  mat_sg_build_bulk_structure_by_template:
+    server: "mat_sg"
+    category: "structure_construction"
+  mat_sg_build_bulk_structure_by_wyckoff:
+    server: "mat_sg"
+    category: "structure_construction"
+  mat_sg_build_molecule_structures_from_smiles:
+    server: "mat_sg"
+    category: "structure_construction"
+  mat_sg_build_surface_slab:
+    server: "mat_sg"
+    category: "structure_construction"
+  mat_sg_build_surface_interface:
+    server: "mat_sg"
+    category: "structure_construction"
+  mat_sg_add_hydrogens:
+    server: "mat_sg"
+    category: "structure_construction"
+  mat_sg_make_defect_structure:
+    server: "mat_sg"
+    category: "structure_construction"
+  mat_sg_make_amorphous_structure:
+    server: "mat_sg"
+    category: "structure_construction"
+
+  # --- MLIPs calculations (operator skill via Bohrium submit_job.py) ---
+  # MLIPs tasks are submitted via execute_bash (submit_job.py + MLIPs scripts).
+  # No dedicated MCP tool entries needed; evidence mapping uses
+  # when_args_contains on execute_bash for script-level classification.
+
+# --- Bash execution (bohrium-job skill, scripts) ---
+  execute_bash:
+    server: "builtin"
+    category: "script_execution"
+
+banks:
+  - path: "batch_processing/bp_alloy.yaml"
+    capability: "batch_processing"
+    domain: "alloy"
+    questions: 1
+
+  - path: "batch_processing/bp_agnostic.yaml"
+    capability: "batch_processing"
+    domain: "agnostic"
+    questions: 1
+
+  - path: "batch_processing/bp_battery.yaml"
+    capability: "batch_processing"
+    domain: "battery"
+    questions: 1
+
+  - path: "batch_processing/bp_catalysis.yaml"
+    capability: "batch_processing"
+    domain: "catalysis"
+    questions: 2
+
+  - path: "batch_processing/bp_semiconductor.yaml"
+    capability: "batch_processing"
+    domain: "semiconductor"
+    questions: 1
+
+  - path: "data_diagnosis/dd_agnostic.yaml"
+    capability: "data_diagnosis"
+    domain: "agnostic"
+    questions: 3
+
+  - path: "data_diagnosis/dd_battery.yaml"
+    capability: "data_diagnosis"
+    domain: "battery"
+    questions: 1
+
+  - path: "data_diagnosis/dd_catalysis.yaml"
+    capability: "data_diagnosis"
+    domain: "catalysis"
+    questions: 1
+
+  - path: "data_diagnosis/dd_semiconductor.yaml"
+    capability: "data_diagnosis"
+    domain: "semiconductor"
+    questions: 2
+
+  - path: "execution_contract/ec_agnostic.yaml"
+    capability: "execution_contract"
+    domain: "agnostic"
+    questions: 3
+
+  - path: "input_generation/ig_agnostic_vasp.yaml"
+    capability: "input_generation"
+    domain: "agnostic"
+    questions: 20
+
+  - path: "input_generation/ig_agnostic_abacus.yaml"
+    capability: "input_generation"
+    domain: "agnostic"
+    questions: 8
+
+  - path: "safety_refusal/sf_agnostic.yaml"
+    capability: "safety_refusal"
+    domain: "agnostic"
+    questions: 4
+
+  - path: "scientific_analysis/sa_alloy.yaml"
+    capability: "scientific_analysis"
+    domain: "alloy"
+    questions: 2
+
+  - path: "scientific_analysis/sa_agnostic.yaml"
+    capability: "scientific_analysis"
+    domain: "agnostic"
+    questions: 6
+
+  - path: "scientific_analysis/sa_battery.yaml"
+    capability: "scientific_analysis"
+    domain: "battery"
+    questions: 2
+
+  - path: "scientific_analysis/sa_catalysis.yaml"
+    capability: "scientific_analysis"
+    domain: "catalysis"
+    questions: 2
+
+  - path: "scientific_analysis/sa_polymer.yaml"
+    capability: "scientific_analysis"
+    domain: "polymer"
+    questions: 4
+
+  - path: "scientific_analysis/sa_semiconductor.yaml"
+    capability: "scientific_analysis"
+    domain: "semiconductor"
+    questions: 3
+
+  - path: "structure_construction/sc_agnostic.yaml"
+    capability: "structure_construction"
+    domain: "agnostic"
+    questions: 13
+
+  - path: "structure_construction/sc_catalysis.yaml"
+    capability: "structure_construction"
+    domain: "catalysis"
+    questions: 4
+
+  - path: "structure_construction/sc_semiconductor.yaml"
+    capability: "structure_construction"
+    domain: "semiconductor"
+    questions: 2
+
+  - path: "structure_retrieval/rt_agnostic.yaml"
+    capability: "structure_retrieval"
+    domain: "agnostic"
+    questions: 7
+
+  - path: "structure_retrieval/rt_battery.yaml"
+    capability: "structure_retrieval"
+    domain: "battery"
+    questions: 1
+
+  - path: "workflow_orchestration/wo_alloy.yaml"
+    capability: "workflow_orchestration"
+    domain: "alloy"
+    questions: 3
+
+  - path: "workflow_orchestration/wo_agnostic.yaml"
+    capability: "workflow_orchestration"
+    domain: "agnostic"
+    questions: 25
+
+  - path: "workflow_orchestration/wo_battery.yaml"
+    capability: "workflow_orchestration"
+    domain: "battery"
+    questions: 2
+
+  - path: "workflow_orchestration/wo_catalysis.yaml"
+    capability: "workflow_orchestration"
+    domain: "catalysis"
+    questions: 6
+
+  - path: "workflow_orchestration/wo_semiconductor.yaml"
+    capability: "workflow_orchestration"
+    domain: "semiconductor"
+    questions: 2
+
+# Total: 132 questions across 29 active bank files

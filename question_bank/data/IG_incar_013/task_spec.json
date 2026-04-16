@@ -1,0 +1,14 @@
+{
+  "critical_params": {
+    "EDIFFG": -0.01,
+    "IBRION": 2,
+    "ISIF": 2,
+    "ISMEAR": 1,
+    "NSW": 301,
+    "SIGMA": 0.2
+  },
+  "description": "为三元碳化物表面 (Ta,V)2C 生成表面弛豫计算的 VASP INCAR。表面计算需要固定晶胞仅优化离子位置。",
+  "formula": "C33O2Ta16V16",
+  "material_context": "(Ta,V)2C 是 MXene 前驱体碳化物，金属性。表面计算需要 ISIF=2(固定晶胞体积和形状)，IBRION=2(共轭梯度法)，NSW>0 进行离子弛豫。金属体系使用 ISMEAR=1(MP smearing)，避免使用 ISMEAR=-5（不适合弛豫计算）。",
+  "task": "surface_relaxation"
+}

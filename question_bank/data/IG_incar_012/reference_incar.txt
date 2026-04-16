@@ -1,0 +1,44 @@
+# ===========================================================================
+# NOMAD VASP INCAR - Real calculation data
+# ===========================================================================
+# Entry ID: -1QQiGU4U9vuoq8WoxLD0o6TVqIO
+# URL: https://nomad-lab.eu/prod/v1/gui/entry/id/-1QQiGU4U9vuoq8WoxLD0o6TVqIO
+# Mainfile: 100_FeFeCN_6/320_HSE06_calculations/400_NEB/100_4of8_CPB/fi/OUTCAR
+# Fetched: 2026-04-01
+# ===========================================================================
+
+#Comment line
+SYSTEM   = VASPcalc     #Names the system within the calculation
+PREC     = Normal       #Sufficient for most routine calculations
+LHFCALC  = .TRUE.       #Indicates that a hybrid functional is used if .TRUE., maybe need for additionally setting AEXX, AGGAX, AGGAC and/or ALDAC. In conjunction with PBE (tag PE) = PBE0. Alternatively HFSCREEN has to be set for HSE-functionals.
+HFSCREEN = 0.2          #Range-seperation parameter. HSE06 = 0.2. HSE03 = 0.3.
+GGA      = PE           #Enter meta-GGA functional to be used here: TPSS, SCAN, MS[0-2], M06L
+LASPH    = .TRUE.       #Include non-spherical contributions related to the gradient of the density in the PAW spheres. Important for d-elements, essential for f-elements & B-F atoms (Mag 2nd row). Useful in: DFT+U, meta-GGA, vdW-DFT & hybrid. Also sets LMAXTAU=6.
+#LDAU     = .TRUE.       #Switch for the +U-method
+#LDAUTYPE = 2            #Chooses implementation style, 1=use of U&J, 2=use of Ueff(U-J) - The simplified (rotationally invariant) approach to the LSDA+U, introduced by Dudarev et al.
+#LDAUL    = 2 2 -1 -1 -1 #Supply NTYP values! Tag to choose to which NTYP-center +U is added, 2=add+U, -1=no+U
+#LDAUU    = 7.0 3.0 0 0 0 #Supply NTYP values! Sets the U-parameter for each element typ
+#LDAUJ    = 0 0 0 0 0    #Supply NTYP values! Sets the J-parameter for each element typ
+LMAXMIX  = 4            #LMAXMIX controls up to which l-quantum number the one-center PAW charge densities are passed through the charge density mixer and written to the CHGCAR file. Default: 2. Set =4 for d-elements & =6 for f-elements. Use in case of DOS-calc with 3-calc-setup to recieve full CHGCAR (esp. for case of +U-calc) or for +U-calc in general.
+LDAUPRINT= 1            #Switch for writing out the Occupancy matrix to the OUTCAR
+ISYM     = 3            #default symmetry options (change to 3 for LHFCALC=.TRUE.-calc)
+ALGO     = Conjugate    #Sets the electronic minimisation algorithm
+EDIFF    = 1e-04        #Electronic optimizations stops at deltaE smaller EDIFF (-06 almost always sufficient) (-08 extrem high for freq analysis / elastic constant or similar)
+NELM     = 300          #Max number of SCF steps, default 60
+ENCUT    = 550          #cutoff energy
+ISPIN    = 2            #spin polarized calculation
+ISMEAR   = 0            #Gaussian smearing is used
+SIGMA    = 0.02         #width of smearing
+LORBIT   = 11           #Prints out orbital-decomposed charge and magnetization for each ion, CAUTION together with ISYM=2 - change to ISYM=0. for more see vasp wiki.
+NUPDOWN  = 20            #Sets and FIXES the difference in up- and down-spin electrons
+MAGMOM   = 4*5.0 4*0.0 24*0 24*0 4*0
+ISIF     = 2            #the stress tensor is calculated (cell opt)
+IBRION   = 1            #Ionic step algorithm for accurate convergence if guess/structure is already close to minimum, use after IBRION=2 converged
+EDIFFG   = -1e-02       #Ionic optimization convergence criteria (-02 sufficient for energies/geometry) (-06 extrem high for freq analysis / elastic constant or similar)
+POTIM    = 0.02         #Scaling constant for the step width with IBRION = 1-3. Default: 0.5. Small values might help convergence if not achived otherwise.
+NSW      = 500          #MAX number of ionic steps, single point calc if NSW=0
+NFREE    = 15           #Specifies the number of remembered steps in the history of ionic convergence runs, or the number of ionic displacements in phonon calculations. Ideal values should be around 10-20. Default: 0.
+LREAL    = Auto         #no real space projection
+ISTART   = 1            #read in WAVECAR if available
+LWAVE    = .TRUE.       #write out WAVECAR
+LCHARG   = .FALSE.      #no CHG and CHGCAR files

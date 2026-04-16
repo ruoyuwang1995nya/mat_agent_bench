@@ -1,0 +1,14 @@
+{
+  "critical_params": {
+    "ALGO": "Conjugate",
+    "HFSCREEN": 0.2,
+    "IBRION": 1,
+    "ISPIN": 2,
+    "LHFCALC": ".TRUE.",
+    "NSW": 500
+  },
+  "description": "为普鲁士蓝类似物 C24Fe8N24Na4 生成 NEB(nudged elastic band)过渡态搜索计算的 VASP INCAR。使用 HSE06 杂化泛函进行 NEB。",
+  "formula": "C24Fe8N24Na4",
+  "material_context": "C24Fe8N24Na4 是普鲁士蓝类似物(PBA)，含 Fe 磁性离子。NEB+HSE06 计算需要较多的离子步(NSW=500)，ALGO=Conjugate 适合 HSE+NEB，NUPDOWN 固定磁矩。IBRION=1 使用准牛顿法优化路径。",
+  "task": "neb_transition_state"
+}

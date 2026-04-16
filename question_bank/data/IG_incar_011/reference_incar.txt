@@ -1,0 +1,28 @@
+# ===========================================================================
+# NOMAD VASP INCAR - Real calculation data
+# ===========================================================================
+# Entry ID: -128lYrmaIr2gX4VACQndrmEZ8N3
+# URL: https://nomad-lab.eu/prod/v1/gui/entry/id/-128lYrmaIr2gX4VACQndrmEZ8N3
+# Mainfile: perovskites/Cd_CdOs3Pt_xxx_02p-00_spg221a/vasprun.xml
+# Fetched: 2026-04-01
+# ===========================================================================
+
+INCAR created by Atomic Simulation Environment
+ EMAX = 15.000000
+ ENCUT = 520.000000
+ ENAUG = 659.424000
+ PSTRESS = 0.000000
+ EMIN = -15.000000
+ EDIFF = 1.00e-07
+ SYMPREC = 1.00e-08
+ PREC = High
+ ALGO = Fast
+ ISYM = 2
+ ISPIN = 2
+ ISMEAR = -5
+ LORBIT = 11
+ NSW = 0
+ IBRION = -1
+ NPAR = 2
+ NSIM = 1
+ MAGMOM = 5*1.0000

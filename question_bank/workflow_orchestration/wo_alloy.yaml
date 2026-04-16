@@ -1,0 +1,290 @@
+version: v5
+capability: workflow_orchestration
+domain: alloy
+questions:
+- id: WO_general_mechmix_004_20260411v1
+  capability: workflow_orchestration
+  domain: alloy
+  intent: Compare database-retrieved alloy references with APEX elastic predictions for a
+    Ni-Co-Cr composition at room temperature.
+  human_prompt_seed: '面向 Ni-Co-Cr 合金的室温弹性性质评估，请先检索相近成分的结构/弹性参考信息，再结合 APEX 计算结果给出对比结论。
+
+    请输出： 1) `nico_cr_roomtemp_elastic.json`（至少包含 `C11`, `C12`, `C44`, `bulk_modulus_GPa`,
+    `db_reference`, `comparison_summary`）； 2) `nico_cr_roomtemp_report.md`（说明检索条件、APEX 参数、结果差异与不确定性）。
+
+    最终回答需简要判断该结果在室温机械性能评估上的可信度。'
+  tags:
+  - meta_userlog
+  - phy_elastic
+  - screening_hte
+  - meta_database
+  data_files: []
+  reference_answers:
+  - key: elastic_json
+    value: nico_cr_roomtemp_elastic.json
+  - key: report_md
+    value: nico_cr_roomtemp_report.md
+  - key: elastic_required_tokens
+    value:
+      filename: nico_cr_roomtemp_elastic.json
+      tokens:
+      - C11
+      - C12
+      - C44
+      - bulk_modulus_GPa
+      - db_reference
+      - comparison_summary
+      flags: i
+  - key: report_required_tokens
+    value:
+      filename: nico_cr_roomtemp_report.md
+      tokens:
+      - Ni
+      - Co
+      - Cr
+      - APEX
+      - 对比
+      - 不确定性
+      flags: i
+  - key: turn_budget
+    value:
+      max: 10
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: elastic_json
+    criterion: Agent writes `nico_cr_roomtemp_elastic.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: report_md
+    criterion: Agent writes `nico_cr_roomtemp_report.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: elastic_required_tokens
+    criterion: JSON includes required elastic constants, bulk modulus, and database-comparison
+      fields.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: report_required_tokens
+    criterion: Report clearly explains retrieval + APEX workflow and uncertainty caveats.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: grounding_source
+    criterion: Deliverables are grounded in generated artifacts and do not fabricate unsupported
+      reference or computed values.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical tool calls with the same parameter set.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
+    axis: efficiency
+    verify: token_budget
+- id: WO_mech_004_20260411v1
+  capability: workflow_orchestration
+  domain: alloy
+  intent: Optimize an alloy structure with APEX and summarize geometry-change evidence with
+    machine-checkable artifacts.
+  human_prompt_seed: '使用 APEX 对给定合金结构执行几何优化，并输出优化结果。
+
+    请完成以下交付：
+
+    1) `alloy_optimized.cif`：优化后的结构文件； 2) `alloy_opt_summary.json`：至少包含 `method`, `input_structure`,
+    `output_structure`, `optimization_status`, `notes`； 3) `alloy_opt_report.md`：说明优化目标、关键设置与结果可信度/不确定性。
+
+    最终回答中简要说明：优化后结构相对输入结构的主要变化（可定性描述）。'
+  tags:
+  - screening_hte
+  - meta_userlog
+  data_files: []
+  reference_answers:
+  - key: optimized_structure
+    value: alloy_optimized.cif
+  - key: summary_json
+    value: alloy_opt_summary.json
+  - key: report_md
+    value: alloy_opt_report.md
+  - key: summary_required_tokens
+    value:
+      filename: alloy_opt_summary.json
+      tokens:
+      - method
+      - input_structure
+      - output_structure
+      - optimization_status
+      - APEX
+      flags: i
+  - key: report_required_tokens
+    value:
+      filename: alloy_opt_report.md
+      tokens:
+      - optimization
+      - alloy
+      - structure
+      - 不确定性
+      flags: i
+  - key: turn_budget
+    value:
+      max: 14
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 9000
+  scoring_checklist:
+  - id: optimized_structure
+    criterion: Agent writes `alloy_optimized.cif` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: summary_json
+    criterion: Agent writes `alloy_opt_summary.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: report_md
+    criterion: Agent writes `alloy_opt_report.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: summary_required_tokens
+    criterion: Summary JSON includes optimization metadata and APEX method context.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: report_required_tokens
+    criterion: Report explains optimization setup and uncertainty notes.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: grounding_source
+    criterion: Final answer is grounded in generated optimization artifacts and does not invent
+      unsupported structural changes.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical optimization calls with the same parameters.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: WO_mech_006_20260411v1
+  capability: workflow_orchestration
+  domain: alloy
+  intent: Build the convex hull for a CuCrZr alloy and summarize stability interpretation
+    artifacts.
+  human_prompt_seed: "对 CuCrZr 执行凸包稳定性分析（Mock版）：\n1. 先 query/检索并整理凸包分析所需输入文件与参考相信息；\n2. 说明稳定性判据（hull\
+    \ distance 与稳定标签关系）；\n3. 不做真实计算，使用以下 mock 结果：\n   - hull_distance = 0.024 eV/atom\n  \
+    \ - stability_label = metastable\n   - reference_phases = [\"Cu\", \"Cr2Zr\", \"CuZr2\"\
+    ]\n4. 基于 mock 值做稳定性后处理与结论解释。\n\n请完成以下交付：\n1) `cucrzr_convex_hull_summary.json`：至少包含 `input_files`,\
+    \ `hull_distance`, `stability_label`, `reference_phases`, `notes`；\n2) `cucrzr_convex_hull_report.md`：说明\
+    \ query 输入梳理、mock 后处理流程、稳定性判据及不确定性。\n\n最终回答中请明确说明该结构在热力学稳定性上的定性结论（稳定/亚稳/不稳定）。\n"
+  tags:
+  - wf_postprocess
+  - phy_surface
+  - meta_userlog
+  data_files: []
+  reference_answers:
+  - key: hull_summary_json
+    value: cucrzr_convex_hull_summary.json
+  - key: hull_report_md
+    value: cucrzr_convex_hull_report.md
+  - key: hull_required_tokens
+    value:
+      filename: cucrzr_convex_hull_summary.json
+      tokens:
+      - hull_distance
+      - stability_label
+      - reference_phases
+      - Cu
+      - Cr
+      - Zr
+      flags: i
+  - key: report_required_tokens
+    value:
+      filename: cucrzr_convex_hull_report.md
+      tokens:
+      - convex hull
+      - stability
+      - CuCrZr
+      - 不确定性
+      flags: i
+  - key: hull_distance_mock
+    value: 0.024
+    tolerance: 0.01
+  - key: turn_budget
+    value:
+      max: 14
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 9000
+  scoring_checklist:
+  - id: hull_summary_json
+    criterion: Agent writes `cucrzr_convex_hull_summary.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: hull_report_md
+    criterion: Agent writes `cucrzr_convex_hull_report.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: hull_required_tokens
+    criterion: Hull summary JSON includes distance/stability fields and phase-reference metadata.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: report_required_tokens
+    criterion: Report explains convex-hull interpretation and uncertainty caveats.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: hull_distance_mock
+    criterion: Final answer includes a mock hull distance near 0.024 eV/atom.
+    axis: correctness
+    verify: numerical_range
+  - id: grounding_source
+    criterion: Final answer is grounded in convex-hull artifacts and does not assert unsupported
+      stability conclusions.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical hull-analysis calls with the same parameters.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget

@@ -1,0 +1,125 @@
+version: v5
+capability: batch_processing
+domain: agnostic
+questions:
+- id: BP_struct_005_20260406
+  capability: batch_processing
+  domain: agnostic
+  intent: Generate corrected VASP input files for 5 structures whose initial geometry caused
+    calculation failures. For each structure, fix only the geometry (atomic positions, cell,
+    symmetry) while keeping all calculation parameters (k-points, ISMEAR, SIGMA, ENCUT) strictly
+    frozen. Focus is on correct input-file preparation and parameter isolation, not on submitting
+    or running calculations.
+  human_prompt_seed: '从 `failure_recovery.json` 读取 5 个结构（TiO2, ZnO, MgO, Al2O3, SiO2）的失败恢复场景。每个结构的初始计算因几何问题失败（如原子重叠、晶胞畸变、对称性错误等）。
+
+    请为每个结构生成修正后的 VASP 输入文件（POSCAR + INCAR），修复策略：
+
+    1. 仅修复结构文件（POSCAR）中的几何问题（原子位置、晶胞参数、对称性）
+
+    2. 严格冻结所有计算参数（INCAR + KPOINTS）： - k-point 网格: 6x6x6（不变，通过 KPOINTS 文件或 INCAR 均可） - ISMEAR=1,
+    SIGMA=0.1（不变） - ENCUT=520 eV（不变） - 其他求解器参数（ALGO, NSW 等）不变
+
+    3. 对每个结构说明修复了什么几何问题
+
+    输出要求：
+
+    1. 5 组修正后的输入文件（POSCAR + INCAR）
+
+    2. 所有 INCAR 使用相同的冻结参数集
+
+    3. 明确标记每个结构的几何修复内容
+
+    不需要提交计算，只需生成正确的修正输入文件。
+
+    关键考察点： 1. 只修改了几何/结构文件 2. 没有不必要地调整计算参数 3. 修复内容与失败原因对应
+
+    '
+  tags:
+  - wf_batch
+  - wf_recovery
+  - wf_sweep
+  - wf_inputs
+  data_files:
+  - key: failure_recovery
+    path: data/BP_struct_005/failure_recovery.json
+    oss_url: ''
+    description: Batch failure recovery scenarios with frozen calculation parameters.
+  reference_answers:
+  - key: input_file_sets_count
+    value: 5
+    tolerance: 0.0
+  - key: kpoint_mesh_frozen
+    value: 6 6 6
+  - key: electronic_params_frozen
+    value:
+      ISMEAR: 1
+      SIGMA: 0.1
+      ENCUT: 520
+  - key: geometry_repairs_isolated
+    value: Only POSCAR/structure files modified, INCAR unchanged
+  - key: no_parameter_thrashing
+    value: No re-tuning of electronic settings in any INCAR
+  - key: grounding_frozen_params
+    value: Frozen parameters from failure_recovery.json
+  - key: grounding_repair_causes
+    value: Each geometry fix addresses the specific failure cause
+  - key: turn_budget
+    value: &id001
+      max: 20
+  - key: duration_budget
+    value: &id002
+      max: 7200000
+  - key: token_budget_total
+    value: &id003
+      max: 35000
+  scoring_checklist:
+  - id: input_file_sets_count
+    criterion: Exactly 5 sets of corrected input files are generated (one POSCAR + INCAR per
+      material).
+    axis: correctness
+    verify: numerical_range
+  - id: kpoint_mesh_frozen
+    criterion: All 5 calculations use identical k-point mesh (6×6×6), unchanged from the original
+      configuration—whether specified via a KPOINTS file or via KSPACING in INCAR.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: electronic_params_frozen
+    criterion: ISMEAR=1, SIGMA=0.1, ENCUT=520 are identical across all 5 INCAR files and match
+      the original frozen values.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: geometry_repairs_isolated
+    criterion: Only the POSCAR / structure files were modified to fix geometry issues; all
+      INCAR calculation settings remain unchanged from the originals.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: no_parameter_thrashing
+    criterion: No unnecessary re-tuning of k-points, smearing, cutoff, or solver algorithm
+      in any of the 5 INCAR files.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_frozen_params
+    criterion: Frozen parameters (k-mesh, ISMEAR, SIGMA, ENCUT) match the failure_recovery.json
+      configuration exactly.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: grounding_repair_causes
+    criterion: Each geometry fix correctly addresses the specific failure cause described
+      in the configuration (e.g., fixing overlapping atoms, correcting cell distortion, resolving
+      symmetry errors).
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget

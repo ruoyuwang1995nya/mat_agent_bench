@@ -1,0 +1,15 @@
+{
+  "critical_params": {
+    "IBRION": 0,
+    "ISMEAR": 1,
+    "ISPIN": 2,
+    "ISYM": 0,
+    "NSW": 5000,
+    "POTIM": 0.5,
+    "SIGMA": 0.2
+  },
+  "description": "为 Heusler 合金 MnNaPm2 生成分子动力学(MD)计算的 VASP INCAR。这是一个 Born-Oppenheimer 分子动力学模拟。",
+  "formula": "MnNaPm2",
+  "material_context": "MnNaPm2 是含 Mn(磁性)的 Heusler 合金，磁性金属。MD 需要 IBRION=0，POTIM 设定时间步长(fs)，NSW 设定总步数(>=1000)。ISPIN=2 处理磁性。ISMEAR=1(MP smearing)适合金属MD，切勿使用 ISMEAR=-5。需要设置恒温器(SMASS 或 MDALGO)。",
+  "task": "molecular_dynamics"
+}

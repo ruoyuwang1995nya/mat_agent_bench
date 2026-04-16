@@ -1,0 +1,13 @@
+{
+  "critical_params": {
+    "ALGO": "FAST",
+    "ENCUT": 520,
+    "ISMEAR": -5,
+    "ISPIN": 2,
+    "NSW": 0
+  },
+  "description": "为二元化合物 DySe 生成 GW 计算前驱 SCF 的 VASP INCAR。需要保存波函数供后续 GW 计算使用。",
+  "formula": "DySe",
+  "material_context": "DySe 是稀土硒化物，磁性体系(Dy 含 f 电子，MAGMOM~7)。GW 前驱 SCF 需要高质量波函数(LCHARG=.TRUE., LELF=.TRUE.)，ISMEAR=-5(四面体方法)获取精确占据数。",
+  "task": "gw_precursor_scf"
+}

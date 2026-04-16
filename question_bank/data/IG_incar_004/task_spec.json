@@ -1,0 +1,13 @@
+{
+  "critical_params": {
+    "ALGO": "All",
+    "HFSCREEN": 0.2,
+    "ISMEAR": 0,
+    "LHFCALC": ".TRUE.",
+    "NSW": 0
+  },
+  "description": "为金属有机框架(MOF) C30H22N4O10Zn2 生成 HSE06 杂化泛函计算的 VASP INCAR。这是一个静态 HSE06 计算用于获取准确的电子结构。",
+  "formula": "C30H22N4O10Zn2",
+  "material_context": "C30H22N4O10Zn2 是含锌的金属有机框架材料，半导体/绝缘体。HSE06 需要设置 LHFCALC=.TRUE. 开启 Hartree-Fock 交换，HFSCREEN=0.2 设定屏蔽参数，ALGO=All 适用于杂化泛函。",
+  "task": "hse06_hybrid_functional"
+}

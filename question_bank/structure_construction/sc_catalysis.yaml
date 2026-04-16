@@ -1,0 +1,252 @@
+version: v5
+capability: structure_construction
+domain: catalysis
+questions:
+- id: CR_SC_ZnPd011_20260409
+  capability: structure_construction
+  domain: catalysis
+  intent: Cut ZnPd (011) slab from Materials Project bulk (mp-1103252) with 3 layers and 2x2x1
+    supercell per doc 3.1.1.
+  human_prompt_seed: '使用体相结构 mp-1103252（ZnPd）切出 (011) 表面 slab：3 层厚度、2×2×1 扩胞，真空 ≥15 Å，z 向居中。
+    输出 POSCAR/CIF，并注明与 mp-1103252 的对应关系及切面/扩胞参数。
+
+    '
+  tags:
+  - catalysis_lab
+  - phy_surface
+  - meta_database
+  data_files: []
+  reference_answers:
+  - key: turn_budget
+    value:
+      max: 22
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 24000
+  scoring_checklist:
+  - id: mp_and_miller
+    criterion: 答案明确使用 mp-1103252 为体相来源，(011) 切面，3 层、2×2×1 扩胞，并提供结构文件。
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: 结构来源与切面参数可核对（体相 ID、切面、层数、扩胞），非脱离文件的口头描述。
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling.
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within a generous benchmark ceiling.
+    axis: efficiency
+    verify: token_budget
+- id: CR_SC_ZnS001_20260411
+  capability: structure_construction
+  domain: catalysis
+  intent: Build ZnS(001) polar surface slab with 3 layers and 2x2x1 supercell per doc 3.1.2.
+  human_prompt_seed: 'ZnS 化合物 (001) 切面 slab：3 层厚度、2×2×1 扩胞，真空 ≥15 Å。若为极性表面，说明是否采用对称 slab 或偶极修正策略。输出
+    slab 结构文件为 `ZnS_001_slab.cif`，并简述终止面/化学计量处理。
+
+    '
+  tags:
+  - catalysis_lab
+  - phy_surface
+  data_files: []
+  reference_answers:
+  - key: file_exists
+    value: ZnS_001_slab.cif
+  - key: slab_layer_count
+    value:
+      filename: ZnS_001_slab.cif
+      expected: 7
+      tolerance: 2
+      axis: z
+      layer_tol_A: 0.5
+  - key: turn_budget
+    value:
+      max: 22
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 24000
+  scoring_checklist:
+  - id: file_exists
+    criterion: The output file `ZnS_001_slab.cif` exists in the workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: slab_layer_count
+    criterion: The number of distinct atomic z-planes in ZnS_001_slab.cif is approximately
+      5-9 (expected 7 ± 2), consistent with 3 Zn-S bilayers of zinc-blende (001). Atoms within
+      0.5 Å along z are merged into one plane.
+    axis: correctness
+    verify: struct_file_layer_count
+  - id: supercell_vacuum_ok
+    criterion: 交付的 ZnS(001) slab 采用 2×2×1 扩胞，真空层 ≥15 Å。
+    axis: correctness
+    verify: llm_binary_judge
+    weight: 1.0
+  - id: polar_handling
+    criterion: 答案说明了 ZnS(001) 表面的极性问题，并至少提出一种合理的处理策略（如构建对称 slab、施加偶极修正等），所述策略与交付的结构文件一致。
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical slab construction or surface cut with the same parameters.
+    axis: efficiency
+    verify: no_retries
+  - id: efficiency_judge
+    criterion: The ZnS(001) slab construction and polar-surface handling complete without
+      redundant exploratory calls.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling.
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within a generous benchmark ceiling.
+    axis: efficiency
+    verify: token_budget
+- id: CR_SC_ZnO_Au_HCOO_20260406
+  capability: structure_construction
+  domain: catalysis
+  intent: Build Au13 cluster CIF, ZnO(001) two-layer 2x2x1 slab with Au single atom and HCOO
+    adsorbate on-top per doc 3.1.3.
+  human_prompt_seed: '按文档 3.1.3：（1）用 ASE 或等价方式构建 Au13 团簇并保存为 CIF；（2）ZnO(001) 切面 slab，两层厚、2×2×1
+    扩胞； （3）在两个表面 O 位点之一上放置单原子 Au；（4）在 Au 上放置 HCOO，采用 on-top 排布，初始吸附高度合理（约 1.5–2.5 Å）且无严重原子重叠。
+    输出团簇与 adslab 的结构文件，并附简短几何说明。
+
+    '
+  tags:
+  - catalysis_lab
+  - phy_surface
+  data_files: []
+  reference_answers:
+  - key: turn_budget
+    value:
+      max: 28
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 16000
+  scoring_checklist:
+  - id: multi_part_deliverables
+    criterion: 同时交付 Au13 团簇 CIF、含单 Au 的 ZnO(001) adslab，且 HCOO 为 on-top 初始构型；层数/扩胞与文档一致。
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: 各子结构与相对排布在答案中可追踪（文件名与几何关系一致），非仅文字宣称。
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling.
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within a generous benchmark ceiling.
+    axis: efficiency
+    verify: token_budget
+- id: SC_elec_004_20260404
+  capability: structure_construction
+  domain: catalysis
+  intent: Build Ag(001) surface slab and place CO molecule at ontop site for adsorption calculation.
+  human_prompt_seed: '构建CO在Ag(001)表面的吸附结构：
+
+    1. 获取Ag FCC体相结构（空间群Fm-3m，a=4.086 Å）；
+
+    2. 切出(001)表面slab：4个原子层（即沿z方向4个不等价原子平面，3×3扩胞共36个Ag原子），真空层15 Å；
+
+    3. 在slab顶层ontop位点放置CO分子（C端朝下，初始距离~2.0 Å）；
+
+    4. 输出三个结构文件：bare_slab.vasp, CO_molecule.vasp, adsorbed_system.vasp。
+
+    '
+  tags:
+  - chem_co2rr
+  - phy_surface
+  data_files: []
+  reference_answers:
+  - key: slab_layers
+    value: 4
+    tolerance: 0
+  - key: required_fields
+    value:
+    - bare_slab_file
+    - molecule_file
+    - adsorbed_system_file
+    - slab_layers
+    - vacuum_thickness
+    - adsorption_site
+  - key: turn_budget
+    value:
+      max: 10
+  - key: duration_budget
+    value:
+      max: 3600000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: slab_layers
+    criterion: Slab has exactly 4 atomic layers (4 z-distinct atomic planes, 36 Ag atoms in
+      3×3 supercell).
+    axis: correctness
+    verify: numerical_range
+  - id: required_fields
+    criterion: Output includes three structure files, layer count, vacuum thickness, and adsorption
+      site description.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: structure_validity
+    criterion: Slab has 4 atomic layers (4 z-distinct planes, 36 Ag atoms), vacuum ≥ 15 Å,
+      CO is placed at ontop site with C-down orientation.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: Ag bulk structure uses correct FCC lattice constant; slab is built with proper
+      crystallographic orientation and parameters; CO placement uses physically motivated
+      coordinates, tied to named deliverables. Judge solely from the final answer; do not
+      fail because the tool-call log omits MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical slab construction calls.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: Adsorption structure built in direct workflow without unnecessary rebuilds.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration does not exceed benchmark ceiling.
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling.
+    axis: efficiency
+    verify: token_budget

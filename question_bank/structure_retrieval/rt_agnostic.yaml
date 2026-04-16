@@ -1,0 +1,712 @@
+version: v5
+capability: structure_retrieval
+domain: agnostic
+questions:
+- id: SR_db_001_20260411v2
+  capability: structure_retrieval
+  domain: agnostic
+  intent: Search a target inorganic crystal structure and report the original database source
+    with machine-checkable provenance fields.
+  human_prompt_seed: '搜索高氯酸铷（RbClO4）的晶体结构，并明确告知原始数据库来源。
+
+
+    请完成以下交付：
+
+    1) `retrieval_report.md`：说明是否找到目标结构、采用了什么检索条件、返回了多少候选、最终选中了哪个结果；
+
+    2) `source_summary.json`：至少包含 `query_formula`, `selected_formula`, `database_source`,
+    `structure_identifier`, `candidate_count`, `space_group`；
+
+    3) 在最终回答中简要说明你为什么认为该结果可以代表“高氯酸铷”的晶体结构，以及来源信息是否唯一。
+
+
+    注意：重点是“数据库检索 + 来源说明”，不是后续计算。
+
+    '
+  tags:
+  - phy_eos
+  - meta_database
+  - meta_userlog
+  data_files: []
+  reference_answers:
+  - key: retrieval_report
+    value: retrieval_report.md
+  - key: source_summary
+    value: source_summary.json
+  - key: summary_required_tokens
+    value:
+      filename: source_summary.json
+      tokens:
+      - query_formula
+      - selected_formula
+      - database_source
+      - structure_identifier
+      - candidate_count
+      - space_group
+      flags: i
+  - key: report_required_tokens
+    value:
+      filename: retrieval_report.md
+      tokens:
+      - RbClO4
+      - 候选
+      - 来源
+      - 数据库
+      - 检索条件
+      flags: i
+  - key: turn_budget
+    value:
+      max: 10
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 7000
+  scoring_checklist:
+  - id: retrieval_report
+    criterion: Agent writes `retrieval_report.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: source_summary
+    criterion: Agent writes `source_summary.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: summary_required_tokens
+    criterion: Source summary JSON includes query formula, selected structure formula, database
+      source, structure identifier, candidate count, and space group.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: report_required_tokens
+    criterion: Retrieval report explicitly describes query conditions, candidate handling,
+      and database-source explanation.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: grounding_source
+    criterion: The answer ties the selected RbClO4 structure and provenance fields to the
+      retrieval outputs, and does not claim unsupported source certainty.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical retrieval calls with the same parameters.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling.
+    axis: efficiency
+    verify: token_budget
+- id: SR_db_002_20260411v2
+  capability: structure_retrieval
+  domain: agnostic
+  intent: Retrieve a target prototype crystal structure from an open database and summarize
+    the returned structural metadata.
+  human_prompt_seed: '从开源数据库获取一个 MgB2 晶体结构。
+
+
+    请完成以下交付：
+
+    1) `mgb2_retrieval.json`：至少包含 `formula`, `database_source`, `structure_identifier`, `space_group`,
+    `lattice_summary`, `candidate_count`；
+
+    2) `mgb2_notes.md`：解释你如何确认该结果是 MgB2，以及如果返回了多个候选你是如何筛选的；
+
+    3) 在最终回答中说明这是“结构检索结果总结”，不要扩展到后续声子或电子结构计算。
+
+    '
+  tags:
+  - phy_surface
+  - meta_database
+  - wf_postprocess
+  - meta_userlog
+  data_files: []
+  reference_answers:
+  - key: retrieval_json
+    value: mgb2_retrieval.json
+  - key: notes_md
+    value: mgb2_notes.md
+  - key: retrieval_required_tokens
+    value:
+      filename: mgb2_retrieval.json
+      tokens:
+      - formula
+      - database_source
+      - structure_identifier
+      - space_group
+      - lattice_summary
+      - candidate_count
+      flags: i
+  - key: notes_required_tokens
+    value:
+      filename: mgb2_notes.md
+      tokens:
+      - MgB2
+      - 候选
+      - 筛选
+      - 数据库
+      flags: i
+  - key: turn_budget
+    value:
+      max: 10
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 7000
+  scoring_checklist:
+  - id: retrieval_json
+    criterion: Agent writes `mgb2_retrieval.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: notes_md
+    criterion: Agent writes `mgb2_notes.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: retrieval_required_tokens
+    criterion: Retrieval JSON includes essential structure metadata and candidate count.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: notes_required_tokens
+    criterion: Notes explain candidate selection and database origin for the MgB2 result.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: grounding_source
+    criterion: The answer stays focused on retrieval metadata and provenance, not fabricated
+      downstream calculations.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical retrieval calls with the same parameters.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling.
+    axis: efficiency
+    verify: token_budget
+- id: SR_db_006_20260411v1
+  capability: structure_retrieval
+  domain: agnostic
+  intent: Retrieve up to two Ti-Al-O compounds with space group 63 and export CIF-oriented
+    retrieval metadata.
+  human_prompt_seed: '从 Materials Project 检索并返回不超过 2 个化合物，约束如下：
+
+    - 仅包含元素 Ti、Al、O（不含其他元素）； - 空间群编号为 63； - 输出支持 CIF 文件导出信息。
+
+    请完成以下交付：
+
+    1) `tao_spg63_candidates.json`：至少包含 `rank`, `formula`, `space_group`, `elements`, `structure_identifier`,
+    `cif_link_or_path`； 2) `tao_spg63_report.md`：说明检索条件、结果数量上限约束（<=2）以及筛选不确定性。
+
+    最终回答中简要确认是否满足“元素集合 + 空间群 + 数量上限”三项约束。'
+  tags:
+  - meta_database
+  - meta_userlog
+  data_files: []
+  reference_answers:
+  - key: candidates_json
+    value: tao_spg63_candidates.json
+  - key: retrieval_report
+    value: tao_spg63_report.md
+  - key: candidates_required_tokens
+    value:
+      filename: tao_spg63_candidates.json
+      tokens:
+      - rank
+      - formula
+      - space_group
+      - elements
+      - structure_identifier
+      - cif_link_or_path
+      - Ti
+      - Al
+      - O
+      - '63'
+      flags: i
+  - key: report_required_tokens
+    value:
+      filename: tao_spg63_report.md
+      tokens:
+      - Materials Project
+      - Ti
+      - Al
+      - O
+      - 63
+      - <=2
+      - 不确定性
+      flags: i
+  - key: turn_budget
+    value:
+      max: 10
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: candidates_json
+    criterion: Agent writes `tao_spg63_candidates.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: retrieval_report
+    criterion: Agent writes `tao_spg63_report.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: candidates_required_tokens
+    criterion: Candidate JSON includes required metadata and explicitly reflects Ti/Al/O with
+      space-group 63 constraints.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: report_required_tokens
+    criterion: Retrieval report states filter constraints, upper-bound candidate count, and
+      uncertainty note.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: grounding_source
+    criterion: The final answer is grounded in retrieval artifacts and does not claim unsupported
+      compounds beyond reported candidates.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical retrieval calls with the same parameters.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling.
+    axis: efficiency
+    verify: token_budget
+- id: SR_db_007_20260411v1
+  capability: structure_retrieval
+  domain: agnostic
+  intent: Retrieve up to five CoREMOF-2019 entries satisfying atom-count, surface-area, and
+    element constraints.
+  human_prompt_seed: '从 CoREMOF 2019 数据库检索并返回不超过 5 个 MOF，约束如下：
+
+    - 原子数 < 50； - 比表面积 > 1000 m²/g； - 同时包含 O 和 C 元素。
+
+    请完成以下交付：
+
+    1) `coremof_filtered_candidates.json`：至少包含 `rank`, `name`, `database`, `n_atom`, `surface_area_m2g`,
+    `elements`, `structure_identifier`； 2) `coremof_filter_report.md`：说明筛选条件、排序逻辑和结果不确定性。
+
+    最终回答需确认每条候选是否满足阈值条件。'
+  tags:
+  - mat_mof
+  - meta_database
+  - meta_userlog
+  data_files: []
+  reference_answers:
+  - key: candidates_json
+    value: coremof_filtered_candidates.json
+  - key: retrieval_report
+    value: coremof_filter_report.md
+  - key: candidates_required_tokens
+    value:
+      filename: coremof_filtered_candidates.json
+      tokens:
+      - rank
+      - name
+      - database
+      - n_atom
+      - surface_area_m2g
+      - elements
+      - structure_identifier
+      - CoREMOF
+      - O
+      - C
+      flags: i
+  - key: threshold_regex
+    value:
+      filename: coremof_filtered_candidates.json
+      pattern: '"n_atom"\s*:\s*(?:[0-9]|[1-3][0-9]|4[0-9])[\s\S]*?"surface_area_m2g"\s*:\s*(?:1000\.\d+|10[1-9]\d|[1-9]\d{3,})(?:\.\d+)?'
+      flags: i
+  - key: report_required_tokens
+    value:
+      filename: coremof_filter_report.md
+      tokens:
+      - CoREMOF 2019
+      - n_atom
+      - surface_area
+      - O
+      - C
+      - 不确定性
+      flags: i
+  - key: turn_budget
+    value:
+      max: 10
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 9000
+  scoring_checklist:
+  - id: candidates_json
+    criterion: Agent writes `coremof_filtered_candidates.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: retrieval_report
+    criterion: Agent writes `coremof_filter_report.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: candidates_required_tokens
+    criterion: Candidate JSON includes required MOF metadata and source/context fields.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: threshold_regex
+    criterion: Candidate JSON explicitly reflects atom-count and surface-area thresholds.
+    axis: correctness
+    verify: text_file_regex
+  - id: report_required_tokens
+    criterion: Report explains filter constraints and uncertainty handling.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: grounding_source
+    criterion: The final answer is grounded in filtered retrieval outputs and does not fabricate
+      candidates outside stated constraints.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical retrieval calls with the same parameters.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling.
+    axis: efficiency
+    verify: token_budget
+- id: SR_db_008_20260411v1
+  capability: structure_retrieval
+  domain: agnostic
+  intent: Retrieve up to five ternary rare-earth transition-metal oxides excluding Fe and
+    Ni.
+  human_prompt_seed: '检索并返回不超过 5 个三元氧化物，约束如下：
+
+    - 同时包含：1 个稀土元素 + 1 个过渡金属元素 + O； - 元素总数为 3（ternary）； - 排除 Fe 和 Ni。
+
+    请完成以下交付：
+
+    1) `re_tm_oxide_candidates.json`：至少包含 `rank`, `formula`, `elements`, `database_source`,
+    `structure_identifier`, `selection_basis`； 2) `re_tm_oxide_report.md`：说明筛选逻辑（稀土、过渡金属、三元、排除
+    Fe/Ni）及结果不确定性。
+
+    最终回答中确认每条候选如何满足上述组合约束。'
+  tags:
+  - phy_magnetism
+  - mat_oxide
+  - meta_userlog
+  data_files: []
+  reference_answers:
+  - key: candidates_json
+    value: re_tm_oxide_candidates.json
+  - key: retrieval_report
+    value: re_tm_oxide_report.md
+  - key: candidates_required_tokens
+    value:
+      filename: re_tm_oxide_candidates.json
+      tokens:
+      - rank
+      - formula
+      - elements
+      - database_source
+      - structure_identifier
+      - selection_basis
+      - O
+      flags: i
+  - key: report_required_tokens
+    value:
+      filename: re_tm_oxide_report.md
+      tokens:
+      - 稀土
+      - 过渡金属
+      - 三元
+      - 排除
+      - Fe
+      - Ni
+      - 不确定性
+      flags: i
+  - key: turn_budget
+    value:
+      max: 10
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 9000
+  scoring_checklist:
+  - id: candidates_json
+    criterion: Agent writes `re_tm_oxide_candidates.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: retrieval_report
+    criterion: Agent writes `re_tm_oxide_report.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: candidates_required_tokens
+    criterion: Candidate JSON includes provenance fields and explicit element composition
+      entries.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: report_required_tokens
+    criterion: Report describes rare-earth/transition-metal/ternary constraints and Fe/Ni
+      exclusion handling.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: grounding_source
+    criterion: The final answer is grounded in retrieved candidates and avoids fabricating
+      unsupported compositions.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical retrieval calls with the same parameters.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling.
+    axis: efficiency
+    verify: token_budget
+- id: SR_db_009_20260411v1
+  capability: structure_retrieval
+  domain: agnostic
+  intent: Retrieve five candidate Heusler-alloy structures and summarize downloadable structure
+    resources.
+  human_prompt_seed: '检索并返回 5 个 Heusler 合金候选结构，并提供结构文件或下载链接信息。
+
+    请完成以下交付：
+
+    1) `heusler_candidates.json`：至少包含 `rank`, `formula`, `space_group`, `database_source`,
+    `structure_identifier`, `cif_link_or_path`； 2) `heusler_retrieval_report.md`：说明检索条件、Heusler
+    识别依据与结果不确定性。
+
+    最终回答需简要确认候选数量和可下载资源情况。'
+  tags:
+  - phy_surface
+  - meta_userlog
+  data_files: []
+  reference_answers:
+  - key: candidates_json
+    value: heusler_candidates.json
+  - key: retrieval_report
+    value: heusler_retrieval_report.md
+  - key: candidates_required_tokens
+    value:
+      filename: heusler_candidates.json
+      tokens:
+      - rank
+      - formula
+      - space_group
+      - database_source
+      - structure_identifier
+      - cif_link_or_path
+      - 225
+      flags: i
+  - key: report_required_tokens
+    value:
+      filename: heusler_retrieval_report.md
+      tokens:
+      - Heusler
+      - 5
+      - 空间群
+      - 下载
+      - 不确定性
+      flags: i
+  - key: turn_budget
+    value:
+      max: 10
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: candidates_json
+    criterion: Agent writes `heusler_candidates.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: retrieval_report
+    criterion: Agent writes `heusler_retrieval_report.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: candidates_required_tokens
+    criterion: Candidate JSON includes required metadata fields and explicit space-group context.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: report_required_tokens
+    criterion: Report explains retrieval constraints and downloadability notes with uncertainty
+      handling.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: grounding_source
+    criterion: The final answer is grounded in retrieved Heusler candidates and does not invent
+      missing links or identifiers.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical retrieval calls with the same parameters.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling.
+    axis: efficiency
+    verify: token_budget
+- id: SR_db_005_20260411v1
+  capability: structure_retrieval
+  domain: agnostic
+  intent: Retrieve three oxide structures with band gap greater than 2 eV and summarize filter
+    compliance.
+  human_prompt_seed: '检索并返回 3 个氧化物结构，要求带隙大于 2 eV。
+
+    请完成以下交付：
+
+    1) `oxide_bg_gt2_candidates.json`：列出 3 个候选，每条至少包含 `rank`, `formula`, `band_gap_eV`, `database_source`,
+    `structure_identifier`；
+
+    2) `oxide_bg_gt2_report.md`：说明检索条件（氧化物约束、带隙阈值、候选数量）以及筛选中可能的不确定性；
+
+    3) 在最终回答中简要确认：每个候选是否满足 band gap > 2 eV 的约束。
+
+    注意：本题仅评估检索与结构元数据汇总。'
+  tags:
+  - mat_oxide
+  - phy_electronic
+  - meta_userlog
+  data_files: []
+  reference_answers:
+  - key: candidates_json
+    value: oxide_bg_gt2_candidates.json
+  - key: retrieval_report
+    value: oxide_bg_gt2_report.md
+  - key: candidates_required_tokens
+    value:
+      filename: oxide_bg_gt2_candidates.json
+      tokens:
+      - rank
+      - formula
+      - band_gap_eV
+      - database_source
+      - structure_identifier
+      flags: i
+  - key: bandgap_regex
+    value:
+      filename: oxide_bg_gt2_candidates.json
+      pattern: '"band_gap_eV"\s*:\s*(?:2\.(?:0*[1-9]\d*|\d*[1-9]\d*)|[3-9]\d*(?:\.\d+)?|\d{3,}(?:\.\d+)?)'
+      flags: i
+  - key: report_required_tokens
+    value:
+      filename: oxide_bg_gt2_report.md
+      tokens:
+      - 氧化物
+      - 带隙
+      - 2
+      - 3
+      - 候选
+      - 不确定性
+      flags: i
+  - key: turn_budget
+    value:
+      max: 10
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: candidates_json
+    criterion: Agent writes `oxide_bg_gt2_candidates.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: retrieval_report
+    criterion: Agent writes `oxide_bg_gt2_report.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: candidates_required_tokens
+    criterion: Candidate JSON includes required metadata fields for oxide and band-gap screening.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: bandgap_regex
+    criterion: Candidate JSON provides explicit band-gap values greater than 2 eV.
+    axis: correctness
+    verify: text_file_regex
+  - id: report_required_tokens
+    criterion: Retrieval report states filter constraints, candidate-count handling, and uncertainty
+      note.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: grounding_source
+    criterion: The final answer is grounded in retrieval results and does not fabricate band-gap
+      values beyond reported metadata.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical retrieval calls with the same parameters.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling.
+    axis: efficiency
+    verify: token_budget

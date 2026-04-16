@@ -1,0 +1,30 @@
+# ===========================================================================
+# NOMAD VASP INCAR - Real calculation data
+# ===========================================================================
+# Entry ID: -0p8_R3Xxbin-Wmj9BTgFVaNo6Xv
+# URL: https://nomad-lab.eu/prod/v1/gui/entry/id/-0p8_R3Xxbin-Wmj9BTgFVaNo6Xv
+# Mainfile: NoMaD/0630/dielectric/vasprun.xml
+# Fetched: 2026-04-01
+# ===========================================================================
+
+PREC = Accurate
+ENCUT = 400
+
+LEPSILON = .TRUE.
+LPEAD = .TRUE.
+
+EDIFF = 1.d-4
+
+ISMEAR = 0
+SIGMA = 0.01
+#NPAR = 2
+
+GGA = ML
+LUSE_VDW = .TRUE.
+Zab_vdW = -1.8867
+AGGAC = 0.0000
+
+
+NSW =         1
+IBRION = 8
+#ISIF   = 3

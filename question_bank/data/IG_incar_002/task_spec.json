@@ -1,0 +1,13 @@
+{
+  "critical_params": {
+    "ALGO": "Fast",
+    "EDIFF": 1e-06,
+    "ISMEAR": 0,
+    "NSW": 0,
+    "PREC": "Accurate"
+  },
+  "description": "为有机-无机杂化钙钛矿 C26H28Cl4N4Pb2 生成静态自洽(SCF)计算的 VASP INCAR。这是一个含重元素 Pb 的有机金属卤化物体系。",
+  "formula": "C26H28Cl4N4Pb2",
+  "material_context": "C26H28Cl4N4Pb2 是有机铅卤钙钛矿，半导体，带隙约 2-3 eV。SCF 计算需要高精度收敛(EDIFF~1e-6)，使用高斯展宽(ISMEAR=0)适合半导体。",
+  "task": "static_scf"
+}

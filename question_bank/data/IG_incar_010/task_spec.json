@@ -1,0 +1,15 @@
+{
+  "critical_params": {
+    "ENCUT": 520,
+    "ISMEAR": 0,
+    "ISPIN": 2,
+    "ISYM": 0,
+    "LMAXMIX": 4,
+    "LSORBIT": ".TRUE.",
+    "PREC": "Accurate"
+  },
+  "description": "为含重元素 Pb 的卤化物 Br6H6Pb2S2 生成自旋轨道耦合(SOC)计算的 VASP INCAR。",
+  "formula": "Br6H6Pb2S2",
+  "material_context": "Br6H6Pb2S2 含有重元素 Pb 和卤素 Br，SOC 效应显著。需要 LSORBIT=.TRUE. 开启自旋轨道耦合，ISPIN=2 开启自旋极化。SOC 计算通常需要更高精度(PREC=Accurate)和足够的能带数(NBANDS)。ISYM=0 避免SOC与对称性冲突。LMAXMIX=4 用于 d 电子元素。",
+  "task": "spin_orbit_coupling"
+}

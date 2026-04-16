@@ -1,0 +1,32 @@
+# ===========================================================================
+# NOMAD VASP INCAR - Real calculation data
+# ===========================================================================
+# Entry ID: 4MwNr-yIE9n5pz4QuymM5MlVu6ZO
+# URL: https://nomad-lab.eu/prod/v1/gui/entry/id/4MwNr-yIE9n5pz4QuymM5MlVu6ZO
+# Mainfile: ss_2d/BiIS-acdcd16c0d76/scf_ncl/vasprun.xml
+# Fetched: 2026-04-01
+# Note: BiSI SOC SCF calculation (closest match for defect HSE+SOC question)
+# ===========================================================================
+
+INCAR created by Atomic Simulation Environment
+ ENCUT = 520.000000
+ EDIFF = 1.00e-06
+ ALGO = Normal
+ GGA = PE
+ PREC = Accurate
+ SYSTEM = BiIS-acdcd16c0d76_scf_ncl
+ IBRION = -1
+ ICHARG = 1
+ ISMEAR = -5
+ ISPIN = 2
+ KPAR = 2
+ LMAXMIX = 4
+ NELM = 200
+ NSW = 0
+ NCORE = 24
+ SAXIS = 0.0000 0.0000 1.0000
+ LAECHG = .TRUE.
+ LCHARG = .TRUE.
+ LWAVE = .FALSE.
+ LSORBIT = .TRUE.
+ MAGMOM = 9*0

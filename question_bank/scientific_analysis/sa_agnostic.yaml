@@ -1,0 +1,707 @@
+version: v5
+capability: scientific_analysis
+domain: agnostic
+questions:
+- id: DF_mech_001_20260404
+  capability: scientific_analysis
+  domain: agnostic
+  intent: Fit equation of state from provided E-V data and report V0 and B0.
+  human_prompt_seed: 使用 `ev_curve.json` 中的 E-V 数据拟合 Birch-Murnaghan 状态方程，输出 V0(A3) 与 B0(GPa)。
+  tags:
+  - phy_eos
+  data_files:
+  - key: ev_table
+    path: data/DF_mech_001/ev_curve.json
+    oss_url: ''
+    description: Energy-volume data points for EOS fitting.
+  reference_answers:
+  - key: v0_A3
+    value: 162.0
+    tolerance: 2.0
+  - key: b0_GPa
+    value: 92.0
+    tolerance: 12.0
+  - key: required_fields
+    value:
+    - v0
+    - b0
+    - fit_quality
+  - key: turn_budget
+    value: &id001
+      max: 8
+  - key: duration_budget
+    value: &id002
+      max: 7200000
+  - key: token_budget_total
+    value: &id003
+      max: 8000
+  scoring_checklist:
+  - id: v0_A3
+    criterion: V0 is within tolerance.
+    axis: correctness
+    verify: numerical_range
+  - id: b0_GPa
+    criterion: B0 is within tolerance.
+    axis: correctness
+    verify: numerical_range
+  - id: required_fields
+    criterion: Reports V0, B0, and some measure of fit quality (R-squared, residuals, or similar).
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: EOS fitting uses the data from ev_curve.json; fit parameters are derived from
+      the provided E-V points, not hallucinated. Judge solely from the final answer; do not
+      fail because the tool-call log omits MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: efficiency_judge
+    criterion: EOS fitting is accomplished in a single fitting step without redundant re-runs
+      or parameter sweeps.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: DF_mech_002_20260404
+  capability: scientific_analysis
+  domain: agnostic
+  intent: From MSST Hugoniot simulation data, fit the P-V Hugoniot curve and determine C-J
+    detonation velocity and pressure for RDX.
+  human_prompt_seed: '读取 `msst_hugoniot.json`，其中包含 RDX 在不同冲击波速度下的 MSST 模拟数据 （压力、比容、温度、是否反应）。筛选完全反应的数据点，拟合
+    P-V Hugoniot 曲线， 通过 Rayleigh 线切线法确定 Chapman-Jouguet (C-J) 点，输出 C-J 爆速 (m/s) 和爆压 (GPa)。
+
+    '
+  tags:
+  - phy_eos
+  priority: P0
+  data_files:
+  - key: msst_data
+    path: data/DF_mech_002/msst_hugoniot.json
+    oss_url: ''
+    description: MSST simulation data at multiple shock velocities for RDX.
+  reference_answers:
+  - key: cj_velocity_m_s
+    value: 8750.0
+    tolerance: 300.0
+  - key: cj_pressure_GPa
+    value: 34.0
+    tolerance: 5.0
+  - key: required_fields
+    value:
+    - cj_velocity
+    - cj_pressure
+    - hugoniot_fit
+    - rayleigh_line
+  - key: turn_budget
+    value: *id001
+  - key: duration_budget
+    value: *id002
+  - key: token_budget_total
+    value: *id003
+  scoring_checklist:
+  - id: cj_velocity_m_s
+    criterion: C-J detonation velocity is within tolerance.
+    axis: correctness
+    verify: numerical_range
+  - id: cj_pressure_GPa
+    criterion: C-J detonation pressure is within tolerance.
+    axis: correctness
+    verify: numerical_range
+  - id: required_fields
+    criterion: Includes Hugoniot curve fitting details, Rayleigh line analysis, and C-J velocity/pressure
+      values.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: C-J parameters are derived from the provided msst_hugoniot.json data, with
+      filtered reaction-complete points shown. Judge solely from the final answer; do not
+      fail because the tool-call log omits MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: efficiency_judge
+    criterion: Hugoniot fitting and C-J determination are performed in a direct computation
+      pipeline without unnecessary retries.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: DF_mech_pressure_003_20260410v3
+  capability: scientific_analysis
+  domain: agnostic
+  intent: Produce structured mechanical-pressure estimation with sensitivity analysis and
+    go/no-go recommendation.
+  human_prompt_seed: '工作区已提供 `implant_params.json`。
+
+
+    请先读取该文件，再生成：
+
+    1) `calc_sheet.json`：包含 `load_N`, `contact_area_mm2`, `pressure_MPa`, `formula`；
+
+    2) `estimation_report.md`：包含参数表、公式、计算步骤、不确定性来源、验证建议。
+
+    3) `sensitivity_note.md`：对 `load_N` 和 `contact_area_mm2` 各做 ±10% 扰动，说明压力变化方向与量级。
+
+
+    说明：
+
+    - 可用关系 `pressure_MPa = load_N / contact_area_mm2`（N/mm^2 = MPa）；
+
+    - 不要使用文件外的虚构参数。
+
+    '
+  tags:
+  - meta_userlog
+  - phy_elastic
+  data_files:
+  - key: implant_params
+    path: data/WO_general_userlog_004_20260410v3/implant_params.json
+    oss_url: ''
+    description: Minimal parameter set for interface pressure estimation.
+  reference_answers:
+  - key: calc_sheet_artifact
+    value: calc_sheet.json
+  - key: estimation_report_artifact
+    value: estimation_report.md
+  - key: sensitivity_artifact
+    value: sensitivity_note.md
+  - key: calc_sheet_required_tokens
+    value:
+      filename: calc_sheet.json
+      tokens:
+      - load_N
+      - contact_area_mm2
+      - pressure_MPa
+      - formula
+      flags: i
+  - key: pressure_value_regex
+    value:
+      filename: calc_sheet.json
+      pattern: '"pressure_MPa"\s*:\s*3(?:\.0+)?\b'
+      flags: i
+  - key: estimation_report_required_tokens
+    value:
+      filename: estimation_report.md
+      tokens:
+      - 参数
+      - 公式
+      - 不确定性
+      - 验证建议
+      - MPa
+      flags: i
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 7000
+  scoring_checklist:
+  - id: calc_sheet_artifact
+    criterion: Agent writes `calc_sheet.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: estimation_report_artifact
+    criterion: Agent writes `estimation_report.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: sensitivity_artifact
+    criterion: Agent writes `sensitivity_note.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: calc_sheet_required_tokens
+    criterion: Calculation sheet JSON includes required keys.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: pressure_value_regex
+    criterion: Calculation sheet reports pressure around 3 MPa from provided parameters.
+    axis: correctness
+    verify: text_file_regex
+  - id: estimation_report_required_tokens
+    criterion: Report includes formula, units, uncertainty discussion, and validation suggestions.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: grounding_source
+    criterion: The estimate is grounded in `implant_params.json` and avoids fabricated non-provided
+      parameters.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical tool calls with the same parameter set.
+    axis: efficiency
+    verify: no_retries
+  - id: efficiency_judge
+    criterion: The workflow is delivered in a compact engineering format without unnecessary
+      digressions.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
+    axis: efficiency
+    verify: token_budget
+- id: DF_scxrd_001_20260408
+  capability: scientific_analysis
+  domain: agnostic
+  intent: Determine the crystal structure of an ordered molecular crystal (1-RTP, 293 K) from
+    raw single-crystal X-ray diffraction data. Starting from the reduced reflection file (.hkl)
+    and the data-collection summary (.p4p), the agent must determine the space group, solve
+    the structure, refine it, and generate a validated CIF with no A-level checkCIF alerts.
+  human_prompt_seed: '文件 `A23050101A0735.hkl` 和 `A23050101A0735.p4p` 是一个有机-无机杂化硝普盐在 293 K
+    下采集的单晶 X 射线衍射数据（已经过数据还原）。请完成以下工作：
+
+    1. 根据 .p4p 文件中的晶胞参数和系统消光规律，确定空间群；
+
+    2. 使用合适的程序解析晶体结构；
+
+    3. 对结构进行全矩阵最小二乘精修，直至收敛；
+
+    4. 生成 CIF 文件，并通过 IUCr checkCIF 验证（不允许有 A 类警告）；
+
+    5. 报告最终精修结果：R1、wR2、GooF 及晶胞参数。
+
+    '
+  tags:
+  - char_xrd
+  - char_cif_validation
+  - phy_defect
+  data_files:
+  - key: hkl_file
+    path: data/DF_scxrd_001_20260408/A23050101A0735.hkl
+    oss_url: https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/DF_scxrd_001_20260408/1775644505_A23050101A0735.hkl
+    description: Reduced reflection data file (SHELX .hkl format) for 1-RTP at 293 K.
+  - key: p4p_file
+    path: data/DF_scxrd_001_20260408/A23050101A0735.p4p
+    oss_url: https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/DF_scxrd_001_20260408/1775644506_A23050101A0735.p4p
+    description: Data-collection summary file (.p4p) with unit cell parameters, wavelength,
+      and crystal system information.
+  reference_answers:
+  - key: r1_factor
+    value: 0.0418
+    tolerance: 0.008
+    unit: dimensionless
+  - key: wr2_factor
+    value: 0.0981
+    tolerance: 0.02
+    unit: dimensionless
+  - key: goof
+    value: 1.048
+    tolerance: 0.1
+    unit: dimensionless
+  - key: space_group_number
+    value: 4
+    tolerance: 0
+    unit: IT_number
+  - key: cell_volume
+    value: 1001.05
+    tolerance: 5.0
+    unit: A3
+  - key: checkcif_validation
+    value:
+      filename: '*.cif'
+      max_a_alerts: 0
+  - key: turn_budget
+    value:
+      max: 30
+  - key: duration_budget
+    value:
+      max: 14400000
+  - key: token_budget_total
+    value:
+      max: 20000
+  scoring_checklist:
+  - id: r1_factor
+    criterion: Final R1 factor (on F, I>2sigma) is within tolerance of 0.0418 (human baseline).
+      A value ≤ 0.05 is acceptable for a well-refined ordered structure.
+    axis: correctness
+    verify: numerical_range
+    weight: 2.0
+  - id: wr2_factor
+    criterion: Final wR2 factor (on F², all data) is within tolerance of 0.0981 (human baseline).
+      A value ≤ 0.12 is acceptable.
+    axis: correctness
+    verify: numerical_range
+    weight: 1.5
+  - id: goof
+    criterion: Goodness-of-fit (GooF, S) is within tolerance of 1.048. A value between 0.9
+      and 1.2 indicates a well-refined structure.
+    axis: correctness
+    verify: numerical_range
+    weight: 1.0
+  - id: space_group_number
+    criterion: The agent correctly identifies the space group number as 4 (P2₁, monoclinic).
+      The answer or CIF must report space group No. 4.
+    axis: correctness
+    verify: numerical_range
+    weight: 1.5
+  - id: cell_volume
+    criterion: Refined unit cell volume is within tolerance of 1001.05 Å³.
+    axis: correctness
+    verify: numerical_range
+    weight: 1.0
+  - id: checkcif_validation
+    criterion: The generated CIF passes IUCr checkCIF with zero A-level alerts.
+    axis: correctness
+    verify: checkcif_no_a_alerts
+    weight: 2.0
+  - id: cif_generated
+    criterion: The agent produces a valid CIF file as output of the refinement.
+    axis: correctness
+    verify: llm_binary_judge
+    weight: 1.0
+  - id: turn_budget
+    criterion: Task completed within 30 turns.
+    axis: efficiency
+    verify: turn_budget
+    weight: 1.0
+  - id: duration_budget
+    criterion: Task completed within 4 hours (14400 seconds).
+    axis: efficiency
+    verify: duration_budget
+    weight: 1.0
+  - id: token_budget_total
+    criterion: Total token usage does not exceed 20000 tokens.
+    axis: efficiency
+    verify: token_budget
+    weight: 1.0
+- id: DF_scxrd_002_20260408
+  capability: scientific_analysis
+  domain: agnostic
+  intent: Determine the crystal structure of a disordered molecular crystal (1-HTP, 385 K)
+    from raw single-crystal X-ray diffraction data. The high-temperature phase features cation
+    orientational disorder, requiring split-atom or constraint-based modeling. Starting from
+    the reduced reflection file (.hkl) and the data-collection summary (.p4p), the agent must
+    determine the space group, solve the structure, refine it with disorder modeling, and
+    generate a validated CIF with no A-level checkCIF alerts.
+  human_prompt_seed: '文件 `A23050102A0375.hkl` 和 `A23050102A0375.p4p` 是一个有机-无机杂化硝普盐在 385 K
+    下采集的单晶 X 射线衍射数据（已经过数据还原）。该高温相中阳离子存在取向无序。请完成以下工作：
+
+    1. 根据 .p4p 文件中的晶胞参数和系统消光规律，确定空间群；
+
+    2. 使用合适的程序解析晶体结构；
+
+    3. 对结构进行精修，需对无序部分进行合理建模（如分裂原子模型或约束/限制）；
+
+    4. 生成 CIF 文件，并通过 IUCr checkCIF 验证（不允许有 A 类警告）；
+
+    5. 报告最终精修结果：R1、wR2、GooF 及晶胞参数。
+
+    '
+  tags:
+  - char_xrd
+  - char_cif_validation
+  - phy_defect
+  data_files:
+  - key: hkl_file
+    path: data/DF_scxrd_002_20260408/A23050102A0375.hkl
+    oss_url: https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/DF_scxrd_002_20260408/1775644506_A23050102A0375.hkl
+    description: Reduced reflection data file (SHELX .hkl format) for 1-HTP at 385 K.
+  - key: p4p_file
+    path: data/DF_scxrd_002_20260408/A23050102A0375.p4p
+    oss_url: https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/DF_scxrd_002_20260408/1775644507_A23050102A0375.p4p
+    description: Data-collection summary file (.p4p) with unit cell parameters, wavelength,
+      and crystal system information for the high-temperature disordered phase.
+  reference_answers:
+  - key: r1_factor
+    value: 0.0637
+    tolerance: 0.015
+    unit: dimensionless
+  - key: wr2_factor
+    value: 0.2183
+    tolerance: 0.04
+    unit: dimensionless
+  - key: goof
+    value: 1.022
+    tolerance: 0.1
+    unit: dimensionless
+  - key: space_group_number
+    value: 4
+    tolerance: 0
+    unit: IT_number
+  - key: cell_volume
+    value: 1025.98
+    tolerance: 5.0
+    unit: A3
+  - key: checkcif_validation
+    value:
+      filename: '*.cif'
+      max_a_alerts: 0
+  - key: turn_budget
+    value:
+      max: 40
+  - key: duration_budget
+    value:
+      max: 21600000
+  - key: token_budget_total
+    value:
+      max: 25000
+  scoring_checklist:
+  - id: r1_factor
+    criterion: Final R1 factor (on F, I>2sigma) is within tolerance of 0.0637 (human baseline
+      for disordered structure). A value ≤ 0.08 is acceptable given the disorder.
+    axis: correctness
+    verify: numerical_range
+    weight: 2.0
+  - id: wr2_factor
+    criterion: Final wR2 factor (on F², all data) is within tolerance of 0.2183 (human baseline).
+      Higher wR2 is expected for disordered structures; ≤ 0.25 is acceptable.
+    axis: correctness
+    verify: numerical_range
+    weight: 1.5
+  - id: goof
+    criterion: Goodness-of-fit (GooF, S) is within tolerance of 1.022. A value between 0.9
+      and 1.2 indicates a well-refined structure.
+    axis: correctness
+    verify: numerical_range
+    weight: 1.0
+  - id: space_group_number
+    criterion: The agent correctly identifies the space group number as 4 (P2₁, monoclinic).
+      The answer or CIF must report space group No. 4.
+    axis: correctness
+    verify: numerical_range
+    weight: 1.5
+  - id: cell_volume
+    criterion: Refined unit cell volume is within tolerance of 1025.98 Å³.
+    axis: correctness
+    verify: numerical_range
+    weight: 1.0
+  - id: checkcif_validation
+    criterion: The generated CIF passes IUCr checkCIF with zero A-level alerts.
+    axis: correctness
+    verify: checkcif_no_a_alerts
+    weight: 2.0
+  - id: disorder_modeled
+    criterion: The agent explicitly models the cation orientational disorder (e.g., using
+      split-atom positions, PART instructions, or occupancy constraints in SHELXL) and reports
+      the disorder in the answer.
+    axis: correctness
+    verify: llm_binary_judge
+    weight: 2.0
+  - id: cif_generated
+    criterion: The agent produces a valid CIF file as output of the refinement.
+    axis: correctness
+    verify: llm_binary_judge
+    weight: 1.0
+  - id: turn_budget
+    criterion: Task completed within 40 turns.
+    axis: efficiency
+    verify: turn_budget
+    weight: 1.0
+  - id: duration_budget
+    criterion: Task completed within 6 hours (21600 seconds).
+    axis: efficiency
+    verify: duration_budget
+    weight: 1.0
+  - id: token_budget_total
+    criterion: Total token usage does not exceed 25000 tokens.
+    axis: efficiency
+    verify: token_budget
+    weight: 1.0
+- id: DFT_pxrd_001_20260408
+  capability: scientific_analysis
+  domain: agnostic
+  intent: Perform Pawley refinement on variable-temperature PXRD patterns to extract lattice
+    parameters at each temperature, identify two structural phases (low-temperature RTP and
+    high-temperature HTP), and fit linear thermal expansion equations for each phase.
+  human_prompt_seed: '文件 `_td-pxrd_test.txt` 包含一个化合物在 8 个温度下的变温粉末 X 射线衍射（PXRD）数据，温度标签对应关系为：25°C→303K、40°C→323K、60°C→343K、80°C→363K、100°C→383K、115°C→393K、130°C→403K、140°C→413K。该化合物为单斜晶系。
+
+    请对每个温度的 PXRD 图谱进行 Pawley 精修，提取晶格参数（a、b、c、β、V），并分析结果： 1. 识别两个结构相：低温相（1-RTP，303K–363K）和高温相（1-HTP，383K–413K）；
+    2. 分别对两个相的各晶格参数（a、b、c、β、V）随温度的变化进行线性拟合，给出拟合方程（斜率、截距、R²）； 3. 报告各温度下的精修结果（晶格参数与 Rp/Rwp 指标）。
+
+    '
+  tags:
+  - char_xrd
+  - phy_phonon
+  - wf_postprocess
+  data_files:
+  - key: vt_pxrd_data
+    path: data/DFT_pxrd_001_20260408/_td-pxrd_test.txt
+    oss_url: https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/DF_thermo_001_20260408/1775629319__td-pxrd_test.txt
+    description: Variable-temperature PXRD patterns at 8 temperatures (303K–413K), CSV format
+      with paired (2theta, intensity) columns for each temperature.
+  reference_answers:
+  - key: rtp_V_303K
+    value: 999.81
+    tolerance: 20.0
+    unit: A3
+  - key: rtp_V_363K
+    value: 1011.67
+    tolerance: 20.0
+    unit: A3
+  - key: htp_V_383K
+    value: 1022.73
+    tolerance: 20.0
+    unit: A3
+  - key: htp_V_413K
+    value: 1026.1
+    tolerance: 20.0
+    unit: A3
+  - key: rtp_a_303K
+    value: 10.828
+    tolerance: 0.05
+    unit: A
+  - key: htp_a_383K
+    value: 11.0506
+    tolerance: 0.05
+    unit: A
+  - key: rtp_V_slope
+    value: 0.2013
+    tolerance: 0.06
+    unit: A3/K
+  - key: htp_V_slope
+    value: 0.1154
+    tolerance: 0.06
+    unit: A3/K
+  - key: rtp_a_slope
+    value: 0.00129
+    tolerance: 0.0006
+    unit: A/K
+  - key: htp_c_slope
+    value: -0.00053
+    tolerance: 0.0006
+    unit: A/K
+  - key: required_fields
+    value:
+    - RTP
+    - HTP
+    - slope
+    - intercept
+  - key: turn_budget
+    value:
+      max: 20
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 12000
+  scoring_checklist:
+  - id: rtp_V_303K
+    criterion: Refined unit cell volume at 303 K (RTP phase) is within tolerance of 999.81
+      Å³.
+    axis: correctness
+    verify: numerical_range
+    weight: 1.5
+  - id: rtp_V_363K
+    criterion: Refined unit cell volume at 363 K (RTP phase) is within tolerance of 1011.67
+      Å³.
+    axis: correctness
+    verify: numerical_range
+    weight: 1.0
+  - id: htp_V_383K
+    criterion: Refined unit cell volume at 383 K (HTP phase) is within tolerance of 1022.73
+      Å³.
+    axis: correctness
+    verify: numerical_range
+    weight: 1.5
+  - id: htp_V_413K
+    criterion: Refined unit cell volume at 413 K (HTP phase) is within tolerance of 1026.10
+      Å³.
+    axis: correctness
+    verify: numerical_range
+    weight: 1.0
+  - id: rtp_a_303K
+    criterion: Refined lattice parameter a at 303 K (RTP phase) is within tolerance of 10.828
+      Å.
+    axis: correctness
+    verify: numerical_range
+    weight: 1.0
+  - id: htp_a_383K
+    criterion: Refined lattice parameter a at 383 K (HTP phase) is within tolerance of 11.0506
+      Å.
+    axis: correctness
+    verify: numerical_range
+    weight: 1.0
+  - id: rtp_V_slope
+    criterion: Linear fit slope of V vs T for RTP phase (303–363 K) is within tolerance of
+      0.2013 Å³/K.
+    axis: correctness
+    verify: numerical_range
+    weight: 2.0
+  - id: htp_V_slope
+    criterion: Linear fit slope of V vs T for HTP phase (383–413 K) is within tolerance of
+      0.1154 Å³/K.
+    axis: correctness
+    verify: numerical_range
+    weight: 2.0
+  - id: rtp_a_slope
+    criterion: Linear fit slope of a vs T for RTP phase is within tolerance of 0.00129 Å/K.
+    axis: correctness
+    verify: numerical_range
+    weight: 1.5
+  - id: htp_c_slope
+    criterion: Linear fit slope of c vs T for HTP phase is within tolerance of -0.00053 Å/K
+      (negative thermal expansion along c axis in HTP phase).
+    axis: correctness
+    verify: numerical_range
+    weight: 1.5
+  - id: required_fields
+    criterion: Answer reports both RTP and HTP phases with linear fit equations including
+      slope, intercept, and R² for at least V vs T in each phase.
+    axis: correctness
+    verify: llm_binary_judge
+    weight: 1.0
+  - id: phase_transition_identified
+    criterion: Answer identifies a structural phase transition between 363 K and 383 K, with
+      distinct lattice parameters for the two phases (notably a jump in a and β at the transition).
+    axis: correctness
+    verify: llm_binary_judge
+    weight: 1.5
+  - id: grounding_source
+    criterion: Lattice parameters and fit results are derived from Pawley refinement of the
+      provided PXRD data file, not from literature values or hallucination. Judge from the
+      final answer and stated methodology; do not fail because the tool-call log omits specific
+      tools.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: efficiency_judge
+    criterion: Pawley refinement and thermal expansion fitting are performed in a direct pipeline
+      without unnecessary repeated refinements or redundant parameter sweeps.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget

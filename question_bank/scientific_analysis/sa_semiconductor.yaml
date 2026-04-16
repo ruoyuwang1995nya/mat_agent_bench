@@ -1,0 +1,251 @@
+version: v5
+capability: scientific_analysis
+domain: semiconductor
+questions:
+- id: DF_elec_001_20260404
+  capability: scientific_analysis
+  domain: semiconductor
+  intent: Determine band-gap type and value from given band-edge dataset.
+  human_prompt_seed: 读取 `band_edges.json`，判断直接/间接带隙并输出带隙值 (eV)、VBM 和 CBM 的 k 点位置。
+  tags:
+  - phy_electronic
+  data_files:
+  - key: band_data
+    path: data/DF_elec_001/band_edges.json
+    oss_url: ''
+    description: Band-edge summary data.
+  reference_answers:
+  - key: gap_type
+    value: indirect
+  - key: gap_value_eV
+    value: 1.18
+    tolerance: 0.08
+  - key: required_fields
+    value:
+    - gap_type
+    - gap_value
+    - vbm_kpoint
+    - cbm_kpoint
+  - key: turn_budget
+    value:
+      max: 6
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: gap_type
+    criterion: Band-gap type is correctly identified as indirect (not direct).
+    axis: correctness
+    verify: llm_binary_judge
+  - id: gap_value_eV
+    criterion: Band-gap value is in tolerance.
+    axis: correctness
+    verify: numerical_range
+  - id: required_fields
+    criterion: Reports band gap type, band gap value in eV, VBM k-point location, and CBM
+      k-point location.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: Gap type and value are tied to band_edges.json as described in the final answer,
+      not bare LLM recall of Si. Judge from the answer and stated file use; do not fail because
+      the tool-call log omits MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: efficiency_judge
+    criterion: Band gap classification is achieved by directly reading the provided data file
+      without extra computation.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: WO_general_perov_007_20260411v1
+  capability: scientific_analysis
+  domain: semiconductor
+  intent: Query high-efficiency perovskite additives and produce recommendation plus a proposal
+    draft based on predicted performance.
+  human_prompt_seed: '请围绕“高效率（>26%）钙钛矿添加剂设计”完成一份推荐与提案。
+
+    请输出： 1) `perovskite_additive_candidates.json`：至少包含 `smiles`, `predicted_effect`, `selection_reason`,
+    `similar_formulation_hint`； 2) `perovskite_additive_proposal.md`：基于最佳候选，给出研究目标、验证方案、预期结果与风险。
+
+    最终回答中简要说明：为什么该候选最值得优先验证。'
+  tags:
+  - meta_userlog
+  - mat_perovskite
+  - wf_report
+  data_files: []
+  reference_answers:
+  - key: additive_json
+    value: perovskite_additive_candidates.json
+  - key: proposal_md
+    value: perovskite_additive_proposal.md
+  - key: additive_tokens
+    value:
+      filename: perovskite_additive_candidates.json
+      tokens:
+      - smiles
+      - predicted_effect
+      - selection_reason
+      - similar_formulation_hint
+      flags: i
+  - key: proposal_tokens
+    value:
+      filename: perovskite_additive_proposal.md
+      tokens:
+      - 目标
+      - 验证
+      - 预期结果
+      - 风险
+      - 不确定性
+      flags: i
+  - key: turn_budget
+    value:
+      max: 10
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 9000
+  scoring_checklist:
+  - id: additive_json
+    criterion: Agent writes `perovskite_additive_candidates.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: proposal_md
+    criterion: Agent writes `perovskite_additive_proposal.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: additive_tokens
+    criterion: Candidate JSON includes required additive-recommendation fields.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: proposal_tokens
+    criterion: Proposal document covers objectives, validation plan, and uncertainty/risk.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: grounding_source
+    criterion: Deliverables are grounded in generated candidate analysis rather than unsupported
+      additive claims.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical tool calls with the same parameter set.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
+    axis: efficiency
+    verify: token_budget
+- id: WO_general_ferro_009_20260411v1
+  capability: scientific_analysis
+  domain: semiconductor
+  intent: Explain principle, applications, and limitations of the double-wave method in Sawyer-Tower
+    ferroelectric measurements.
+  human_prompt_seed: '请围绕 Sawyer-Tower 铁电测试中的 double-wave method，给出结构化说明。
+
+    请输出： 1) `double_wave_sawyer_tower_notes.md`：包含原理、典型应用、局限性与误差来源； 2) `double_wave_keypoints.json`：至少包含
+    `principle`, `applications`, `limitations`, `best_practices`。
+
+    最终回答请用简短段落总结：该方法最适合与最不适合的使用场景。'
+  tags:
+  - meta_userlog
+  - phy_eos
+  data_files: []
+  reference_answers:
+  - key: notes_md
+    value: double_wave_sawyer_tower_notes.md
+  - key: keypoints_json
+    value: double_wave_keypoints.json
+  - key: notes_tokens
+    value:
+      filename: double_wave_sawyer_tower_notes.md
+      tokens:
+      - 原理
+      - 应用
+      - 局限性
+      - 误差
+      - Sawyer-Tower
+      flags: i
+  - key: json_tokens
+    value:
+      filename: double_wave_keypoints.json
+      tokens:
+      - principle
+      - applications
+      - limitations
+      - best_practices
+      flags: i
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 7000
+  scoring_checklist:
+  - id: notes_md
+    criterion: Agent writes `double_wave_sawyer_tower_notes.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: keypoints_json
+    criterion: Agent writes `double_wave_keypoints.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: notes_tokens
+    criterion: Notes cover principle, applications, limitations, and error sources.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: json_tokens
+    criterion: Keypoint JSON includes all required structured fields.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: grounding_source
+    criterion: Deliverables are grounded in methodological references and avoid unsupported
+      claims.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical tool calls with the same parameter set.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
+    axis: efficiency
+    verify: token_budget

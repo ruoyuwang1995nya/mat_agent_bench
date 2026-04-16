@@ -1,0 +1,36 @@
+# ===========================================================================
+# NOMAD VASP INCAR - Real calculation data
+# ===========================================================================
+# Entry ID: --0rqGz0nrAgdJ4czSZj3z7RhfUo
+# URL: https://nomad-lab.eu/prod/v1/gui/entry/id/--0rqGz0nrAgdJ4czSZj3z7RhfUo
+# Mainfile: vasp_files/GERPID01_FSR/vasprun.xml.gz
+# Fetched: 2026-04-01
+# ===========================================================================
+
+INCAR created by Atomic Simulation Environment
+ ENCUT = 520.000000
+ HFSCREEN = 0.200000
+ SIGMA = 0.010000
+ VDW_S8 = 2.310000
+ VDW_A1 = 0.383000
+ VDW_A2 = 5.685000
+ EDIFF = 1.00e-05
+ SYMPREC = 1.00e-08
+ ALGO = All
+ GGA = PE
+ PREC = Accurate
+ ICHARG = 1
+ ISMEAR = 0
+ ISYM = 0
+ LORBIT = 11
+ NELM = 100
+ NSW = 0
+ IVDW = 12
+ NCORE = 24
+ NEDOS = 2000
+ LAECHG = .TRUE.
+ LASPH = .FALSE.
+ LCHARG = .TRUE.
+ LHFCALC = .TRUE.
+ LWAVE = .TRUE.
+ LREAL = .FALSE.

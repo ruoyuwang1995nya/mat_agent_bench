@@ -1,0 +1,96 @@
+version: v5
+capability: batch_processing
+domain: battery
+questions:
+- id: BP_struct_006_20260412v2
+  capability: batch_processing
+  domain: battery
+  intent: Batch retrieve 20 lithium-containing structures and compute the average volume per
+    atom from per-structure metadata.
+  human_prompt_seed: '批量检索 20 个含锂材料（结构文件可下载），并计算它们的平均单原子体积（average volume per atom）。
+
+    请完成以下交付：
+
+    1) `li20_volume_stats.json`：至少包含 `candidate_count`, `volume_per_atom_list`, `average_volume_per_atom`,
+    `unit`； 2) `li20_retrieval_report.md`：说明检索条件（含锂、数量 20）、每条数据的体积/原子数来源，以及均值计算过程； 3) 在最终回答中给出平均值并说明该统计可能受哪些样本偏差影响。
+
+    注意：本题强调批量检索 + 统计汇总，不要求后续第一性原理计算。'
+  tags:
+  - wf_batch
+  - meta_userlog
+  data_files: []
+  reference_answers:
+  - key: stats_json
+    value: li20_volume_stats.json
+  - key: retrieval_report
+    value: li20_retrieval_report.md
+  - key: stats_required_tokens
+    value:
+      filename: li20_volume_stats.json
+      tokens:
+      - candidate_count
+      - 20
+      - volume_per_atom_list
+      - average_volume_per_atom
+      - unit
+      flags: i
+  - key: report_required_tokens
+    value:
+      filename: li20_retrieval_report.md
+      tokens:
+      - 锂
+      - 20
+      - 体积
+      - 原子
+      - 平均
+      flags: i
+  - key: turn_budget
+    value:
+      max: 16
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 12000
+  scoring_checklist:
+  - id: stats_json
+    criterion: Agent writes `li20_volume_stats.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: retrieval_report
+    criterion: Agent writes `li20_retrieval_report.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: stats_required_tokens
+    criterion: Stats JSON contains batch-size and average-volume fields for 20 lithium-containing
+      candidates.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: report_required_tokens
+    criterion: Report explains retrieval constraints and average-volume calculation rationale.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: grounding_source
+    criterion: The final answer is grounded in retrieved structure metadata and explicitly
+      distinguishes measured per-item values from computed aggregate statistics.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical retrieval calls with the same parameters.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget

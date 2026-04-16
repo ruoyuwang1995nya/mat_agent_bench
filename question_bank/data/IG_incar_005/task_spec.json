@@ -1,0 +1,13 @@
+{
+  "critical_params": {
+    "ISPIN": 2,
+    "LDAU": ".TRUE.",
+    "LDAUL": "-1 -1 2 -1",
+    "LDAUTYPE": 2,
+    "LDAUU": "0.000 0.000 4.380 0.000"
+  },
+  "description": "为含稀土和过渡金属的氧化物 RbPmMo2O8 生成 DFT+U 计算的 VASP INCAR。需要对 Mo 的 d 轨道施加 Hubbard U 校正。",
+  "formula": "RbPmMo2O8",
+  "material_context": "RbPmMo2O8 含有 Rb(碱金属)、Pm(镧系)、Mo(过渡金属)和 O。Mo 的 3d 电子需要 U 校正(LDAUU~4.38 eV)。体系为磁性(ISPIN=2)。元素顺序: Rb, Pm, Mo, O。",
+  "task": "dft_plus_u"
+}

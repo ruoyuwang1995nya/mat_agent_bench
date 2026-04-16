@@ -1,0 +1,34 @@
+# ===========================================================================
+# NOMAD VASP INCAR - Real calculation data
+# ===========================================================================
+# Entry ID: --LPV_SHTFhbJzXPsdoodtyy_3kd
+# URL: https://nomad-lab.eu/prod/v1/gui/entry/id/--LPV_SHTFhbJzXPsdoodtyy_3kd
+# Mainfile: train_batch_2/crystal_Al_stable_sheared_C44_-0.8/OUTCAR
+# Fetched: 2026-04-01
+# ===========================================================================
+
+PREC = Accurate
+ENCUT = 450
+ISPIN = 1
+#NPAR = 2
+NCORE = 1
+KPAR = 2
+ISTART = 0
+ISMEAR = 1
+SIGMA = 0.1
+NSW = 1
+NELMIN = 5
+NELM = 150
+IBRION = 1
+POTIM = 0.2
+LMAXMIX = 4
+ISIF = 3
+ISYM = 1
+EDIFF = 1E-06
+EDIFFG = -0.01
+LREAL = Auto # set according to the size of supercell
+LCHARG = .FALSE.
+LWAVE = .FALSE.
+LORBIT=11
+NELMDL = -9
+KSPACING = 0.16

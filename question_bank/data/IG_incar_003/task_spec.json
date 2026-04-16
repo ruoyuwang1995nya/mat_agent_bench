@@ -1,0 +1,13 @@
+{
+  "critical_params": {
+    "EDIFF": 0.0001,
+    "IBRION": 1,
+    "ISIF": 3,
+    "ISPIN": 2,
+    "NSW": 20
+  },
+  "description": "为钙钛矿 ErNaO3 生成结构弛豫(relaxation)计算的 VASP INCAR。需要同时优化离子位置和晶胞参数。",
+  "formula": "ErNaO3",
+  "material_context": "ErNaO3 是稀土钙钛矿氧化物，Er3+ 含 f 电子(ISPIN=2)。需要设定适当的 MAGMOM 初始磁矩。结构弛豫使用准牛顿法(IBRION=1)或共轭梯度法(IBRION=2)。",
+  "task": "structure_relaxation"
+}

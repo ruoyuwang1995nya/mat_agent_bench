@@ -1,0 +1,13 @@
+{
+  "critical_params": {
+    "ALGO": "FAST",
+    "ENCUT": 520,
+    "ISMEAR": -5,
+    "ISPIN": 1,
+    "NSW": 0
+  },
+  "description": "为硼酸铯 B12Cs4O20 生成非磁性绝缘体的静态 SCF 计算 VASP INCAR。",
+  "formula": "B12Cs4O20",
+  "material_context": "B12Cs4O20 是碱金属硼酸盐，宽带隙绝缘体，非磁性(ISPIN=1)。绝缘体使用 ISMEAR=0(Gaussian smearing)或 ISMEAR=-5(四面体方法)，ALGO=FAST 加速收敛。",
+  "task": "nonmagnetic_insulator_scf"
+}

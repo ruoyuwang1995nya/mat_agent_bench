@@ -1,0 +1,214 @@
+version: v5
+capability: structure_construction
+domain: semiconductor
+questions:
+- id: SC_struct_hetero_20260409
+  capability: structure_construction
+  domain: semiconductor
+  intent: Build a graphene/h-BN vertical van der Waals heterostructure with controlled lattice
+    mismatch.
+  human_prompt_seed: '读取 `hetero_spec.json`，构建 graphene/h-BN 垂直范德华异质结。 要求：(1) 构建共度超胞使晶格失配
+    < 2%；(2) AB 堆叠，层间距 3.35 A； (3) z 方向加 15 A 真空层。输出 `hetero_graphene_hBN.cif` 和 `hetero_graphene_hBN_POSCAR`，报告实际失配度和总原子数。
+
+    '
+  tags:
+  - phy_surface
+  - mat_2d
+  data_files:
+  - key: hetero_spec
+    path: data/SC_struct_001/hetero_spec.json
+    oss_url: ''
+    description: Specification for graphene/h-BN heterostructure construction.
+  reference_answers:
+  - key: mismatch_percent
+    value: 1.6
+    tolerance: 1.0
+  - key: hetero_formula
+    value:
+      filename: hetero_graphene_hBN.cif
+      formula: BC2N
+  - key: interlayer_distance_A
+    value:
+      filename: hetero_graphene_hBN.cif
+      element_a: C
+      element_b: B
+      cutoff_A: 5.0
+      expected: 3.35
+      tolerance: 0.3
+  - key: required_fields
+    value:
+    - structure_file
+    - lattice_mismatch_percent
+    - total_atoms
+    - interlayer_distance_A
+    - stacking
+    - vacuum_A
+  - key: turn_budget
+    value: &id001
+      max: 20
+  - key: duration_budget
+    value: &id002
+      max: 7200000
+  - key: token_budget_total
+    value: &id003
+      max: 8000
+  scoring_checklist:
+  - id: mismatch_percent
+    criterion: Lattice mismatch is below 2%.
+    axis: correctness
+    verify: numerical_range
+  - id: hetero_formula
+    criterion: The output CIF has the expected graphene/h-BN supercell formula (equal C, B,
+      N counts) verified by reading the structure file.
+    axis: correctness
+    verify: struct_file_formula
+  - id: interlayer_distance_A
+    criterion: The mean C-B interlayer distance read from the output CIF is near 3.35 A.
+    axis: correctness
+    verify: struct_file_bond_length
+  - id: required_fields
+    criterion: Output includes structure file, lattice mismatch percentage below 2%, total
+      atom count, interlayer distance near 3.35 A, AB stacking, and vacuum thickness near
+      15 A.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The answer states the physical picture (lattice matching, AB stacking, interlayer
+      spacing, vacuum, how mismatch is defined) and ties it to the delivered POSCAR/CIF, not
+      generic claims disconnected from those files. Judge solely from the final answer and
+      named deliverables; do not fail because the tool-call log omits MCP, web_search, or
+      any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No excessive retries with the same parameter set during structure construction.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: Heterostructure construction completes in a direct workflow without redundant
+      structure rebuilds.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: SC_struct_SiH_20260412
+  capability: structure_construction
+  domain: semiconductor
+  intent: Passivate dangling bonds on both top and bottom surfaces of a Si(100) slab with
+    hydrogen atoms.
+  human_prompt_seed: '读取 `hydrogen_cap_spec.json`，对 Si(100) slab 上下两个表面的悬挂键进行氢饱和。 要求：识别 slab
+    顶部和底部所有欠配位 Si 原子，添加 H 使其达到四配位。 Si-H 键长约 1.48 A。输出结构文件为 `Si100_H_passivated_POSCAR`，并报告添加的
+    H 原子总数。
+
+    '
+  tags:
+  - phy_surface
+  data_files:
+  - key: hydrogen_cap_spec
+    path: data/SC_struct_003/hydrogen_cap_spec.json
+    oss_url: ''
+    description: Specification for Si(100) surface hydrogen passivation (both surfaces).
+  reference_answers:
+  - key: si_h_bond_length_A
+    value:
+      filename: Si100_H_passivated_POSCAR
+      element_a: Si
+      element_b: H
+      cutoff_A: 1.7
+      expected: 1.48
+      tolerance: 0.15
+  - key: si_coordination
+    value:
+      filename: Si100_H_passivated_POSCAR
+      center_element: Si
+      expected: 4
+      tolerance: 0.5
+      cutoff_A: 2.6
+  - key: si_si_h_angle_deg
+    value:
+      filename: Si100_H_passivated_POSCAR
+      triplet:
+      - Si
+      - Si
+      - H
+      expected_deg: 109.47
+      tolerance_deg: 8.0
+      cutoff_A: 2.6
+  - key: required_fields
+    value:
+    - structure_file
+    - hydrogen_count
+    - si_h_bond_length_A
+    - all_si_four_coordination
+  - key: turn_budget
+    value: *id001
+  - key: duration_budget
+    value: *id002
+  - key: token_budget_total
+    value: *id003
+  scoring_checklist:
+  - id: si_h_bond_length_A
+    criterion: A representative Si-H bond length in the POSCAR output is near 1.48 A.
+    axis: correctness
+    verify: struct_file_bond_length
+  - id: si_coordination
+    criterion: The mean coordination number of ALL Si atoms in the POSCAR (cutoff 2.6 A) is
+      approximately 4 (within ±0.5), confirming that dangling bonds on both top and bottom
+      surfaces are predominantly saturated.
+    axis: correctness
+    verify: struct_file_coordination
+  - id: si_si_h_angle_deg
+    criterion: The mean Si-Si-H angle read from the POSCAR is close to tetrahedral 109.47
+      degrees (tolerance 8 degrees), confirming that passivating H atoms sit at tetrahedral
+      positions around the surface Si atoms.
+    axis: correctness
+    verify: struct_file_bond_angle
+  - id: required_fields
+    criterion: Output includes structure file, total number of added H atoms (covering both
+      surfaces), representative Si-H bond length, and an explicit check that all Si atoms
+      (top and bottom) reach four coordination.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The answer cites the structural physics (Si(100) facets, dangling bonds on
+      both surfaces, target coordination, Si-H bond length) and ties passivation checks to
+      the delivered POSCAR, not only generic semiconductor chemistry recall disconnected from
+      that file. Judge solely from the final answer and named deliverables; do not fail because
+      the tool-call log omits MCP, web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: Slab construction and passivation run without repeated identical attempts.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: Passivation workflow completes in a direct pipeline without unnecessary intermediate
+      structure rebuilds.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget

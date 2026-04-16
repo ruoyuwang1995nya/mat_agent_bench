@@ -1,0 +1,13 @@
+{
+  "critical_params": {
+    "IBRION": -1,
+    "ISPIN": 2,
+    "LORBIT": 11,
+    "MAGMOM": "6*1.0000",
+    "NSW": 0
+  },
+  "description": "为双钙钛矿 Ca4TaOs 生成磁性自洽计算的 VASP INCAR。需要考虑自旋极化效应。",
+  "formula": "Ca4TaOs",
+  "material_context": "Ca4TaOs 是含 5d 过渡金属(Ta, Os)的双钙钛矿，磁性体系。需要 ISPIN=2 开启自旋极化，设置适当的 MAGMOM 初始磁矩。使用高精度 SCF(EDIFF~5e-7)。",
+  "task": "magnetic_scf"
+}

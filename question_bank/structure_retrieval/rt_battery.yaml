@@ -1,0 +1,106 @@
+version: v5
+capability: structure_retrieval
+domain: battery
+questions:
+- id: SR_db_004_20260411v1
+  capability: structure_retrieval
+  domain: battery
+  intent: Retrieve five Li-Mn-O materials from Alexandria and summarize machine-checkable
+    provenance metadata.
+  human_prompt_seed: '从 Alexandria 数据源检索包含 Li、Mn、O 三种元素的材料，并返回 5 条候选。
+
+    请完成以下交付：
+
+    1) `lmo_candidates.json`：列出 5 条候选，每条至少包含 `rank`, `formula`, `database_source`, `structure_identifier`,
+    `elements`, `format_available`；
+
+    2) `lmo_retrieval_report.md`：说明检索条件（元素约束、结果数量）、候选筛选与结果不确定性；
+
+    3) 在最终回答中简要确认：是否满足“Li+Mn+O 全部同时包含”与“共 5 条”这两个约束。
+
+    注意：本题是结构检索与汇总，不要求后续计算。'
+  tags:
+  - meta_database
+  - meta_userlog
+  data_files: []
+  reference_answers:
+  - key: candidates_json
+    value: lmo_candidates.json
+  - key: retrieval_report
+    value: lmo_retrieval_report.md
+  - key: candidates_required_tokens
+    value:
+      filename: lmo_candidates.json
+      tokens:
+      - rank
+      - formula
+      - database_source
+      - structure_identifier
+      - elements
+      - format_available
+      - Li
+      - Mn
+      - O
+      flags: i
+  - key: report_required_tokens
+    value:
+      filename: lmo_retrieval_report.md
+      tokens:
+      - Alexandria
+      - Li
+      - Mn
+      - O
+      - 5
+      - 检索条件
+      - 不确定性
+      flags: i
+  - key: turn_budget
+    value:
+      max: 10
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: candidates_json
+    criterion: Agent writes `lmo_candidates.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: retrieval_report
+    criterion: Agent writes `lmo_retrieval_report.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: candidates_required_tokens
+    criterion: Candidate JSON includes required provenance fields and explicitly contains
+      Li/Mn/O element information.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: report_required_tokens
+    criterion: Retrieval report states Alexandria source, filter constraints, candidate count,
+      and uncertainty note.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: grounding_source
+    criterion: The final answer is grounded in retrieval outputs and accurately reflects whether
+      all constraints (elements + count) are met.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical retrieval calls with the same parameters.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling.
+    axis: efficiency
+    verify: token_budget

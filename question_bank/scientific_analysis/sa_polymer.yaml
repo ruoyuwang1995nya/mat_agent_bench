@@ -1,0 +1,383 @@
+version: v5
+capability: scientific_analysis
+domain: polymer
+questions:
+- id: pl_adhesion
+  capability: scientific_analysis
+  domain: polymer
+  intent: Compare polyimide adhesion on hydroxyl-rich, epoxy-rich, and carboxyl-rich graphene-oxide
+    surfaces using curated adsorption, MD, and adhesion-work evidence.
+  human_prompt_seed: '文件 `interface_adhesion_bundle.json` 汇总了聚酰亚胺短链与三类氧化石墨烯表面的界面项目数据。
+
+    请完成一个界面粘附分析报告：
+
+    1. 比较不同表面化学条件下的吸附能、界面接触面积、链取向和粘附功；
+
+    2. 说明哪类官能团更有利于增强界面；
+
+    3. 给出最优表面改性建议；
+
+    4. 说明至少一个可能的尺度放大风险。
+
+    '
+  tags:
+  - phy_surface
+  data_files:
+  - key: interface_bundle
+    path: data/pl_adhesion/interface_adhesion_bundle.json
+    description: Interface bundle with adsorption energies, MD-derived contact descriptors,
+      adhesion work, and surface-chemistry ranking.
+  reference_answers:
+  - key: best_surface
+    value: GO-COOH-rich
+  - key: cooh_adhesion_work_J_m2
+    value: 0.81
+    tolerance: 0.08
+  - key: cooh_adsorption_eV
+    value: -1.48
+    tolerance: 0.15
+  - key: required_fields
+    value:
+    - adhesion_table
+    - orientation_discussion
+    - surface_chemistry_mechanism
+    - recommendation
+    - scaleup_risk
+  - key: turn_budget
+    value:
+      max: 24
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 14000
+  scoring_checklist:
+  - id: cooh_adhesion_work_J_m2
+    criterion: GO-COOH-rich adhesion work is reported within tolerance of the curated value
+      (~0.81 J/m^2).
+    axis: correctness
+    verify: numerical_range
+  - id: cooh_adsorption_eV
+    criterion: GO-COOH-rich adsorption energy is reported within tolerance of the curated
+      value (~-1.48 eV).
+    axis: correctness
+    verify: numerical_range
+  - id: recommendation_correctness
+    criterion: Final recommendation identifies GO-COOH-rich as the strongest adhesion surface
+      and ranks GO-OH-rich ahead of GO-epoxy-rich overall.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: required_fields
+    criterion: Report includes an adhesion table, orientation discussion, surface-chemistry
+      mechanism, recommendation, and at least one scale-up risk.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The answer grounds interface conclusions in the provided adsorption, contact-area,
+      orientation, and adhesion-work evidence from interface_adhesion_bundle.json.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: efficiency_judge
+    criterion: Interface analysis is completed directly and does not drift into unrelated
+      surface-science discussion.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration does not exceed benchmark ceiling.
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling.
+    axis: efficiency
+    verify: token_budget
+- id: pl_donor
+  capability: scientific_analysis
+  domain: polymer
+  intent: Pre-screen PM6, PTB7-Th, D18, and P3HT donor polymers for a Y6-like acceptor window
+    using curated oligomer, conformational, and ranking data.
+  human_prompt_seed: '文件 `donor_prescreen_bundle.json` 提供了 PM6、PTB7-Th、D18 和 P3HT 四类给体聚合物的低聚体建模、量化、构象采样和简化
+    ranking 结果。
+
+    请完成一个给体预筛选报告：
+
+    1. 比较 HOMO/LUMO、带隙、主链扭转角和平面性；
+
+    2. 结合 1/n 外推结果，判断哪些体系更适合与 Y6 类受体匹配；
+
+    3. 输出最终 shortlist，并分别说明“综合最优”和“高 Voc 候选”；
+
+    4. 写出至少一个不确定性来源。
+
+    '
+  tags:
+  - mat_polymer
+  data_files:
+  - key: donor_bundle
+    path: data/pl_donor/donor_prescreen_bundle.json
+    description: Curated donor-polymer bundle with oligomer-level electronic structure, torsional
+      descriptors, extrapolated gaps, and ranking metrics.
+  reference_answers:
+  - key: best_candidate
+    value: D18
+  - key: d18_gap_extrapolated_eV
+    value: 1.84
+    tolerance: 0.08
+  - key: pm6_homo_eV
+    value: -5.45
+    tolerance: 0.1
+  - key: required_fields
+    value:
+    - ranking_table
+    - gap_extrapolation
+    - conformational_note
+    - shortlist
+    - uncertainty_note
+  - key: turn_budget
+    value:
+      max: 24
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 14000
+  scoring_checklist:
+  - id: d18_gap_extrapolated_eV
+    criterion: D18 extrapolated polymer-limit gap is reported within tolerance of the curated
+      value (~1.84 eV).
+    axis: correctness
+    verify: numerical_range
+  - id: pm6_homo_eV
+    criterion: PM6 HOMO is reported within tolerance of the curated oligomer/QM value (~-5.45
+      eV).
+    axis: correctness
+    verify: numerical_range
+  - id: shortlist_correctness
+    criterion: Final shortlist identifies D18 as the best-balanced overall donor and places
+      PM6 ahead of PTB7-Th and P3HT for the specified Y6-like acceptor window.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: required_fields
+    criterion: Report includes a ranking table, band-gap extrapolation discussion, conformational-planarity
+      note, final shortlist, and at least one uncertainty note.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: Conclusions are explicitly tied to the provided HOMO/LUMO, extrapolated gap,
+      and torsional descriptors from donor_prescreen_bundle.json rather than literature recall
+      alone.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: efficiency_judge
+    criterion: Completes donor pre-screening in a linear evidence-synthesis workflow without
+      redundant analysis loops.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration does not exceed benchmark ceiling.
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling.
+    axis: efficiency
+    verify: token_budget
+- id: pl_membrane
+  capability: scientific_analysis
+  domain: polymer
+  intent: Compare PIM-1, Matrimid, and 6FDA-DAM membranes for CO2/N2 separation by integrating
+    solubility, diffusivity, free-volume, and ranking metrics.
+  human_prompt_seed: '文件 `membrane_screening_bundle.json` 汇总了 PIM-1、Matrimid 和 6FDA-DAM 三类聚合物膜在
+    CO2/N2 分离中的中间数据。
+
+    请完成一份膜材料筛选报告：
+
+    1. 计算或核对各体系的 CO2 permeability 与 CO2/N2 selectivity；
+
+    2. 区分哪些优势来自高溶解度，哪些来自高扩散性；
+
+    3. 结合自由体积和官能团相互作用解释材料差异；
+
+    4. 给出最适合平衡通量与选择性的候选。
+
+    '
+  tags:
+  - phy_md
+  data_files:
+  - key: membrane_bundle
+    path: data/pl_membrane/membrane_screening_bundle.json
+    description: Membrane-screening bundle with solubility, diffusivity, permeability, selectivity,
+      and free-volume descriptors for CO2/N2 separation.
+  reference_answers:
+  - key: best_balanced_candidate
+    value: 6FDA-DAM
+  - key: pim1_permeability_barrer
+    value: 5400.0
+    tolerance: 250.0
+  - key: dam_selectivity
+    value: 28.0
+    tolerance: 2.0
+  - key: required_fields
+    value:
+    - permeability_table
+    - selectivity_table
+    - tradeoff_discussion
+    - free_volume_note
+    - recommendation
+  - key: turn_budget
+    value:
+      max: 24
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 14000
+  scoring_checklist:
+  - id: pim1_permeability_barrer
+    criterion: PIM-1 CO2 permeability is reported within tolerance of the curated value (~5400
+      Barrer).
+    axis: correctness
+    verify: numerical_range
+  - id: dam_selectivity
+    criterion: 6FDA-DAM CO2/N2 selectivity is reported within tolerance of the curated value
+      (~28).
+    axis: correctness
+    verify: numerical_range
+  - id: recommendation_correctness
+    criterion: Final recommendation identifies 6FDA-DAM as the best balanced membrane, while
+      recognizing that PIM-1 has the highest throughput.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: required_fields
+    criterion: Report includes permeability and selectivity tables, trade-off discussion,
+      free-volume note, and a clear recommendation.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: The answer uses the provided solubility, diffusivity, permeability, and free-volume
+      evidence from membrane_screening_bundle.json rather than generic membrane heuristics
+      alone.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: efficiency_judge
+    criterion: Completes the membrane comparison without redundant reformulation and clearly
+      separates transport and sorption effects.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration does not exceed benchmark ceiling.
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling.
+    axis: efficiency
+    verify: token_budget
+- id: pl_rheology
+  capability: scientific_analysis
+  domain: polymer
+  intent: Identify a processing window for PEO-LiTFSI by balancing zero-shear viscosity, shear-thinning
+    onset, and ionic-conductivity proxies across temperature and salt concentration.
+  human_prompt_seed: '文件 `rheology_window_bundle.json` 提供了 PEO-LiTFSI 在不同盐浓度和温度下的流变、扩散和电导
+    proxy 数据。
+
+    请完成一个粘度-电导率窗口分析：
+
+    1. 比较不同条件下的零剪切粘度、剪切变稀起始和电导 proxy；
+
+    2. 解释盐浓度升高为什么会同时影响粘度和离子迁移；
+
+    3. 推荐最合适的加工温度与盐浓度窗口；
+
+    4. 说明至少一个可能的失效模式或工艺风险。
+
+    '
+  tags:
+  - phy_elastic
+  - chem_electrolyte
+  data_files:
+  - key: rheology_bundle
+    path: data/pl_rheology/rheology_window_bundle.json
+    description: Rheology bundle with zero-shear viscosity, shear-thinning onset, conductivity
+      proxy, and transport descriptors for PEO-LiTFSI.
+  reference_answers:
+  - key: best_window
+    value: 20wt_353K
+  - key: viscosity_20wt_353K_Pa_s
+    value: 38.0
+    tolerance: 5.0
+  - key: conductivity_20wt_353K_mScm
+    value: 0.62
+    tolerance: 0.08
+  - key: required_fields
+    value:
+    - rheology_window
+    - viscosity_conductivity_tradeoff
+    - mechanism_note
+    - process_recommendation
+    - risk_note
+  - key: turn_budget
+    value:
+      max: 24
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 14000
+  scoring_checklist:
+  - id: viscosity_20wt_353K_Pa_s
+    criterion: Zero-shear viscosity at 20 wt% LiTFSI and 353 K is reported within tolerance
+      (~38 Pa·s).
+    axis: correctness
+    verify: numerical_range
+  - id: conductivity_20wt_353K_mScm
+    criterion: Conductivity proxy at 20 wt% LiTFSI and 353 K is reported within tolerance
+      (~0.62 mS/cm).
+    axis: correctness
+    verify: numerical_range
+  - id: best_window_correctness
+    criterion: Final recommendation identifies 20 wt% LiTFSI at 353 K as the best-balanced
+      processing window.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: required_fields
+    criterion: Report includes a rheology window, viscosity-conductivity trade-off discussion,
+      mechanism note, process recommendation, and at least one risk note.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: Conclusions are explicitly grounded in the provided rheology and transport
+      metrics from rheology_window_bundle.json rather than generic electrolyte-processing
+      statements.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: efficiency_judge
+    criterion: Rheology-window analysis is completed directly without redundant side calculations
+      or repeated condition enumeration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration does not exceed benchmark ceiling.
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling.
+    axis: efficiency
+    verify: token_budget

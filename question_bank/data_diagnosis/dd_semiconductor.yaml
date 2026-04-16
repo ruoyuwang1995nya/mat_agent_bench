@@ -1,0 +1,139 @@
+version: v5
+capability: data_diagnosis
+domain: semiconductor
+questions:
+- id: DD_general_002_20260404
+  capability: data_diagnosis
+  domain: semiconductor
+  intent: Diagnose SCF non-convergence caused by wrong SMEARING settings for a semiconductor.
+  human_prompt_seed: '读取 `case_bundle.json`，其中包含一个 Si 计算的 INCAR 参数和 OUTCAR 能量迭代摘录。 SCF 100
+    步仍未收敛，能量振幅约 5 meV，且有分数占据。请诊断根本原因，并给出修复方案。
+
+    '
+  tags:
+  - log_diagnosis
+  data_files:
+  - key: case_bundle
+    path: data/DD_general_002/case_bundle.json
+    oss_url: ''
+    description: 'VASP input/output bundle: Si with ISMEAR=1 SIGMA=0.4, SCF oscillates.'
+  reference_answers:
+  - key: root_cause
+    value: smearing_wrong_for_semiconductor
+  - key: required_fields
+    value:
+    - root_cause
+    - evidence
+    - fix_ISMEAR
+    - fix_SIGMA
+  - key: turn_budget
+    value: &id001
+      max: 8
+  - key: duration_budget
+    value: &id002
+      max: 7200000
+  - key: token_budget_total
+    value: &id003
+      max: 8000
+  scoring_checklist:
+  - id: root_cause
+    criterion: Correctly identifies ISMEAR/SIGMA mismatch (Methfessel-Paxton on semiconductor
+      Si) as root cause.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: required_fields
+    criterion: Provides root cause, evidence from fractional occupation, and concrete fixes
+      (ISMEAR=0 or -5, reduce SIGMA).
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_evidence
+    criterion: Diagnosis is grounded in the provided INCAR/OUTCAR data from case_bundle.json,
+      citing specific parameter values.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: efficiency_judge
+    criterion: Agent diagnoses directly from the bundle without unnecessary tool exploration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: DD_general_004_20260404
+  capability: data_diagnosis
+  domain: semiconductor
+  intent: Diagnose relaxation divergence caused by POTIM too large combined with wrong initial
+    phase.
+  human_prompt_seed: '读取 `case_bundle.json`，其中包含一个 CsPbI3 弛豫计算的 INCAR 参数和离子步摘录。 5 步内能量从 -19
+    eV 升到 +8 eV，力从 2.3 爆炸到 48 eV/A，体积剧烈波动。 请诊断根本原因，并给出修复方案。
+
+    '
+  tags:
+  - log_diagnosis
+  priority: P0
+  data_files:
+  - key: case_bundle
+    path: data/DD_general_004/case_bundle.json
+    oss_url: ''
+    description: 'VASP input/output bundle: CsPbI3 cubic->orthorhombic relax with POTIM=1.0,
+      diverges.'
+  reference_answers:
+  - key: root_cause
+    value: potim_too_large_and_bad_initial_structure
+  - key: required_fields
+    value:
+    - root_cause
+    - evidence
+    - fix_POTIM
+    - fix_initial_structure
+  - key: turn_budget
+    value: *id001
+  - key: duration_budget
+    value: *id002
+  - key: token_budget_total
+    value: *id003
+  scoring_checklist:
+  - id: root_cause
+    criterion: Identifies both POTIM too large (1.0) and wrong initial phase (cubic vs orthorhombic
+      CsPbI3).
+    axis: correctness
+    verify: llm_binary_judge
+  - id: required_fields
+    criterion: Provides evidence from energy/force divergence trajectory, and recommends both
+      reducing POTIM and using correct Pnma phase.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_evidence
+    criterion: Both root causes are evidenced by specific data from case_bundle.json (POTIM=1.0
+      in INCAR, energy/force explosion pattern in OUTCAR).
+    axis: grounding
+    verify: llm_binary_judge
+  - id: efficiency_judge
+    criterion: Dual root cause is identified efficiently without repeated re-reading of the
+      same file.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget

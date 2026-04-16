@@ -1,0 +1,389 @@
+version: v5
+capability: data_diagnosis
+domain: agnostic
+questions:
+- id: DD_general_005_20260404
+  capability: data_diagnosis
+  domain: agnostic
+  intent: Given descriptions of mixed failed-job scenarios, classify failure modes and provide
+    parameterized retry strategy.
+  human_prompt_seed: '假设你提交了一批 20 个 DFT 计算任务，其中 6 个失败了，失败原因如下： Job 3, 7: SCF 不收敛（含过渡金属，ISPIN=1）；
+    Job 11: 内存不足（NCORE 设置不当）； Job 15, 18: KPOINTS 太密导致超时； Job 20: 输入文件 POTCAR 缺失。 请分类这些失败模式（至少
+    3 类），为每类给出参数化的重试方案和终止条件。
+
+    '
+  tags:
+  - wf_recovery
+  - wf_batch
+  data_files: []
+  reference_answers:
+  - key: failure_classes_count
+    value: 3
+    tolerance: 1.0
+  - key: required_fields
+    value:
+    - classification_table
+    - retry_parameters
+    - fallback_rule
+    - stop_condition
+  - key: turn_budget
+    value: &id001
+      max: 8
+  - key: duration_budget
+    value: &id002
+      max: 7200000
+  - key: token_budget_total
+    value: &id003
+      max: 8000
+  scoring_checklist:
+  - id: failure_classes_count
+    criterion: Identifies expected number of failure classes (≥ 3).
+    axis: correctness
+    verify: numerical_range
+  - id: required_fields
+    criterion: Report includes failure classification table, per-class retry parameters, fallback
+      rule, and stop condition.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: Each failure class is grounded in the specific job descriptions provided in
+      the prompt (Job IDs, error types); no generic advice without tracing to the prompt.
+      Judge solely from the final answer; do not fail because the tool-call log omits MCP,
+      web_search, or any specific tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: efficiency_judge
+    criterion: Failure classification and retry policy are produced without unnecessary tool
+      calls beyond reading the provided failure descriptions.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: DD_proposal_review_001_20260410v3
+  capability: data_diagnosis
+  domain: agnostic
+  intent: Evaluate a proposal excerpt and produce structured scorecard, rationale, and risk-mitigation
+    artifacts.
+  human_prompt_seed: '工作区已提供 `proposal_excerpt.md`。
+
+
+    请先读取该文件，再生成：
+
+    1) `review_scorecard.json`：包含 `innovation_score`, `importance_score`, `feasibility_score`,
+    `total_score`, `funding_recommendation`。
+
+    2) `review_rationale.md`：每个维度至少两条依据，并给出风险点与改进建议。
+
+    3) `risk_mitigation.json`：至少包含 `top_risks`, `mitigation_actions`, `owner`, `priority`。
+
+
+    约束：
+
+    - 三个分项每项范围 0~30；
+
+    - 总分范围 0~90；
+
+    - 不要脱离给定文本做无依据结论。
+
+    '
+  tags:
+  - meta_userlog
+  - meta_literature
+  - wf_postprocess
+  data_files:
+  - key: proposal_excerpt
+    path: data/WO_general_userlog_002_20260410v3/proposal_excerpt.md
+    oss_url: ''
+    description: Proposal excerpt for structured review scoring.
+  reference_answers:
+  - key: scorecard_artifact
+    value: review_scorecard.json
+  - key: rationale_artifact
+    value: review_rationale.md
+  - key: risk_artifact
+    value: risk_mitigation.json
+  - key: scorecard_required_tokens
+    value:
+      filename: review_scorecard.json
+      tokens:
+      - innovation_score
+      - importance_score
+      - feasibility_score
+      - total_score
+      - funding_recommendation
+      flags: i
+  - key: score_bounds_regex
+    value:
+      filename: review_scorecard.json
+      pattern: (?is)"innovation_score"\s*:\s*(?:[12]?\d|30)\b.*"importance_score"\s*:\s*(?:[12]?\d|30)\b.*"feasibility_score"\s*:\s*(?:[12]?\d|30)\b.*"total_score"\s*:\s*(?:[1-8]?\d|90)\b
+      flags: is
+  - key: rationale_required_tokens
+    value:
+      filename: review_rationale.md
+      tokens:
+      - 创新性
+      - 重要性
+      - 可执行性
+      - 风险
+      - 建议
+      - 立项
+      flags: i
+  - key: turn_budget
+    value:
+      max: 8
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 7000
+  scoring_checklist:
+  - id: scorecard_artifact
+    criterion: Agent writes `review_scorecard.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: rationale_artifact
+    criterion: Agent writes `review_rationale.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: risk_artifact
+    criterion: Agent writes `risk_mitigation.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: scorecard_required_tokens
+    criterion: Scorecard JSON includes required score and recommendation keys.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: score_bounds_regex
+    criterion: Score fields stay within required numeric ranges.
+    axis: correctness
+    verify: text_file_regex
+  - id: rationale_required_tokens
+    criterion: Rationale includes all required dimensions, risks, suggestions, and recommendation
+      statement.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: grounding_source
+    criterion: Judgments are grounded in `proposal_excerpt.md` rather than generic boilerplate.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical tool calls with the same parameter set.
+    axis: efficiency
+    verify: no_retries
+  - id: efficiency_judge
+    criterion: Proposal assessment is concise and complete without unnecessary tangential
+      exploration.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
+    axis: efficiency
+    verify: token_budget
+- id: DD_data_qc_plot_001_20260410v4
+  capability: data_diagnosis
+  domain: agnostic
+  intent: Build a data-grounded plotting and QC workflow from CSV with machine-checkable artifacts,
+    numeric QC metrics, and chart-priority decisions.
+  human_prompt_seed: "工作区中已提供 `experiment_metrics.csv`。\n\n请先读取该文件，再完成以下任务：\n1) 生成 `fig_spec.json`：给出\
+    \ 3 种图（折线、散点、箱线）的绘图规格，每个规格至少包含 `chart_type`、`x`、`y`、`group_by`、`title`、`reason`，且字段名必须来自\
+    \ CSV。\n2) 生成 `qc_metrics.json`：至少包含以下键：\n   - `row_count`\n   - `missing_count_yield_pct`\n\
+    \   - `missing_rate_yield_pct`\n   - `outlier_rule`\n   - `candidate_outliers_yield_pct`\n\
+    \   - `unit_map`\n3) 生成 `data_qc_report.md`：包含缺失值检查、异常值规则（需写明 IQR 思路）、单位一致性检查、以及最终交付格式建议。\n\
+    4) 生成 `chart_priority.md`：给出 3 种图的优先级排序（P1/P2/P3）与使用边界。\n5) 在最终回答中简要说明你为何选择这 3 种图，并指出当前数据的至少\
+    \ 2 个局限。\n\n注意：不要虚构 CSV 中不存在的字段名。请在当前目录写出上述四个文件。\n"
+  tags:
+  - meta_userlog
+  - wf_report
+  data_files:
+  - key: experiment_metrics
+    path: data/WO_general_userlog_003_20260410v4/experiment_metrics.csv
+    oss_url: ''
+    description: Small tabular sample for plotting-plan and data-quality checks.
+  reference_answers:
+  - key: fig_spec_artifact
+    value: fig_spec.json
+  - key: qc_metrics_artifact
+    value: qc_metrics.json
+  - key: qc_report_artifact
+    value: data_qc_report.md
+  - key: chart_priority_artifact
+    value: chart_priority.md
+  - key: fig_spec_required_tokens
+    value:
+      filename: fig_spec.json
+      tokens:
+      - line
+      - scatter
+      - box
+      - temperature_C
+      - yield_pct
+      - phase
+      flags: i
+  - key: fig_spec_required_keys_regex
+    value:
+      filename: fig_spec.json
+      pattern: (?is)("chart_type"\s*:.*?"x"\s*:.*?"y"\s*:.*?"group_by"\s*:.*?"title"\s*:.*?"reason")
+      flags: is
+  - key: qc_metrics_required_tokens
+    value:
+      filename: qc_metrics.json
+      tokens:
+      - row_count
+      - missing_count_yield_pct
+      - missing_rate_yield_pct
+      - outlier_rule
+      - candidate_outliers_yield_pct
+      - unit_map
+      flags: i
+  - key: qc_metrics_row_count_regex
+    value:
+      filename: qc_metrics.json
+      pattern: '"row_count"\s*:\s*10\b'
+      flags: i
+  - key: qc_metrics_missing_count_regex
+    value:
+      filename: qc_metrics.json
+      pattern: '"missing_count_yield_pct"\s*:\s*1\b'
+      flags: i
+  - key: qc_metrics_missing_rate_regex
+    value:
+      filename: qc_metrics.json
+      pattern: '"missing_rate_yield_pct"\s*:\s*(?:0?\.1(?:0+)?|10(?:\.0+)?|10%)\b'
+      flags: i
+  - key: qc_report_required_tokens
+    value:
+      filename: data_qc_report.md
+      tokens:
+      - 缺失值
+      - 异常值
+      - 单位
+      - 交付格式
+      - experiment_metrics.csv
+      - IQR
+      flags: i
+  - key: qc_report_missing_rate_regex
+    value:
+      filename: data_qc_report.md
+      pattern: (?i)(缺失率|missing\\s*rate)
+      flags: i
+  - key: qc_report_outlier_regex
+    value:
+      filename: data_qc_report.md
+      pattern: (?i)(1\\.5\\s*\\*\\s*IQR|IQR.*Q1.*Q3)
+      flags: i
+  - key: turn_budget
+    value:
+      max: 7
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 6000
+  scoring_checklist:
+  - id: fig_spec_artifact
+    criterion: Agent writes `fig_spec.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: qc_metrics_artifact
+    criterion: Agent writes `qc_metrics.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: qc_report_artifact
+    criterion: Agent writes `data_qc_report.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: chart_priority_artifact
+    criterion: Agent writes `chart_priority.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: fig_spec_required_tokens
+    criterion: '`fig_spec.json` contains three chart types and is grounded in provided CSV
+      column names.'
+    axis: correctness
+    verify: text_file_contains_all
+  - id: fig_spec_required_keys_regex
+    criterion: '`fig_spec.json` includes complete chart-spec keys (`chart_type/x/y/group_by/title/reason`)
+      in chart objects.'
+    axis: correctness
+    verify: text_file_regex
+  - id: qc_metrics_required_tokens
+    criterion: '`qc_metrics.json` includes required QC metric keys.'
+    axis: correctness
+    verify: text_file_contains_all
+  - id: qc_metrics_row_count_regex
+    criterion: '`qc_metrics.json` reports the correct row count (10).'
+    axis: correctness
+    verify: text_file_regex
+  - id: qc_metrics_missing_count_regex
+    criterion: '`qc_metrics.json` reports missing count for `yield_pct` as 1.'
+    axis: correctness
+    verify: text_file_regex
+  - id: qc_metrics_missing_rate_regex
+    criterion: '`qc_metrics.json` reports missing rate for `yield_pct` around 0.1 / 10 / 10%.'
+    axis: correctness
+    verify: text_file_regex
+  - id: qc_report_required_tokens
+    criterion: '`data_qc_report.md` includes QC essentials (missing values, outliers, unit
+      consistency, and deliverable format).'
+    axis: correctness
+    verify: text_file_contains_all
+  - id: qc_report_missing_rate_regex
+    criterion: '`data_qc_report.md` reports missing-rate style check explicitly.'
+    axis: correctness
+    verify: text_file_regex
+  - id: qc_report_outlier_regex
+    criterion: '`data_qc_report.md` explicitly states an IQR-style outlier rule.'
+    axis: correctness
+    verify: text_file_regex
+  - id: grounding_source
+    criterion: Final answer and generated files are grounded in `experiment_metrics.csv` columns
+      and do not invent nonexistent fields.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical tool calls with the same parameter set.
+    axis: efficiency
+    verify: no_retries
+  - id: efficiency_judge
+    criterion: The response converges to required deliverables without redundant exploratory
+      detours.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+    weight: 1.2
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
+    axis: efficiency
+    verify: token_budget
+    weight: 1.2

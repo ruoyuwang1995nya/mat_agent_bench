@@ -1,0 +1,30 @@
+# ===========================================================================
+# NOMAD VASP INCAR - Real calculation data
+# ===========================================================================
+# Entry ID: ---zunmyM7KVNx0YPCrZceSjc9nS
+# URL: https://nomad-lab.eu/prod/v1/gui/entry/id/---zunmyM7KVNx0YPCrZceSjc9nS
+# Mainfile: xxx_02s-00_agm002246469_spg127/GEO2_vasprun.xml.bz2
+# Fetched: 2026-04-01
+# ===========================================================================
+
+INCAR created by Atomic Simulation Environment
+ EMAX = 15.000000
+ ENCUT = 520.000000
+ EMIN = -15.000000
+ ENAUG = 659.424000
+ EDIFF = 5.00e-07
+ SYMPREC = 1.00e-04
+ PREC = High
+ GGA = PE
+ ALGO = A
+ METAGGA = SCAN
+ NELM = 200
+ IBRION = -1
+ NSW = 0
+ LORBIT = 11
+ LMAXTAU = 6
+ ISPIN = 2
+ KPAR = 1
+ ISYM = 2
+ LASPH = .TRUE.
+ MAGMOM = 10*1.0000

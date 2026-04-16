@@ -1,0 +1,51 @@
+# ===========================================================================
+# NOMAD VASP INCAR - Real calculation data
+# ===========================================================================
+# Entry ID: ---x0dhqdpEkEjP-AT6KK_5q_E8D
+# URL: https://nomad-lab.eu/prod/v1/gui/entry/id/---x0dhqdpEkEjP-AT6KK_5q_E8D
+# Mainfile: oqmd/perovskite/O/Na_Er/fine_relax/OUTCAR
+# Fetched: 2026-04-01
+# ===========================================================================
+
+# General
+ PREC = MED
+ ISTART = 1
+ ICHARG = 1
+ ISPIN = 2
+ MAGMOM = 1*7.0000 4*0.0000
+
+# parallization
+ NPAR = 2
+ LPLANE = .TRUE.
+
+# electronic relaxation 1
+ NELM = 60
+ NELMIN = 2
+ EDIFF = 0.0001
+ LREAL = FALSE
+
+# Ionic relaxation
+ IBRION = 1
+ ISIF = 3
+ NSW = 20
+ ISYM = 1
+ SYMPREC = 1e-05
+ POTIM = 0.5
+
+# DOS related
+ ISMEAR = 0
+ SIGMA = 0.2
+
+# electronic relaxation 2
+ ALGO = FAST
+ AMIX = 0.4
+ BMIX = 1.0
+ MAXMIX = -45
+
+# write fields
+ LWAVE = .FALSE.
+ LCHARG = .TRUE.
+ LVTOT = .FALSE
+ LVHAR = .TRUE.
+ LELF = .FALSE.
+ LORBIT = 11

@@ -1,0 +1,182 @@
+version: v5
+capability: workflow_orchestration
+domain: semiconductor
+questions:
+- id: WO_elec_001_20260411v2
+  capability: workflow_orchestration
+  domain: semiconductor
+  intent: 'Run band-structure workflow for Si: locate structure, compute bands along high-symmetry
+    path, report gap.'
+  human_prompt_seed: '计算 Si 的能带结构：从数据库获取金刚石结构 Si，先做 SCF 计算， 然后沿高对称 k 路径 (G-X-L-G) 计算能带，判断带隙类型（直接/间接）并输出带隙值
+    (eV)。 注意 DFT 带隙与实验值的偏差，给出不确定性说明。
+
+    '
+  tags:
+  - phy_electronic
+  - phy_surface
+  priority: P0
+  data_files: []
+  reference_answers:
+  - key: gap_type
+    value: indirect
+  - key: gap_value_eV
+    value: 0.65
+    tolerance: 0.25
+  - key: required_fields
+    value:
+    - kpath
+    - gap_type
+    - gap_value
+    - uncertainty_note
+  - key: turn_budget
+    value:
+      max: 18
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 8000
+  scoring_checklist:
+  - id: gap_type
+    criterion: Band-gap type is correctly identified as indirect (not direct).
+    axis: correctness
+    verify: llm_binary_judge
+  - id: gap_value_eV
+    criterion: Gap value is in expected DFT range.
+    axis: correctness
+    verify: numerical_range
+  - id: required_fields
+    criterion: Report includes high-symmetry k-path, gap type classification, gap value, and
+      DFT uncertainty note.
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_source
+    criterion: Stated band gap values are tied to band-structure or calculation outcomes described
+      in the final answer, not only generic training recall. Judge from the answer and named
+      outputs; do not fail because the tool-call log omits MCP, web_search, or any specific
+      tool.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: Band structure calculation is not repeated unnecessarily for the same k-path.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: efficiency_judge
+    criterion: Si band structure workflow (fetch → SCF → bands → report) completes without
+      redundant intermediate steps.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget
+- id: WO_elec_009_20260411v1
+  capability: workflow_orchestration
+  domain: semiconductor
+  intent: Compute Si phonon dispersion with ABACUS (including relaxation step) and summarize
+    key spectrum outcomes.
+  human_prompt_seed: "计算 Si 的声子特征（Mock版）：\n1. 先 query/检索并梳理本任务所需输入文件（结构文件、参数文件、声子相关输入）；\n\
+    2. 给出你会采用的声子设置（k 路径/采样、超胞或最小长度、位移步长）；\n3. 不做真实 ABACUS 计算，使用以下 mock 结果进行后处理：\n   - supercell_or_min_length\
+    \ = \"3x3x3\"\n   - displacement_step = 0.01\n   - gamma_optical_frequency_THz = 15.6\n\
+    \   - imaginary_mode_check = false\n4. 汇总是否存在虚频，并给出结果可信度与不确定性说明。\n\n请完成以下交付：\n1) `si_phonon_abacus.json`：至少包含\
+    \ `input_files`, `kpath_or_sampling`, `supercell_or_min_length`, `displacement_step`,\
+    \ `imaginary_mode_check`, `key_frequency_summary`；\n2) `si_phonon_abacus_report.md`：说明\
+    \ query 输入梳理 + mock 后处理流程、关键结论与不确定性。\n\n最终回答请简要说明是否出现虚频，并标注为 mock 后处理结论。\n"
+  tags:
+  - abacus
+  - phy_phonon
+  - phy_surface
+  - meta_userlog
+  data_files: []
+  reference_answers:
+  - key: phonon_json
+    value: si_phonon_abacus.json
+  - key: phonon_report
+    value: si_phonon_abacus_report.md
+  - key: json_required_tokens
+    value:
+      filename: si_phonon_abacus.json
+      tokens:
+      - displacement_step
+      - imaginary_mode_check
+      - key_frequency_summary
+      - supercell_or_min_length
+      flags: i
+  - key: report_required_tokens
+    value:
+      filename: si_phonon_abacus_report.md
+      tokens:
+      - Si
+      - ABACUS
+      - phonon
+      - 优化
+      - 虚频
+      - 不确定性
+      flags: i
+  - key: gamma_freq_mock
+    value: 15.6
+    tolerance: 1.0
+  - key: turn_budget
+    value:
+      max: 18
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 9000
+  scoring_checklist:
+  - id: phonon_json
+    criterion: Agent writes `si_phonon_abacus.json` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: phonon_report
+    criterion: Agent writes `si_phonon_abacus_report.md` to workspace.
+    axis: correctness
+    verify: artifact_exists
+  - id: json_required_tokens
+    criterion: JSON contains key phonon workflow and imaginary-mode-check fields.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: report_required_tokens
+    criterion: Report explains relax→phonon workflow and uncertainty caveats.
+    axis: correctness
+    verify: text_file_contains_all
+  - id: gamma_freq_mock
+    criterion: Final answer includes a mock gamma optical frequency value near 15.6 THz.
+    axis: correctness
+    verify: numerical_range
+  - id: grounding_source
+    criterion: Final answer is grounded in generated phonon artifacts and does not fabricate
+      unsupported dispersion conclusions.
+    axis: grounding
+    verify: llm_binary_judge
+  - id: no_retries
+    criterion: No repeated identical tool calls with the same parameter set.
+    axis: efficiency
+    verify: no_retries
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling (tunable per deployment).
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+      (tunable per task after calibration).
+    axis: efficiency
+    verify: token_budget

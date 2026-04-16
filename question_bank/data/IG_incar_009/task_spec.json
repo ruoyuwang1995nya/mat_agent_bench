@@ -1,0 +1,12 @@
+{
+  "critical_params": {
+    "EDIFF": 0.0001,
+    "IBRION": 8,
+    "ISMEAR": 0,
+    "LEPSILON": ".TRUE."
+  },
+  "description": "为有机金属氧化物 C8H12HfO4 生成 DFPT(密度泛函微扰理论)介电常数计算的 VASP INCAR。",
+  "formula": "C8H12HfO4",
+  "material_context": "C8H12HfO4 是含 Hf 的有机氧化物。DFPT 介电计算需要 IBRION=8 和 LEPSILON=.TRUE.，使用高斯展宽(ISMEAR=0)适合绝缘体/半导体。",
+  "task": "dfpt_dielectric"
+}

@@ -1,0 +1,161 @@
+version: v5
+capability: batch_processing
+domain: catalysis
+questions:
+- id: CR_BP_HT_adsorption_tree_20260406v2
+  capability: batch_processing
+  domain: catalysis
+  intent: Generate HT_adsorption/ directory tree with pure_metals, compounds, clusters sections
+    per doc 4.1 (high-level structure and naming).
+  human_prompt_seed: '构建高通量吸附建模数据集目录 HT_adsorption/，顶层包含 pure_metals、compounds、clusters 三部分，命名与层级遵循文档
+    4.1： pure_metals 下按元素与 std-{structure} 组织，含 bulk/、slab/001/、slab/011/、adslab/001/、adslab/011/；slab
+    至少 5 层、真空 ≥15 Å、横向 ≥10 Å； 吸附分子 HCOOH、CO2、COOH、HCOO、H、CO；每个 slab 至少 top/bridge/hollow 三种位点，文件命名
+    {adsorbate}_{site}.xyz。 compounds 列表与 clusters（Au13 等）按文档列出。若无法一次生成全部元素，请生成可复现的脚本 + 对
+    Ag、ZnO、Au13 的完整示例子树，并说明如何扩展到全量。
+
+    '
+  tags:
+  - catalysis_lab
+  - wf_batch
+  - meta_database
+  data_files: []
+  reference_answers:
+  - key: turn_budget
+    value:
+      max: 30
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 40000
+  scoring_checklist:
+  - id: tree_and_script
+    criterion: 交付 HT_adsorption/ 层级说明或实际目录；含 bulk/slab/adslab 逻辑与吸附位点命名约定；至少对 Ag、ZnO、Au13
+      有可检查示例子树或等价产物。
+    axis: correctness
+    verify: llm_binary_judge
+  - id: grounding_batch
+    criterion: 最终答案中描述的目录层级与脚本逻辑与文档 4.1 的字段（元素列表、化合物列表、团簇列表、文件名规则）一致，答案内容无自相矛盾。评判仅基于 final
+      answer 中的目录描述和脚本逻辑，不以 workspace 平面文件列表中缺失子目录为由判 fail（子目录内容在平面 artifact 列表中不可见属正常行为）。
+    axis: grounding
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous
+      benchmark ceiling.
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within a generous benchmark ceiling.
+    axis: efficiency
+    verify: token_budget
+- id: BP_elec_001_20260406v2
+  capability: batch_processing
+  domain: catalysis
+  intent: Batch-compute H adsorption energy on 3 different metal (001) surfaces using mock
+    energies to test batch workflow efficiency.
+  human_prompt_seed: "批量计算 H 原子在 Cu(001)、Ag(001)、Au(001) 三种金属表面的吸附能，用于 HER 活性对比：\n\n对每种金属执行相同流程：\n\
+    1. 获取 FCC 体相结构（Cu: Fm-3m, a=3.615 Å; Ag: Fm-3m, a=4.085 Å; Au: Fm-3m, a=4.078 Å）；\n2.\
+    \ 切 (001) 面 slab（4 层，15 Å 真空，2×2 扩胞）；\n3. 在 ontop 位点放置 H 原子（距表面 1.5 Å）；\n4. 使用以下mock能量值（模拟DPA弛豫结果）：\n\
+    \n   | 金属 | E_slab (eV) | E_slab+H (eV) |\n   |------|-------------|---------------|\n\
+    \   | Cu   | -57.12      | -61.08        |\n   | Ag   | -43.56      | -47.63        |\n\
+    \   | Au   | -50.84      | -54.83        |\n\n   H₂ 参考能量：E_H₂ = -6.68 eV（Final Energy/Atom\
+    \ ≈ -3.34 eV，只计算一次，三种金属共用）\n\n5. 计算 E_ads = E(slab+H) - E(slab) - 0.5×E(H₂)；\n\n关键要求：\n\
+    - 三种金属的 slab 参数完全一致（同样层数、真空、扩胞）\n- H₂ 参考能量只使用一次，三种金属共用\n- 输出三种金属的吸附能对比表，并按 |ΔG_H| 排序评价\
+    \ HER 活性\n\n预期结果：\n- Cu: E_ads ≈ -0.62 eV\n- Ag: E_ads ≈ -0.73 eV\n- Au: E_ads ≈ -0.65\
+    \ eV\n"
+  tags:
+  - wf_batch
+  - chem_her
+  - phy_surface
+  data_files: []
+  reference_answers:
+  - key: E_ads_Cu
+    value: -0.62
+    tolerance: 0.2
+  - key: E_ads_Ag
+    value: -0.73
+    tolerance: 0.2
+  - key: E_ads_Au
+    value: -0.65
+    tolerance: 0.2
+  - key: required_fields
+    value:
+    - E_ads_Cu
+    - E_ads_Ag
+    - E_ads_Au
+    - H2_reference
+    - activity_ranking
+  - key: batch_efficiency
+    value: H2 reference computed once, shared across 3 metals
+  - key: turn_budget
+    value:
+      max: 20
+  - key: duration_budget
+    value:
+      max: 7200000
+  - key: token_budget_total
+    value:
+      max: 25000
+  scoring_checklist:
+  - id: E_ads_Cu
+    criterion: 'In the FINAL delivered answer (not intermediate steps), a Cu(001) H adsorption
+      energy of approximately −0.62 eV is explicitly reported as a number (accept ±0.2 eV).
+      NOTE: The answer may be in Chinese with markdown tables; ''|------|'' separator lines
+      are standard table formatting, NOT truncation indicators. Intermediate computation errors
+      do not matter if the final answer contains the value.'
+    axis: correctness
+    verify: llm_binary_judge
+  - id: E_ads_Ag
+    criterion: 'In the FINAL delivered answer (not intermediate steps), an Ag(001) H adsorption
+      energy of approximately −0.73 eV is explicitly reported as a number (accept ±0.2 eV).
+      NOTE: The answer may be in Chinese with markdown tables; ''|------|'' separator lines
+      are standard table formatting, NOT truncation indicators. Intermediate computation errors
+      do not matter if the final answer contains the value.'
+    axis: correctness
+    verify: llm_binary_judge
+  - id: E_ads_Au
+    criterion: 'In the FINAL delivered answer (not intermediate steps), an Au(001) H adsorption
+      energy of approximately −0.65 eV is explicitly reported as a number (accept ±0.2 eV).
+      NOTE: The answer may be in Chinese with markdown tables; ''|------|'' separator lines
+      are standard table formatting, NOT truncation indicators. Intermediate computation errors
+      do not matter if the final answer contains the value.'
+    axis: correctness
+    verify: llm_binary_judge
+  - id: required_fields
+    criterion: 'The FINAL delivered answer contains ALL of: (1) numerical adsorption energy
+      values for Cu, Ag, and Au; (2) the H₂ reference energy value; (3) an HER activity ranking
+      of the three metals. NOTE: The answer may be in Chinese with markdown tables; ''|------|''
+      separator lines are standard table formatting, NOT truncation. Intermediate computation
+      errors do not matter if the final answer covers all five items.'
+    axis: correctness
+    verify: llm_binary_judge
+  - id: consistent_slab_params
+    criterion: 'All three metal slabs use identical structural parameters: 4 layers, 15 Å
+      vacuum, 2×2 supercell, (001) surface.'
+    axis: correctness
+    verify: llm_binary_judge
+  - id: batch_efficiency
+    criterion: H₂ reference energy is used only once and shared for all three metals.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: efficiency_judge
+    criterion: Batch workflow is organized efficiently without redundant steps.
+    axis: efficiency
+    verify: llm_binary_judge
+  - id: turn_budget
+    criterion: Agent completes the task within the turn (step) budget.
+    axis: efficiency
+    verify: turn_budget
+  - id: duration_budget
+    criterion: Wall-clock run duration does not exceed benchmark ceiling.
+    axis: efficiency
+    verify: duration_budget
+  - id: token_budget_total
+    criterion: Total token usage stays within benchmark ceiling.
+    axis: efficiency
+    verify: token_budget

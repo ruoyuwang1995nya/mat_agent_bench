@@ -1,0 +1,14 @@
+{
+  "critical_params": {
+    "EDIFF": 1e-07,
+    "IBRION": -1,
+    "ISMEAR": -5,
+    "ISPIN": 2,
+    "LORBIT": 11,
+    "NSW": 0
+  },
+  "description": "为三元化合物 Na3AlSe 生成静态 SCF 计算 VASP INCAR。按照 NOMAD 数据库中的参考设置，采用自旋极化。",
+  "formula": "Na3AlSe",
+  "material_context": "Na3AlSe 是三元硒化物。NOMAD 数据库中该体系的计算采用了 ISPIN=2 自旋极化设置（可能用于验证磁性基态稳定性或作为计算流程的一致性设置）。使用 ISMEAR=-5(四面体方法)适合精确态密度计算，LORBIT=11 输出投影态密度。EDIFF=1e-7 确保高精度收敛。",
+  "task": "magnetic_metal_scf"
+}

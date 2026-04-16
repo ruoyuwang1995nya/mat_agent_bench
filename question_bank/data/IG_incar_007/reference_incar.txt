@@ -1,0 +1,56 @@
+# ===========================================================================
+# NOMAD VASP INCAR - Real calculation data (adapted for MD)
+# ===========================================================================
+# Base Entry ID: ---mWpSogZteOYvPrpyT6PUZfSQJ
+# URL: https://nomad-lab.eu/prod/v1/gui/entry/id/---mWpSogZteOYvPrpyT6PUZfSQJ
+# Mainfile: oqmd/heusler/Pm/Mn_Na/standard/OUTCAR
+# Fetched: 2026-04-01
+# NOTE: Original NOMAD entry is a static SCF for this Heusler alloy.
+# No AIMD entry exists for MnNaPm2 on NOMAD. Electronic structure
+# parameters (ENCUT, MAGMOM, ISPIN) are preserved from the original;
+# ionic section adapted to Born-Oppenheimer MD best practices.
+# ===========================================================================
+
+# General
+ PREC = MED
+ ISTART = 1
+ ICHARG = 1
+ ISPIN = 2
+ MAGMOM = 1*5.0000 1*0.0000 2*7.0000
+
+# Parallelization
+ NPAR = 2
+ LPLANE = .TRUE.
+
+# Electronic relaxation
+ ENCUT = 520
+ NELM = 60
+ NELMIN = 2
+ EDIFF = 0.0001
+ LREAL = Auto
+
+# Molecular Dynamics (Born-Oppenheimer)
+ IBRION = 0
+ ISIF = 2
+ NSW = 5000
+ ISYM = 0
+ POTIM = 0.5
+ SMASS = 0
+ TEBEG = 300
+ TEEND = 300
+
+# Smearing (MP for metallic MD; NEVER use ISMEAR=-5 for MD)
+ ISMEAR = 1
+ SIGMA = 0.2
+
+# Electronic relaxation 2
+ ALGO = FAST
+ AMIX = 0.4
+ BMIX = 1.0
+ MAXMIX = -45
+
+# Write fields
+ LWAVE = .FALSE.
+ LCHARG = .FALSE.
+ LVTOT = .FALSE.
+ LORBIT = 11
