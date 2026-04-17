@@ -1,6 +1,7 @@
 """CLI entry point for mat-bench.
 
 Subcommands:
+    mat-bench run           Run benchmark with an agent script
     mat-bench list          List questions in the question bank
     mat-bench grade         Grade a JSONL submission file
     mat-bench report        Re-generate reports from existing JSONL
@@ -11,6 +12,112 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+
+
+def _add_run_parser(subparsers: argparse._SubParsersAction) -> None:
+    p = subparsers.add_parser(
+        'run',
+        help='Run benchmark with an agent script',
+        description=(
+            'Run mat-agent-bench with any agent. '
+            'The agent is a shell script invoked per-question.'
+        ),
+    )
+    p.add_argument(
+        '--agent',
+        type=str,
+        required=True,
+        help='Path to agent shell script (e.g. agents/claude_code.sh).',
+    )
+    p.add_argument(
+        '--agent-env',
+        nargs='*',
+        metavar='KEY=VALUE',
+        help='Extra environment variables passed to the agent script.',
+    )
+    p.add_argument(
+        '--question-bank-dir',
+        type=str,
+        default='question_bank',
+        help='Path to question_bank directory (default: question_bank).',
+    )
+    p.add_argument(
+        '--questions',
+        nargs='*',
+        help='Specific question ID(s) to run.',
+    )
+    p.add_argument(
+        '--capability',
+        type=str,
+        default=None,
+        help='Filter by capability (e.g. input_generation).',
+    )
+    p.add_argument(
+        '--domain',
+        type=str,
+        default=None,
+        help='Filter by domain (e.g. agnostic, battery).',
+    )
+    p.add_argument(
+        '--limit',
+        type=int,
+        default=None,
+        help='Run only the first N questions.',
+    )
+    p.add_argument(
+        '--output-dir',
+        type=str,
+        default=None,
+        help='Output directory (default: runs/<agent>_<timestamp>).',
+    )
+    p.add_argument(
+        '--timeout',
+        type=int,
+        default=600,
+        help='Timeout in seconds per question (default: 600).',
+    )
+    p.add_argument(
+        '--mode',
+        type=str,
+        default='direct',
+        choices=['direct', 'planner'],
+        help='Evaluation mode (default: direct).',
+    )
+    p.add_argument(
+        '--llm-judge',
+        type=str,
+        default=None,
+        metavar='PROVIDER/MODEL',
+        help=(
+            "LLM judge for llm_binary_judge criteria, e.g. "
+            "'anthropic/claude-sonnet-4-20250514'."
+        ),
+    )
+    p.add_argument(
+        '--skip-grading',
+        action='store_true',
+        help='Skip grading — just run and output pre-grading JSONL.',
+    )
+    p.add_argument(
+        '--report',
+        action='store_true',
+        help='Generate full reports after grading.',
+    )
+    p.add_argument(
+        '-j',
+        '--jobs',
+        type=int,
+        default=1,
+        help='Concurrent tasks (default: 1).',
+    )
+    p.set_defaults(func=_cmd_run)
+
+
+def _cmd_run(args: argparse.Namespace) -> None:
+    from .harness import run_benchmark
+
+    rc = run_benchmark(args)
+    sys.exit(rc)
 
 
 def _add_list_parser(subparsers: argparse._SubParsersAction) -> None:
@@ -121,6 +228,7 @@ def main() -> None:
     )
     subparsers = parser.add_subparsers(dest='command')
 
+    _add_run_parser(subparsers)
     _add_list_parser(subparsers)
     _add_grade_parser(subparsers)
     _add_report_parser(subparsers)
