@@ -1,6 +1,6 @@
 # mat-agent-bench
 
-**MATTER v5** — a benchmark toolkit for evaluating AI agents on materials science tasks.
+**MAT-AGENT-BENCH** — a benchmark toolkit for evaluating AI agents on materials science tasks.
 
 The benchmark covers 10 capability categories (structure retrieval, structure construction, input generation, workflow orchestration, batch processing, data diagnosis, execution contract, scientific analysis, safety/refusal, and more) and grades agent runs against a structured question bank using a binary pass/fail checklist system with per-item weights.
 
@@ -13,7 +13,7 @@ Requires Python ≥ 3.11 and [uv](https://github.com/astral-sh/uv).
 ```bash
 # Clone the repo
 git clone <repo-url>
-cd mat_agent_bench
+cd mat-agent-bench
 
 # Install core package
 uv venv .venv --python 3.12
