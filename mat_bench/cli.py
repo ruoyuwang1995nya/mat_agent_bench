@@ -10,6 +10,7 @@ Subcommands:
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -86,11 +87,12 @@ def _add_run_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument(
         '--llm-judge',
         type=str,
-        default=None,
+        default=os.environ.get('MAT_BENCH_LLM_JUDGE'),
         metavar='PROVIDER/MODEL',
         help=(
             "LLM judge for llm_binary_judge criteria, e.g. "
-            "'anthropic/claude-sonnet-4-20250514'."
+            "'anthropic/claude-sonnet-4-20250514'. "
+            "Falls back to MAT_BENCH_LLM_JUDGE env var."
         ),
     )
     p.add_argument(
