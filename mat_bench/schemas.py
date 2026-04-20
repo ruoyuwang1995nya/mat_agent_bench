@@ -327,7 +327,7 @@ class QuestionBank(BaseModel):
 class LLMConfig(BaseModel):
     """LLM config for the evaluator judge."""
 
-    provider: Literal['openai', 'anthropic', 'deepseek', 'openrouter']
+    #provider: str
     model: str
     api_key: str
     base_url: str | None = None

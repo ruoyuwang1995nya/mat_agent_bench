@@ -379,32 +379,49 @@ def run_single_question(
 # ---------------------------------------------------------------------------
 
 
-def parse_llm_judge_config(llm_judge_str: str) -> LLMConfig:
-    """Parse ``PROVIDER/MODEL`` string into an LLMConfig.
+def parse_llm_judge_config(llm_judge_str: str | None = None) -> LLMConfig:
+    """Build an LLMConfig from environment variables.
 
-    API key is read from ``<PROVIDER>_API_KEY`` environment variable.
+    Env vars:
+        MAT_BENCH_LLM_PROVIDER  (default: "openai")
+        MAT_BENCH_LLM_MODEL     (required)
+        MAT_BENCH_LLM_API_KEY   (required)
+        MAT_BENCH_LLM_BASE_URL  (optional)
+        MAT_BENCH_LLM_TEMPERATURE (optional, default: 0.0)
+        MAT_BENCH_LLM_MAX_TOKENS  (optional, default: 4096)
+        MAT_BENCH_LLM_TIMEOUT     (optional, default: 180)
+
+    The *llm_judge_str* parameter (``PROVIDER/MODEL`` from ``--llm-judge``)
+    is accepted for CLI convenience and overrides the provider/model env vars.
     """
-    parts = llm_judge_str.split("/", 1)
-    if len(parts) != 2:
+    #provider = os.environ.get("MAT_BENCH_LLM_PROVIDER", "openai")
+    model = os.environ.get("MAT_BENCH_LLM_MODEL", "")
+    api_key = os.environ.get("MAT_BENCH_LLM_API_KEY", "")
+
+    # --llm-judge PROVIDER/MODEL overrides env vars
+    if llm_judge_str:
+        parts = llm_judge_str.split("/", 1)
+        if len(parts) != 2:
+            raise ValueError(
+                "--llm-judge must be PROVIDER/MODEL "
+                "(e.g. anthropic/claude-sonnet-4-20250514)"
+            )
+        model=llm_judge_str
+
+    if not model:
         raise ValueError(
-            "--llm-judge must be PROVIDER/MODEL "
-            "(e.g. anthropic/claude-sonnet-4-20250514)"
+            "MAT_BENCH_LLM_MODEL not set and no --llm-judge provided"
         )
-    provider, model = parts
-    api_key_envs = {
-        "anthropic": "ANTHROPIC_API_KEY",
-        "openai": "OPENAI_API_KEY",
-        "deepseek": "DEEPSEEK_API_KEY",
-        "openrouter": "OPENROUTER_API_KEY",
-    }
-    env_var = api_key_envs.get(provider, f"{provider.upper()}_API_KEY")
-    api_key = os.environ.get(env_var, "")
     if not api_key:
-        raise ValueError(f"{env_var} not set (required for --llm-judge)")
+        raise ValueError("MAT_BENCH_LLM_API_KEY not set")
+
     return LLMConfig(
-        provider=provider,  # type: ignore[arg-type]
         model=model,
         api_key=api_key,
+        base_url=os.environ.get("MAT_BENCH_LLM_BASE_URL") or None,
+        temperature=float(os.environ.get("MAT_BENCH_LLM_TEMPERATURE", "0.0")),
+        max_tokens=int(os.environ.get("MAT_BENCH_LLM_MAX_TOKENS", "4096")),
+        timeout=int(os.environ.get("MAT_BENCH_LLM_TIMEOUT", "180")),
     )
 
 
@@ -588,12 +605,14 @@ def run_benchmark(args: argparse.Namespace) -> int:
 
     # LLM judge config
     llm_cfg = None
-    if args.llm_judge and not args.skip_grading:
-        try:
-            llm_cfg = parse_llm_judge_config(args.llm_judge)
-        except ValueError as exc:
-            print(f"error: {exc}", file=sys.stderr)
-            return 1
+    if not args.skip_grading:
+        has_env = os.environ.get("MAT_BENCH_LLM_MODEL") and os.environ.get("MAT_BENCH_LLM_API_KEY")
+        if args.llm_judge or has_env:
+            try:
+                llm_cfg = parse_llm_judge_config(args.llm_judge or None)
+            except ValueError as exc:
+                print(f"error: {exc}", file=sys.stderr)
+                return 1
 
     # Run questions
     records: list[EvalRunRecord] = []
