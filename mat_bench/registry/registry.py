@@ -12,7 +12,7 @@ from typing import Any
 
 import yaml
 
-from .schemas import QuestionBank, QuestionItem
+from ..schemas import QuestionBank, QuestionItem
 
 _logger = logging.getLogger(__name__)
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Any
 
-from .schemas import AxisPassRates, EvalRunRecord, EvaluationSummary, QuestionPassRate
+from ..schemas import AxisPassRates, EvalRunRecord, EvaluationSummary, QuestionPassRate
 
 
 def build_summary(records: list[EvalRunRecord]) -> EvaluationSummary:

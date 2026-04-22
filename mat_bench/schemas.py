@@ -12,7 +12,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from .question_tags import QuestionTag
+from .registry.tags import QuestionTag
 
 # ---------------------------------------------------------------------------
 # Literal type aliases
