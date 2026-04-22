@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
 from .evidence import EvidenceBundle, TokenUsage
-from .schemas import (
+from ..schemas import (
     CriterionResult,
     EvalRunRecord,
     QuestionItem,
@@ -18,7 +18,7 @@ from .schemas import (
     SafetyVetoRecord,
     TokenUsageRecord,
 )
-from .validators import (
+from ..validators import (
     check_atom_count,
     check_bond_angle,
     check_bond_count,

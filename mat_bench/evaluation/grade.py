@@ -11,12 +11,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from .aggregator import build_summary
+from ..reporting.aggregator import build_summary
 from .evaluator import BinaryEvaluator
 from .evidence import EvidenceBundle, EvidenceExtractor
-from .registry import Question, Registry
-from .reporter import load_records_from_jsonl, write_reports
-from .schemas import (
+from ..registry import Question, Registry
+from ..reporting.reporter import load_records_from_jsonl, write_reports
+from ..schemas import (
     EvalRunRecord,
     EvaluationSummary,
     LLMConfig,

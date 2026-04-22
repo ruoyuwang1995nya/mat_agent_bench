@@ -51,7 +51,7 @@ from .prompts import (
     GROUNDING_JUDGE_SYSTEM_PROMPT,
     SAFETY_EVAL_SYSTEM_PROMPT,
 )
-from .schemas import (
+from ..schemas import (
     AxisLiteral,
     CriterionResult,
     EvalRunRecord,

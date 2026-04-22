@@ -182,7 +182,7 @@ def _cmd_list(args: argparse.Namespace) -> None:
 
 
 def _cmd_grade(args: argparse.Namespace) -> None:
-    from .grade import grade_run
+    from .evaluation.grade import grade_run
 
     raw_runs_path = Path(args.raw_runs)
     output_dir = Path(args.output_dir) if args.output_dir else None
@@ -204,7 +204,7 @@ def _cmd_grade(args: argparse.Namespace) -> None:
 
 
 def _cmd_report(args: argparse.Namespace) -> None:
-    from .reporter import generate_rating_from_raw_runs
+    from .reporting.reporter import generate_rating_from_raw_runs
 
     raw_runs_path = Path(args.raw_runs)
     output_dir = Path(args.output_dir) if args.output_dir else None

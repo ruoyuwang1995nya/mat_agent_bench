@@ -27,8 +27,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from .evidence import ArtifactRecord, EvidenceBundle, TokenUsage
-from .grade import grade_question, grade_run
+from .evaluation.evidence import ArtifactRecord, EvidenceBundle, TokenUsage
+from .evaluation.grade import grade_question, grade_run
 from .registry import Question, Registry
 from .schemas import EvalRunRecord, LLMConfig, TokenUsageRecord
 

@@ -3,13 +3,19 @@
 Public API exports for programmatic use.
 """
 
-from .aggregator import build_summary
-from .evaluator import BinaryEvaluator
-from .evidence import EvidenceBundle, EvidenceExtractor
-from .grade import QuestionReport, RunReport, grade_question, grade_run
+from .evaluation import (
+    BinaryEvaluator,
+    EvidenceBundle,
+    EvidenceExtractor,
+    QuestionReport,
+    RunReport,
+    grade_question,
+    grade_run,
+)
 from .registry import Question, Registry
-from .reporter import (
+from .reporting import (
     append_raw_run,
+    build_summary,
     generate_rating_from_raw_runs,
     load_records_from_jsonl,
     write_reports,
