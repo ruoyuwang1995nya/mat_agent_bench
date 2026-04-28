@@ -8,11 +8,12 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
-from ..schemas import QuestionBank, QuestionItem
+if TYPE_CHECKING:
+    from ..schemas import QuestionItem
 
 _logger = logging.getLogger(__name__)
 
@@ -115,6 +116,7 @@ class Registry:
         if not isinstance(raw, dict) or 'questions' not in raw:
             return
 
+        from ..schemas import QuestionItem  # local import to avoid circular dependency
         for q_raw in raw['questions']:
             try:
                 item = QuestionItem.model_validate(q_raw)
