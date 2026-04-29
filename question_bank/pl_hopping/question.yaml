@@ -1,0 +1,97 @@
+id: pl_hopping
+capability: scientific_analysis
+domain: battery
+intent: Analyze Li+ hopping in PEO-LiTFSI by comparing PMF barriers and diffusion
+  evidence for two salt-ratio conditions.
+human_prompt_seed: '文件 `free_energy_hopping_bundle.json` 给出了 PEO-LiTFSI 在两个盐浓度条件下的局域结构、PMF
+  和扩散关联数据。
+
+  请完成一个 Li+ hopping 机制分析：
+
+  1. 解释 reaction coordinate 的物理意义；
+
+  2. 比较两种条件下 PMF 最低点、主要能垒和稳定态；
+
+  3. 结合常规 MD 中的配位和扩散信息，判断哪种条件更有利于 hopping；
+
+  4. 说明如果进一步做实验或更高精度模拟，应优先验证什么。
+
+  '
+tags:
+- chem_her
+- phy_elastic
+- mat_polymer
+data_files:
+- key: free_energy_bundle
+  path: free_energy_hopping_bundle.json
+  description: Free-energy bundle with PMF barriers, minima, state labels, and corresponding
+    MD diffusion/coordination descriptors for two salt-ratio conditions.
+reference_answers:
+- key: lower_barrier_condition
+  value: EO_Li_20
+- key: barrier_eo_li_20_eV
+  value: 0.18
+  tolerance: 0.05
+- key: barrier_eo_li_10_eV
+  value: 0.33
+  tolerance: 0.05
+- key: required_fields
+  value:
+  - pmf_profile
+  - barrier_table
+  - reaction_coordinate_note
+  - hopping_mechanism
+  - validation_suggestion
+- key: turn_budget
+  value:
+    max: 24
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 14000
+scoring_checklist:
+- id: barrier_eo_li_20_eV
+  criterion: PMF main barrier for EO/Li = 20 is reported within tolerance of the curated
+    value (~0.18 eV).
+  axis: correctness
+  verify: numerical_range
+- id: barrier_eo_li_10_eV
+  criterion: PMF main barrier for EO/Li = 10 is reported within tolerance of the curated
+    value (~0.33 eV).
+  axis: correctness
+  verify: numerical_range
+- id: lower_barrier_condition_correctness
+  criterion: Final mechanism analysis identifies EO/Li = 20 as the condition with
+    the lower hopping barrier and the more favorable Li+ migration pathway.
+  axis: correctness
+  verify: llm_binary_judge
+- id: required_fields
+  criterion: Report includes PMF profile discussion, barrier table, reaction-coordinate
+    note, hopping-mechanism interpretation, and a validation suggestion.
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: The PMF interpretation is explicitly tied to the provided free-energy
+    and MD descriptors from free_energy_hopping_bundle.json rather than generic statements
+    about ion transport.
+  axis: grounding
+  verify: llm_binary_judge
+- id: efficiency_judge
+  criterion: The free-energy analysis compares the two conditions directly and avoids
+    redundant side analysis.
+  axis: efficiency
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration does not exceed benchmark ceiling.
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling.
+  axis: efficiency
+  verify: token_budget

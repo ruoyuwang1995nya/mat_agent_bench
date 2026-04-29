@@ -1,0 +1,101 @@
+id: WO_elec_007_20260411v1
+capability: workflow_orchestration
+domain: catalysis
+intent: Compute Pd(111) work function with ABACUS under a z-direction vacuum setup
+  and summarize key computational settings and output.
+human_prompt_seed: "计算 Pd(111) 表面功函数（Mock版）：\n1. 先 query/检索 Pd 体相与 Pd(111) slab 建模所需输入文件，并确认真空方向约束；\n\
+  2. 列出关键设置（exchange-correlation functional、计算模式、真空方向、是否弛豫）；\n3. 不做真实 ABACUS 计算，使用以下\
+  \ mock 结果：\n   - work_function_eV = 5.43\n   - vacuum_direction = z\n   - functional\
+  \ = PBE\n   - calculation_mode = SCF\n4. 基于以上数值完成后处理与结论解释。\n\n请完成以下交付：\n1) `pd111_work_function.json`：至少包含\
+  \ `input_files`, `work_function_eV`, `vacuum_direction`, `functional`, `calculation_mode`,\
+  \ `notes`；\n2) `pd111_work_function_report.md`：说明 query 输入梳理、mock 后处理流程和结果解读。\n\n\
+  最终回答需明确给出功函数数值（eV）并确认 vacuum_direction=z。\n"
+tags:
+- phy_electronic
+- phy_surface
+- abacus
+- meta_userlog
+data_files: []
+reference_answers:
+- key: wf_json_artifact
+  value: pd111_work_function.json
+- key: wf_report_artifact
+  value: pd111_work_function_report.md
+- key: wf_required_tokens
+  value:
+    filename: pd111_work_function.json
+    tokens:
+    - work_function_eV
+    - vacuum_direction
+    - z
+    - functional
+    - calculation_mode
+    flags: i
+- key: report_required_tokens
+  value:
+    filename: pd111_work_function_report.md
+    tokens:
+    - Pd(111)
+    - work function
+    - ABACUS
+    - z
+    - 不确定性
+    flags: i
+- key: wf_value_mock
+  value: 5.43
+  tolerance: 0.3
+- key: turn_budget
+  value:
+    max: 18
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 9000
+scoring_checklist:
+- id: wf_json_artifact
+  criterion: Agent writes `pd111_work_function.json` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: wf_report_artifact
+  criterion: Agent writes `pd111_work_function_report.md` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: wf_required_tokens
+  criterion: JSON output includes work-function value and explicit z-direction vacuum
+    setting.
+  axis: correctness
+  verify: text_file_contains_all
+- id: report_required_tokens
+  criterion: Report explains setup rationale and output interpretation with uncertainty
+    caveats.
+  axis: correctness
+  verify: text_file_contains_all
+- id: wf_value_mock
+  criterion: Final answer includes a mock work-function value near 5.43 eV.
+  axis: correctness
+  verify: numerical_range
+- id: grounding_source
+  criterion: The final answer is grounded in generated work-function artifacts and
+    does not fabricate unsupported setup or result details.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: No repeated identical tool calls with the same parameter set.
+  axis: efficiency
+  verify: no_retries
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
+    a generous benchmark ceiling (tunable per deployment).
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+    (tunable per task after calibration).
+  axis: efficiency
+  verify: token_budget

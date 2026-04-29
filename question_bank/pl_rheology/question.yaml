@@ -1,0 +1,97 @@
+id: pl_rheology
+capability: scientific_analysis
+domain: polymer
+intent: Identify a processing window for PEO-LiTFSI by balancing zero-shear viscosity,
+  shear-thinning onset, and ionic-conductivity proxies across temperature and salt
+  concentration.
+human_prompt_seed: '文件 `rheology_window_bundle.json` 提供了 PEO-LiTFSI 在不同盐浓度和温度下的流变、扩散和电导
+  proxy 数据。
+
+  请完成一个粘度-电导率窗口分析：
+
+  1. 比较不同条件下的零剪切粘度、剪切变稀起始和电导 proxy；
+
+  2. 解释盐浓度升高为什么会同时影响粘度和离子迁移；
+
+  3. 推荐最合适的加工温度与盐浓度窗口；
+
+  4. 说明至少一个可能的失效模式或工艺风险。
+
+  '
+tags:
+- phy_elastic
+- chem_electrolyte
+data_files:
+- key: rheology_bundle
+  path: rheology_window_bundle.json
+  description: Rheology bundle with zero-shear viscosity, shear-thinning onset, conductivity
+    proxy, and transport descriptors for PEO-LiTFSI.
+reference_answers:
+- key: best_window
+  value: 20wt_353K
+- key: viscosity_20wt_353K_Pa_s
+  value: 38.0
+  tolerance: 5.0
+- key: conductivity_20wt_353K_mScm
+  value: 0.62
+  tolerance: 0.08
+- key: required_fields
+  value:
+  - rheology_window
+  - viscosity_conductivity_tradeoff
+  - mechanism_note
+  - process_recommendation
+  - risk_note
+- key: turn_budget
+  value:
+    max: 24
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 14000
+scoring_checklist:
+- id: viscosity_20wt_353K_Pa_s
+  criterion: Zero-shear viscosity at 20 wt% LiTFSI and 353 K is reported within tolerance
+    (~38 Pa·s).
+  axis: correctness
+  verify: numerical_range
+- id: conductivity_20wt_353K_mScm
+  criterion: Conductivity proxy at 20 wt% LiTFSI and 353 K is reported within tolerance
+    (~0.62 mS/cm).
+  axis: correctness
+  verify: numerical_range
+- id: best_window_correctness
+  criterion: Final recommendation identifies 20 wt% LiTFSI at 353 K as the best-balanced
+    processing window.
+  axis: correctness
+  verify: llm_binary_judge
+- id: required_fields
+  criterion: Report includes a rheology window, viscosity-conductivity trade-off discussion,
+    mechanism note, process recommendation, and at least one risk note.
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: Conclusions are explicitly grounded in the provided rheology and transport
+    metrics from rheology_window_bundle.json rather than generic electrolyte-processing
+    statements.
+  axis: grounding
+  verify: llm_binary_judge
+- id: efficiency_judge
+  criterion: Rheology-window analysis is completed directly without redundant side
+    calculations or repeated condition enumeration.
+  axis: efficiency
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration does not exceed benchmark ceiling.
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling.
+  axis: efficiency
+  verify: token_budget

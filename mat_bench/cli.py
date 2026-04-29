@@ -180,6 +180,13 @@ def _add_serve_parser(subparsers: argparse._SubParsersAction) -> None:
         default=4,
         help='Number of parallel grading threads (default: 4).',
     )
+    p.add_argument(
+        '--log-level',
+        type=str,
+        default='info',
+        choices=['debug', 'info', 'warning', 'error', 'critical'],
+        help='Uvicorn log level (default: info).',
+    )
     p.set_defaults(func=_cmd_serve)
 
 
@@ -257,7 +264,7 @@ def _cmd_serve(args: argparse.Namespace) -> None:
     )
     print(f'Output directory: {output_dir}', file=sys.stderr)
     print(f'Starting server at http://{args.host}:{args.port}', file=sys.stderr)
-    uvicorn.run(app, host=args.host, port=args.port)
+    uvicorn.run(app, host=args.host, port=args.port, log_level=args.log_level)
 
 
 

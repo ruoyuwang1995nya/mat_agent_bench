@@ -1,0 +1,74 @@
+id: WO_elec_002_20260411v2
+capability: workflow_orchestration
+domain: agnostic
+intent: 'Build and execute periodic liquid water gap workflow: construct 64-water
+  box, compute HOMO-LUMO gap with hybrid acceleration.'
+human_prompt_seed: '计算周期性液态水体系的 HOMO-LUMO gap： 构建 64 个水分子的周期性盒子（密度 ~1.0 g/cm3）， 使用杂化泛函或加速方案（如先
+  PBE 再 HSE 单点）计算电子 gap。 输出 gap 值 (eV)、所用加速策略和计算成本估算。
+
+  '
+tags:
+- hybrid_functional
+- phy_md
+- wf_report
+- phy_electronic
+data_files: []
+reference_answers:
+- key: gap_value_eV
+  value: 6.2
+  tolerance: 1.2
+- key: required_fields
+  value:
+  - hybrid_setup
+  - acceleration_strategy
+  - gap_extraction
+  - cost_note
+- key: turn_budget
+  value:
+    max: 18
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 8000
+scoring_checklist:
+- id: gap_value_eV
+  criterion: Gap value is in tolerance.
+  axis: correctness
+  verify: numerical_range
+- id: required_fields
+  criterion: Report includes hybrid functional setup, acceleration strategy description,
+    gap extraction method, and cost estimate.
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: The gap value and any acceleration discussion are tied to calculation
+    results or constraints stated in the final answer. Judge from the answer; do not
+    fail because the tool-call log omits MCP, web_search, or any specific tool.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: Amorphous builder and DOS calculator are not called repeatedly with identical
+    parameters.
+  axis: efficiency
+  verify: no_retries
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: efficiency_judge
+  criterion: Liquid water gap workflow (build box → SCF/hybrid → DOS → report) is
+    executed without redundant intermediate calculations.
+  axis: efficiency
+  verify: llm_binary_judge
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
+    a generous benchmark ceiling (tunable per deployment).
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+    (tunable per task after calibration).
+  axis: efficiency
+  verify: token_budget

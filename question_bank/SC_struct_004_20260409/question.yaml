@@ -1,0 +1,91 @@
+id: SC_struct_004_20260409
+capability: structure_construction
+domain: agnostic
+intent: Exfoliate a MoS2 monolayer from bulk 2H-MoS2 and verify the 2D structure.
+human_prompt_seed: '读取 `twod_spec.json`，从体相 2H-MoS2 中剥离单层 MoS2。 添加 20 A z 方向真空层，验证化学计量比为
+  MoS2，层厚约 3.1 A。 输出结构文件为 `MoS2_monolayer_POSCAR`。
+
+  '
+tags:
+- mat_2d
+- phy_surface
+data_files:
+- key: twod_spec
+  path: twod_spec.json
+  oss_url: ''
+  description: Specification for MoS2 monolayer exfoliation.
+reference_answers:
+- key: stoichiometry_formula
+  value:
+    filename: MoS2_monolayer_POSCAR
+    formula: MoS2
+- key: layer_thickness_A
+  value:
+    filename: MoS2_monolayer_POSCAR
+    element_a: S
+    element_b: S
+    cutoff_A: 4.0
+    expected: 3.13
+    tolerance: 0.6
+- key: required_fields
+  value:
+  - structure_file
+  - stoichiometry_verified
+  - layer_thickness_A
+  - vacuum_A
+- key: turn_budget
+  value:
+    max: 20
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 24000
+scoring_checklist:
+- id: stoichiometry_formula
+  criterion: The output structure file has MoS2 stoichiometry (verified by reading
+    the file).
+  axis: correctness
+  verify: struct_file_formula
+- id: layer_thickness_A
+  criterion: The mean S-S nearest-neighbor distance read from the output POSCAR is
+    approximately 3.13 A, representative of the MoS2 monolayer S-Mo-S sandwich thickness.
+  axis: correctness
+  verify: struct_file_bond_length
+- id: required_fields
+  criterion: Output includes structure file, explicit MoS2 stoichiometry verification,
+    layer thickness near 3.1 A, and vacuum layer near 20 A.
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: The answer explains how monolayer stoichiometry, in-plane extent, layer
+    thickness, and vacuum are verified from the delivered POSCAR/structure (geometric
+    definitions), not asserted without structural basis. Judge solely from the final
+    answer and named deliverables; do not fail because the tool-call log omits MCP,
+    web_search, or any specific tool.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: No repeated identical exfoliation or slab cuts with the same parameters.
+  axis: efficiency
+  verify: no_retries
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: efficiency_judge
+  criterion: Monolayer exfoliation and stoichiometry verification complete in a direct
+    workflow.
+  axis: efficiency
+  verify: llm_binary_judge
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
+    a generous benchmark ceiling (tunable per deployment).
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+    (tunable per task after calibration).
+  axis: efficiency
+  verify: token_budget
