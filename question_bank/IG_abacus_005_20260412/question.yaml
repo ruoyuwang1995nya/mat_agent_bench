@@ -1,0 +1,234 @@
+id: IG_abacus_005_20260412
+capability: input_generation
+domain: agnostic
+intent: Prepare ABACUS PW bulk-and-slab inputs for Al fcc(100) surface-energy convergence
+  using bulk, 5-layer slab, and 7-layer slab structures.
+human_prompt_seed: '工作区中提供了体相与两种厚度 slab 的 Al fcc(100) 结构。
+
+
+  请为表面能收敛测试准备 ABACUS 平面波输入：
+
+  1) 体相输入使用 cell-relax。
+
+  2) 两个 slab 输入使用离子弛豫，并保留原 STRU 中已有的固定/弛豫标记，不修改给定结构。
+
+  3) 提供体相与 slab 各自匹配的 K 点文件；其中 slab 需采用各向异性采样并在法向使用单点。
+
+
+  将结果写入当前目录：`INPUT_bulk_relax`、`INPUT_slab5`、`INPUT_slab7`、`KPT_bulk`、`KPT_slab`。
+
+  '
+tags:
+- abacus
+- phy_surface
+- wf_inputs
+data_files:
+- key: bulk_al_fcc
+  path: bulk_al_fcc.stru
+  oss_url: ''
+  description: Bulk Al fcc structure for equilibrium energy reference.
+- key: slab_al_fcc100_5l
+  path: slab_al_fcc100_5l.stru
+  oss_url: ''
+  description: Five-layer Al fcc(100) slab with selective-relaxation flags.
+- key: slab_al_fcc100_7l
+  path: slab_al_fcc100_7l.stru
+  oss_url: ''
+  description: Seven-layer Al fcc(100) slab with selective-relaxation flags.
+reference_answers:
+- key: must_input_bulk_relax_core
+  value:
+    filename: INPUT_bulk_relax
+    tokens:
+    - calculation cell-relax
+    - basis_type pw
+    flags: i
+- key: must_input_slab5_relax_mode
+  value:
+    filename: INPUT_slab5
+    tokens:
+    - calculation relax
+    - basis_type pw
+    flags: i
+- key: must_input_slab7_relax_mode
+  value:
+    filename: INPUT_slab7
+    tokens:
+    - calculation relax
+    - basis_type pw
+    flags: i
+- key: must_kpt_slab_gamma_marker
+  value:
+    filename: KPT_slab
+    tokens:
+    - K_POINTS
+    - Gamma
+    flags: i
+- key: must_kpt_slab_vacuum_axis_one
+  value:
+    filename: KPT_slab
+    pattern: ^\s*\d+\s+\d+\s+1(?:\s+\d+){0,3}\s*$
+    flags: m
+- key: suggested_input_bulk_relax_numerics
+  value:
+    filename: INPUT_bulk_relax
+    checks:
+    - key: ecutwfc
+      min: 55
+      max: 65
+    - key: scf_nmax
+      expected: 100
+      tolerance: 0
+    - key: relax_nmax
+      expected: 100
+      tolerance: 0
+- key: suggested_kpt_bulk_three_dimensional
+  value:
+    filename: KPT_bulk
+    pattern: ^\s*(?:[2-9]\d*|1\d+)\s+(?:[2-9]\d*|1\d+)\s+(?:[2-9]\d*|1\d+)(?:\s+\d+){0,3}\s*$
+    flags: m
+- key: variable_input_bulk_smearing
+  value:
+    filename: INPUT_bulk_relax
+    checks:
+    - key: smearing_method
+      allowed_values:
+      - gauss
+      - gaussian
+      - fixed
+      - mp
+      - mp2
+      - methfessel-paxton
+      - mv
+      - cold
+      - marzari-vanderbilt
+      - fd
+      - fermi-dirac
+    - key: smearing_sigma
+      min: 0.007
+      max: 0.02
+- key: variable_kpt_slab_inplane_density
+  value:
+    filename: KPT_slab
+    pattern: ^\s*(?:1[2-9]|[2-9]\d|[1-9]\d{2,})\s+(?:1[2-9]|[2-9]\d|[1-9]\d{2,})\s+1(?:\s+\d+){0,3}\s*$
+    flags: m
+- key: input_bulk_relax_artifact
+  value: INPUT_bulk_relax
+- key: input_slab5_artifact
+  value: INPUT_slab5
+- key: input_slab7_artifact
+  value: INPUT_slab7
+- key: kpt_bulk_artifact
+  value: KPT_bulk
+- key: kpt_slab_artifact
+  value: KPT_slab
+- key: turn_budget
+  value:
+    max: 8
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 8000
+scoring_checklist:
+- id: must_input_bulk_relax_core
+  criterion: '[Must] INPUT_bulk_relax uses PW cell-relax core controls.'
+  axis: correctness
+  verify: text_file_contains_all
+  weight: 1.0
+- id: must_input_slab5_relax_mode
+  criterion: '[Must] INPUT_slab5 uses PW relax mode.'
+  axis: correctness
+  verify: text_file_contains_all
+  weight: 1.0
+- id: must_input_slab7_relax_mode
+  criterion: '[Must] INPUT_slab7 uses PW relax mode.'
+  axis: correctness
+  verify: text_file_contains_all
+  weight: 1.0
+- id: must_kpt_slab_gamma_marker
+  criterion: '[Must] KPT_slab is Gamma-centered.'
+  axis: correctness
+  verify: text_file_contains_all
+  weight: 1.0
+- id: must_kpt_slab_vacuum_axis_one
+  criterion: '[Must] KPT_slab sets exactly one k-point along the vacuum axis.'
+  axis: correctness
+  verify: text_file_regex
+  weight: 1.0
+- id: suggested_input_bulk_relax_numerics
+  criterion: '[Suggested] INPUT_bulk_relax follows benchmark numeric settings (`ecutwfc/scf_nmax/relax_nmax`).'
+  axis: correctness
+  verify: text_file_numeric_range
+  weight: 0.6
+- id: suggested_kpt_bulk_three_dimensional
+  criterion: '[Suggested] KPT_bulk uses a three-dimensional bulk mesh.'
+  axis: correctness
+  verify: text_file_regex
+  weight: 0.6
+- id: variable_input_bulk_smearing
+  criterion: '[Variable] INPUT_bulk_relax uses an acceptable smearing setup for this
+    benchmark family.'
+  axis: correctness
+  verify: text_file_numeric_range
+  weight: 0.3
+- id: variable_kpt_slab_inplane_density
+  criterion: '[Variable] KPT_slab uses sufficiently dense in-plane sampling while
+    keeping vacuum-axis single-point.'
+  axis: correctness
+  verify: text_file_regex
+  weight: 0.3
+- id: input_bulk_relax_artifact
+  criterion: Generated deliverables count even if the final answer does not quote
+    file contents; `INPUT_bulk_relax` must be written to the workspace.
+  axis: correctness
+  verify: artifact_exists
+  weight: 0.2
+- id: input_slab5_artifact
+  criterion: Generated deliverables count even if the final answer does not quote
+    file contents; `INPUT_slab5` must be written to the workspace.
+  axis: correctness
+  verify: artifact_exists
+  weight: 0.2
+- id: input_slab7_artifact
+  criterion: Generated deliverables count even if the final answer does not quote
+    file contents; `INPUT_slab7` must be written to the workspace.
+  axis: correctness
+  verify: artifact_exists
+  weight: 0.2
+- id: kpt_bulk_artifact
+  criterion: Generated deliverables count even if the final answer does not quote
+    file contents; `KPT_bulk` must be written to the workspace.
+  axis: correctness
+  verify: artifact_exists
+  weight: 0.2
+- id: kpt_slab_artifact
+  criterion: Generated deliverables count even if the final answer does not quote
+    file contents; `KPT_slab` must be written to the workspace.
+  axis: correctness
+  verify: artifact_exists
+  weight: 0.2
+- id: grounding_source
+  criterion: The generated files are grounded in the three provided STRU files; no
+    unrelated structural edits are introduced beyond preparing inputs for bulk and
+    slab calculations.
+  axis: grounding
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: no_retries
+  criterion: No repeated identical tool calls with the same parameter set.
+  axis: efficiency
+  verify: no_retries
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
+    a generous benchmark ceiling (tunable per deployment).
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
+  axis: efficiency
+  verify: token_budget

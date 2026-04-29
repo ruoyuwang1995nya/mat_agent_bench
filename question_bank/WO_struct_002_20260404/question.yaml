@@ -1,0 +1,75 @@
+id: WO_struct_002_20260404
+capability: workflow_orchestration
+domain: catalysis
+intent: 'Calculate vacancy formation energy: build perfect and defective supercells,
+  compute energies, derive formation energy.'
+human_prompt_seed: '计算 MgO 中 O 空位的形成能：从数据库获取 MgO 岩盐结构， 构建 2x2x2 超胞作为 perfect cell，再在超胞中移除一个
+  O 原子构建 defective cell， 分别优化两个结构，按 E_f = E_defective - E_perfect + mu_O 计算空位形成能。
+  输出形成能 (eV) 和计算表达式。
+
+  '
+tags:
+- phy_defect
+- wf_postprocess
+- phy_surface
+priority: P0
+data_files: []
+reference_answers:
+- key: formation_energy_eV
+  value: 7.5
+  tolerance: 1.5
+- key: required_fields
+  value:
+  - E_defective
+  - E_perfect
+  - chemical_potential
+  - formation_energy
+- key: turn_budget
+  value:
+    max: 18
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 8000
+scoring_checklist:
+- id: formation_energy_eV
+  criterion: Vacancy formation energy is in tolerance.
+  axis: correctness
+  verify: numerical_range
+- id: required_fields
+  criterion: Report includes defective/perfect cell energies, chemical potential definition,
+    and formation energy formula.
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: Formation energy is computed from stated perfect and defective total
+    energies with an explicit chemical potential; numbers are tied to the reported
+    structures rather than invented. Judge solely from the final answer; do not fail
+    because the tool-call log omits MCP, web_search, or any specific tool.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: Defect construction and relaxation are not repeated with identical parameters.
+  axis: efficiency
+  verify: no_retries
+- id: efficiency_judge
+  criterion: Vacancy formation energy workflow (build → optimize × 2 → formula) is
+    executed without redundant steps.
+  axis: efficiency
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
+    a generous benchmark ceiling (tunable per deployment).
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+    (tunable per task after calibration).
+  axis: efficiency
+  verify: token_budget

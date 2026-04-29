@@ -1,0 +1,114 @@
+id: WO_struct_003_20260411v1
+capability: workflow_orchestration
+domain: agnostic
+intent: Generate and summarize 10 candidate crystal structures constrained by superconducting
+  critical temperature and space group.
+human_prompt_seed: '基于结构生成流程，生成 10 个候选晶体结构，并满足以下约束：
+
+  1) 候选结构目标条件：超导临界温度 Tc > 40 K；
+
+  2) 空间群编号固定为 225；
+
+  3) 给出机器可校验的候选列表文件 `candidate_structures.json`，每条至少包含： `rank`, `structure_name`,
+  `predicted_tc_k`, `space_group`, `selection_basis`；
+
+  4) 生成 `generation_report.md`，说明生成参数（如 sample 数量、约束条件）、 候选筛选逻辑，以及不确定性声明。
+
+  在最终回答中简要总结：是否满足“10 个候选 + Tc 阈值 + 空间群约束”三项要求。'
+tags:
+- phy_surface
+- wf_batch
+data_files: []
+reference_answers:
+- key: candidate_json
+  value: candidate_structures.json
+- key: generation_report
+  value: generation_report.md
+- key: candidate_required_tokens
+  value:
+    filename: candidate_structures.json
+    tokens:
+    - rank
+    - structure_name
+    - predicted_tc_k
+    - space_group
+    - selection_basis
+    - '225'
+    flags: i
+- key: tc_threshold_regex
+  value:
+    filename: candidate_structures.json
+    pattern: '"predicted_tc_k"\s*:\s*(?:4[1-9](?:\.\d+)?|[5-9]\d(?:\.\d+)?|\d{3,}(?:\.\d+)?)'
+    flags: i
+- key: report_required_tokens
+  value:
+    filename: generation_report.md
+    tokens:
+    - sample_num
+    - 10
+    - Tc
+    - 40
+    - 225
+    - 不确定性
+    flags: i
+- key: turn_budget
+  value:
+    max: 18
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 9000
+scoring_checklist:
+- id: candidate_json
+  criterion: Agent writes `candidate_structures.json` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: generation_report
+  criterion: Agent writes `generation_report.md` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: candidate_required_tokens
+  criterion: Candidate JSON includes required fields and explicitly reflects the space-group
+    225 constraint.
+  axis: correctness
+  verify: text_file_contains_all
+- id: tc_threshold_regex
+  criterion: Candidate JSON contains explicit Tc values above 40 K for generated entries.
+  axis: correctness
+  verify: text_file_regex
+- id: report_required_tokens
+  criterion: Report explains generation parameters, Tc/space-group constraints, and
+    uncertainty handling.
+  axis: correctness
+  verify: text_file_contains_all
+- id: grounding_source
+  criterion: The final answer is grounded in generated candidate artifacts and explicitly
+    checks the three constraints (count, Tc threshold, and space group), rather than
+    generic superconductivity statements.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: No repeated identical tool calls with the same parameter set.
+  axis: efficiency
+  verify: no_retries
+- id: efficiency_judge
+  criterion: Workflow converges in a compact path (set constraints → generate candidates
+    → summarize artifacts) without redundant loops.
+  axis: efficiency
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
+    a generous benchmark ceiling (tunable per deployment).
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+    (tunable per task after calibration).
+  axis: efficiency
+  verify: token_budget

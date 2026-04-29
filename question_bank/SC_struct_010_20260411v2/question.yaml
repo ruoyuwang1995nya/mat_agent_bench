@@ -1,0 +1,142 @@
+id: SC_struct_010_20260411v2
+capability: structure_construction
+domain: agnostic
+intent: Build a seven-layer Ag(111) slab with explicit water and potassium ions for
+  an electrochemical interface initial model.
+human_prompt_seed: '构建一个 Ag(111) 界面初始结构并导出为 `ag111_k_water_interface.cif`。
+
+  要求：
+
+  (1) Ag(111) slab 为 (2 × 3) 面内超胞，并具有 7 个原子层；
+
+  (2) 在金属基底上方加入 43 个 H2O 分子和 2 个 K 离子； 仅允许中性 H2O 分子，不允许引入 OH-/H3O+ 或水分解产物；
+
+  (3) z 方向保留约 12 Å 真空层；
+
+  (4) 最终答案中明确报告 Ag 原子数、H2O 分子数、K 离子数、slab 层数、真空层厚度， 并说明这些溶剂/离子位于金属表面同一侧上方。
+
+  '
+tags:
+- phy_surface
+- phy_md
+- chem_electrolyte
+data_files: []
+reference_answers:
+- key: file_exists
+  value: ag111_k_water_interface.cif
+- key: ag_count
+  value:
+    filename: ag111_k_water_interface.cif
+    element: Ag
+    expected: 42
+    tolerance: 0
+- key: water_count
+  value:
+    filename: ag111_k_water_interface.cif
+    element: O
+    expected: 43
+    tolerance: 0
+- key: k_count
+  value:
+    filename: ag111_k_water_interface.cif
+    element: K
+    expected: 2
+    tolerance: 0
+- key: formula_check
+  value:
+    filename: ag111_k_water_interface.cif
+    formula: Ag42K2H86O43
+- key: slab_layers
+  value:
+    filename: ag111_k_water_interface.cif
+    expected: 7
+    tolerance: 0
+    axis: z
+    element: Ag
+    layer_tol_A: 0.35
+- key: required_fields
+  value:
+  - file_exists
+  - ag_count
+  - water_count
+  - k_count
+  - slab_layers
+  - vacuum_A
+  - interface_side
+  - neutral_water_only
+- key: turn_budget
+  value:
+    max: 20
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 16000
+scoring_checklist:
+- id: file_exists
+  criterion: The output file `ag111_k_water_interface.cif` exists.
+  axis: correctness
+  verify: artifact_exists
+- id: ag_count
+  criterion: The output CIF contains exactly 42 Ag atoms, consistent with a 7-layer
+    (2 × 3) Ag(111) slab.
+  axis: correctness
+  verify: struct_file_atom_count
+- id: water_count
+  criterion: Under the neutral-water-only assumption, the output CIF contains exactly
+    43 oxygen atoms, equivalent to 43 H2O molecules.
+  axis: correctness
+  verify: struct_file_atom_count
+- id: k_count
+  criterion: The output CIF contains exactly 2 K atoms, confirming the potassium-ion
+    count.
+  axis: correctness
+  verify: struct_file_atom_count
+- id: formula_check
+  criterion: The output CIF formula is Ag42K2H86O43, confirming 43 H2O molecules and
+    2 K ions were included.
+  axis: correctness
+  verify: struct_file_formula
+- id: slab_layers
+  criterion: The Ag atoms form exactly 7 distinct z-layers in the slab.
+  axis: correctness
+  verify: struct_file_layer_count
+- id: required_fields
+  criterion: The answer explicitly reports the output structure file, Ag atom count,
+    H2O molecule count, K ion count, slab layer count, vacuum thickness near 12 Å,
+    confirms neutral-water-only composition (no OH-/H3O+), and states that solvent/ions
+    are placed above one side of the slab rather than embedded into the metal.
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: The answer ties the 7-layer Ag(111) slab, explicit solvent loading, potassium-ion
+    placement, and vacuum spacing to `ag111_k_water_interface.cif`, not generic interface-building
+    claims disconnected from that file. Judge solely from the final answer and named
+    deliverables; do not fail because the tool-call log omits MCP, web_search, or
+    any specific tool.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: Interface construction is not repeated with identical parameters.
+  axis: efficiency
+  verify: no_retries
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: efficiency_judge
+  criterion: The explicit-solvent Ag(111) interface is built in a direct workflow
+    without unnecessary rebuilds.
+  axis: efficiency
+  verify: llm_binary_judge
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
+    a generous benchmark ceiling (tunable per deployment).
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+    (tunable per task after calibration).
+  axis: efficiency
+  verify: token_budget

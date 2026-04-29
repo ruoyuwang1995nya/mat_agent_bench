@@ -1,0 +1,134 @@
+id: IG_incar_009_20260404
+capability: input_generation
+domain: agnostic
+intent: 'Generate VASP INCAR for DFPT dielectric constant calculation of C8H12HfO4.
+  Compute dielectric tensor and Born effective charges.
+
+  '
+human_prompt_seed: '读取 `task_spec.json` 中的任务描述。为有机金属氧化物 C8H12HfO4 生成一个 DFPT(密度泛函微扰理论)
+  介电常数计算的 VASP INCAR。需要计算介电张量和 Born 有效电荷。 将完整的 INCAR 写入当前目录下的 `INCAR` 文件。
+
+  '
+tags:
+- vasp
+- wf_inputs
+data_files:
+- key: task_spec
+  path: task_spec.json
+  oss_url: ''
+  description: Task specification for DFPT dielectric INCAR generation.
+reference_answers:
+- key: param_AGGAC
+  value: AGGAC = 0.0000
+- key: param_EDIFF
+  value: EDIFF = 1.d-4
+- key: param_ENCUT
+  value: ENCUT = 400
+- key: param_GGA
+  value: GGA = ML
+- key: param_IBRION
+  value: IBRION = 8
+- key: param_ISMEAR
+  value: ISMEAR = 0
+- key: param_LEPSILON
+  value: LEPSILON = .TRUE.
+- key: param_LPEAD
+  value: LPEAD = .TRUE.
+- key: param_LUSE_VDW
+  value: LUSE_VDW = .TRUE.
+- key: param_NSW
+  value: NSW = 1
+- key: param_PREC
+  value: PREC = Accurate
+- key: param_SIGMA
+  value: SIGMA = 0.01
+- key: param_ZAB_VDW
+  value: ZAB_VDW = -1.8867
+- key: turn_budget
+  value:
+    max: 8
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 8000
+scoring_checklist:
+- id: param_AGGAC
+  criterion: INCAR sets AGGAC = 0.0000
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_EDIFF
+  criterion: INCAR sets EDIFF = 1.d-4
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_ENCUT
+  criterion: INCAR sets ENCUT = 400
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_GGA
+  criterion: INCAR sets GGA = ML
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_IBRION
+  criterion: INCAR sets IBRION = 8
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_ISMEAR
+  criterion: INCAR sets ISMEAR = 0
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_LEPSILON
+  criterion: INCAR sets LEPSILON = .TRUE.
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_LPEAD
+  criterion: INCAR sets LPEAD = .TRUE.
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_LUSE_VDW
+  criterion: INCAR sets LUSE_VDW = .TRUE.
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_NSW
+  criterion: INCAR sets NSW = 1
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_PREC
+  criterion: INCAR sets PREC = Accurate
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_SIGMA
+  criterion: INCAR sets SIGMA = 0.01
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_ZAB_VDW
+  criterion: INCAR sets ZAB_VDW = -1.8867
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: The generated INCAR is grounded in the provided task_spec.json data (material
+    system, calculation type, element order) rather than hallucinated. Judge solely
+    from the final answer and stated file content; do not fail because the tool-call
+    log omits MCP, web_search, or any specific tool.
+  axis: grounding
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: efficiency_judge
+  criterion: The agent produced the INCAR efficiently without unnecessary tool calls,
+    redundant queries, or irrelevant exploration.
+  axis: efficiency
+  verify: llm_binary_judge
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
+    a generous benchmark ceiling (tunable per deployment).
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+    (tunable per task after calibration).
+  axis: efficiency
+  verify: token_budget

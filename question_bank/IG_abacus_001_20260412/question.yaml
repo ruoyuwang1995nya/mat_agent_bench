@@ -1,0 +1,178 @@
+id: IG_abacus_001_20260412
+capability: input_generation
+domain: agnostic
+intent: 'Add ABACUS LCAO BSSE correction for Fe(110) slab: define Fe_empty species,
+  place empty-atom layers in vacuum, and write SCF INPUT with sparse k along vacuum.'
+human_prompt_seed: '工作区中提供了仅含真实 Fe 原子的表面 slab 结构（尚未做 BSSE 校正）。
+
+
+  请准备 ABACUS LCAO 单点输入用于 NAO-BSSE 校正：
+
+  1) 在结构中引入 empty/ghost 物种用于补足基组。
+
+  2) 在真空区域布置 empty 原子层，保证位于 slab 外侧而不是埋入体内。
+
+  3) 生成与该场景匹配的 SCF INPUT，沿真空方向使用单点/稀疏采样。
+
+
+  将结果写入当前目录：`STRU_bsse`、`INPUT_bsse`。
+
+  '
+tags:
+- abacus
+- bsse
+- phy_surface
+data_files:
+- key: base_slab
+  path: base_slab.stru
+  oss_url: ''
+  description: Fe slab STRU without Fe_empty (starting geometry for BSSE setup).
+reference_answers:
+- key: must_stru_bsse_fe_empty_core
+  value:
+    filename: STRU_bsse
+    tokens:
+    - Fe_empty
+    - '0.000000'
+    flags: i
+- key: must_input_bsse_core
+  value:
+    filename: INPUT_bsse
+    tokens:
+    - calculation scf
+    - basis_type lcao
+    - nspin 2
+    flags: i
+- key: must_input_bsse_vacuum_kspacing
+  value:
+    filename: INPUT_bsse
+    checks:
+    - key: kspacing
+      component: 1
+      min: 0.8
+      max: 1.2
+      if_component_count_in:
+      - 1
+    - key: kspacing
+      component: 3
+      min: 0.8
+      max: 1.2
+      if_component_count_in:
+      - 3
+- key: suggested_input_bsse_numerics
+  value:
+    filename: INPUT_bsse
+    checks:
+    - key: ecutwfc
+      min: 90
+      max: 120
+    - key: scf_thr
+      min: 1.0e-07
+      max: 1.0e-06
+- key: suggested_input_bsse_smearing
+  value:
+    filename: INPUT_bsse
+    checks:
+    - key: smearing_method
+      allowed_values:
+      - gauss
+      - gaussian
+    - key: smearing_sigma
+      min: 0.01
+      max: 0.02
+- key: variable_empty_layer_placement
+  value: {}
+- key: variable_fe_empty_species_quality
+  value: {}
+- key: stru_bsse_artifact
+  value: STRU_bsse
+- key: input_bsse_artifact
+  value: INPUT_bsse
+- key: turn_budget
+  value:
+    max: 8
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 25000
+scoring_checklist:
+- id: must_stru_bsse_fe_empty_core
+  criterion: '[Must] STRU_bsse includes Fe_empty with explicit empty-species charge
+    marker.'
+  axis: correctness
+  verify: text_file_contains_all
+  weight: 1.0
+- id: must_input_bsse_core
+  criterion: '[Must] INPUT_bsse uses LCAO SCF core controls (`calculation scf`, `basis_type
+    lcao`, `nspin 2`).'
+  axis: correctness
+  verify: text_file_contains_all
+  weight: 1.0
+- id: must_input_bsse_vacuum_kspacing
+  criterion: '[Must] INPUT_bsse sets sparse vacuum-axis k-spacing (either single `kspacing
+    1.0` or three-component form with the third component ~=1.0).'
+  axis: correctness
+  verify: text_file_numeric_range
+  weight: 1.0
+- id: suggested_input_bsse_numerics
+  criterion: '[Suggested] INPUT_bsse follows benchmark numeric settings with tolerance
+    (`ecutwfc ~100`, `scf_thr around 1e-7~1e-6`).'
+  axis: correctness
+  verify: text_file_numeric_range
+  weight: 0.6
+- id: suggested_input_bsse_smearing
+  criterion: '[Suggested] INPUT_bsse uses benchmark smearing controls (gauss/gaussian
+    + sigma within 0.01~0.02).'
+  axis: correctness
+  verify: text_file_numeric_range
+  weight: 0.6
+- id: variable_empty_layer_placement
+  criterion: '[Variable] Empty Fe layers are placed on both slab sides in vacuum,
+    not buried inside slab.'
+  axis: correctness
+  verify: llm_binary_judge
+  weight: 0.3
+- id: variable_fe_empty_species_quality
+  criterion: '[Variable] Fe_empty species configuration is physically consistent with
+    ghost-basis usage (matching PP/orbital, no spurious empty-site magnetic setup).'
+  axis: correctness
+  verify: llm_binary_judge
+  weight: 0.3
+- id: stru_bsse_artifact
+  criterion: Generated deliverables count even if the final answer does not quote
+    file contents; `STRU_bsse` must be written to the workspace.
+  axis: correctness
+  verify: artifact_exists
+  weight: 0.5
+- id: input_bsse_artifact
+  criterion: Generated deliverables count even if the final answer does not quote
+    file contents; `INPUT_bsse` must be written to the workspace.
+  axis: correctness
+  verify: artifact_exists
+  weight: 0.5
+- id: grounding_source
+  criterion: The modified STRU preserves the original slab lattice vectors and real
+    Fe fractional coordinates from base_slab.stru; changes are limited to adding Fe_empty
+    species/layers and INPUT parameters. Judge solely from the final answer; do not
+    fail because the tool-call log omits MCP, web_search, or any specific tool.
+  axis: grounding
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: no_retries
+  criterion: No repeated identical tool calls with the same parameter set.
+  axis: efficiency
+  verify: no_retries
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
+    a generous benchmark ceiling (tunable per deployment).
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
+  axis: efficiency
+  verify: token_budget

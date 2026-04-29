@@ -1,0 +1,73 @@
+id: SC_struct_013_20260411v3
+capability: structure_construction
+domain: agnostic
+intent: Construct and compare close-packed layer cross sections for fcc and hcp crystals,
+  then expand both slabs to 5x5x1 supercells.
+human_prompt_seed: '请演示 fcc 与 hcp 近密堆积结构的差异，完成以下建模任务并导出结构：
+
+  1) 先分别构建 fcc 与 hcp 体相模板结构； 2) 对两者各自切出近密堆积层截面，要求 5 个原子层，并设置约 1 层真空； 3) 将两个截面结构都扩展为
+  5×5×1 超胞； 4) 输出文件： - `fcc_close_packed_5x5x1.cif` - `hcp_close_packed_5x5x1.cif`
+  - `packing_comparison.md`（说明 fcc/hcp 堆垛差异与截面构建设置）。
+
+  最终回答需简要说明：你如何保证两种结构在可比条件下进行截面对比。'
+tags:
+- phy_surface
+- meta_userlog
+data_files: []
+reference_answers:
+- key: fcc_artifact
+  value: fcc_close_packed_5x5x1.cif
+- key: hcp_artifact
+  value: hcp_close_packed_5x5x1.cif
+- key: compare_artifact
+  value: packing_comparison.md
+- key: turn_budget
+  value:
+    max: 20
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 12000
+scoring_checklist:
+- id: fcc_artifact
+  criterion: Agent writes `fcc_close_packed_5x5x1.cif` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: hcp_artifact
+  criterion: Agent writes `hcp_close_packed_5x5x1.cif` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: compare_artifact
+  criterion: Agent writes `packing_comparison.md` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: grounding_source
+  criterion: The final answer is grounded in both generated CIF files and the comparison
+    note, rather than generic textbook-only statements.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: No repeated identical tool calls with the same parameter set.
+  axis: efficiency
+  verify: no_retries
+- id: efficiency_judge
+  criterion: Workflow completes in a compact sequence (build bulk → cut slabs → make
+    supercells → compare) without redundant loops.
+  axis: efficiency
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
+    a generous benchmark ceiling (tunable per deployment).
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+    (tunable per task after calibration).
+  axis: efficiency
+  verify: token_budget

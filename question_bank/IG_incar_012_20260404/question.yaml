@@ -1,0 +1,230 @@
+id: IG_incar_012_20260404
+capability: input_generation
+domain: agnostic
+intent: 'Generate VASP INCAR for NEB transition state search with HSE06 of Prussian
+  blue analogue C24Fe8N24Na4. Fe magnetic, NUPDOWN=20.
+
+  '
+human_prompt_seed: 读取 `task_spec.json` 中的任务描述。为普鲁士蓝类似物 C24Fe8N24Na4 生成一个 NEB(nudged
+  elastic band)+HSE06 过渡态搜索的 VASP INCAR。Fe 含磁性，需要固定总磁矩。将完整的 INCAR 写入当前目录下的 `INCAR`
+  文件。
+tags:
+- vasp
+- hybrid_functional
+- phy_magnetism
+data_files:
+- key: task_spec
+  path: task_spec.json
+  oss_url: ''
+  description: Task specification for NEB INCAR generation.
+reference_answers:
+- key: param_ALGO
+  value: ALGO = Conjugate
+- key: param_EDIFF
+  value: EDIFF = 1e-04
+- key: param_EDIFFG
+  value: EDIFFG = -1e-02
+- key: param_ENCUT
+  value: ENCUT = 550
+- key: param_GGA
+  value: GGA = PE
+- key: param_HFSCREEN
+  value: HFSCREEN = 0.2
+- key: param_IBRION
+  value: IBRION = 1
+- key: param_ISIF
+  value: ISIF = 2
+- key: param_ISMEAR
+  value: ISMEAR = 0
+- key: param_ISPIN
+  value: ISPIN = 2
+- key: param_ISTART
+  value: ISTART = 1
+- key: param_ISYM
+  value: ISYM = 3
+- key: param_LASPH
+  value: LASPH = .TRUE.
+- key: param_LCHARG
+  value: LCHARG = .FALSE.
+- key: param_LDAUPRINT
+  value: LDAUPRINT = 1
+- key: param_LHFCALC
+  value: LHFCALC = .TRUE.
+- key: param_LMAXMIX
+  value: LMAXMIX = 4
+- key: param_LORBIT
+  value: LORBIT = 11
+- key: param_LREAL
+  value: LREAL = Auto
+- key: param_LWAVE
+  value: LWAVE = .TRUE.
+- key: param_MAGMOM
+  value: MAGMOM = 4*5.0 4*0.0 24*0 24*0 4*0
+- key: param_NELM
+  value: NELM = 300
+- key: param_NFREE
+  value: NFREE = 15
+- key: param_NSW
+  value: NSW = 500
+- key: param_NUPDOWN
+  value: NUPDOWN = 20
+- key: param_POTIM
+  value: POTIM = 0.02
+- key: param_PREC
+  value: PREC = Normal
+- key: param_SIGMA
+  value: SIGMA = 0.02
+- key: param_SYSTEM
+  value: SYSTEM = VASPcalc
+- key: turn_budget
+  value:
+    max: 8
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 8000
+scoring_checklist:
+- id: param_ALGO
+  criterion: INCAR sets ALGO = Conjugate
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_EDIFF
+  criterion: INCAR sets EDIFF = 1e-04
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_EDIFFG
+  criterion: INCAR sets EDIFFG = -1e-02
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_ENCUT
+  criterion: INCAR sets ENCUT = 550
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_GGA
+  criterion: INCAR sets GGA = PE
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_HFSCREEN
+  criterion: INCAR sets HFSCREEN = 0.2
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_IBRION
+  criterion: INCAR sets IBRION = 1
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_ISIF
+  criterion: INCAR sets ISIF = 2
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_ISMEAR
+  criterion: INCAR sets ISMEAR = 0
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_ISPIN
+  criterion: INCAR sets ISPIN = 2
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_ISTART
+  criterion: INCAR sets ISTART = 1
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_ISYM
+  criterion: INCAR sets ISYM = 3
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_LASPH
+  criterion: INCAR sets LASPH = .TRUE.
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_LCHARG
+  criterion: INCAR sets LCHARG = .FALSE.
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_LDAUPRINT
+  criterion: INCAR sets LDAUPRINT = 1
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_LHFCALC
+  criterion: INCAR sets LHFCALC = .TRUE.
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_LMAXMIX
+  criterion: INCAR sets LMAXMIX = 4
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_LORBIT
+  criterion: INCAR sets LORBIT = 11
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_LREAL
+  criterion: INCAR sets LREAL = Auto
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_LWAVE
+  criterion: INCAR sets LWAVE = .TRUE.
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_MAGMOM
+  criterion: INCAR sets MAGMOM = 4*5.0 4*0.0 24*0 24*0 4*0
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_NELM
+  criterion: INCAR sets NELM = 300
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_NFREE
+  criterion: INCAR sets NFREE = 15
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_NSW
+  criterion: INCAR sets NSW = 500
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_NUPDOWN
+  criterion: INCAR sets NUPDOWN = 20
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_POTIM
+  criterion: INCAR sets POTIM = 0.02
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_PREC
+  criterion: INCAR sets PREC = Normal
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_SIGMA
+  criterion: INCAR sets SIGMA = 0.02
+  axis: correctness
+  verify: llm_binary_judge
+- id: param_SYSTEM
+  criterion: INCAR sets SYSTEM = VASPcalc
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: The generated INCAR is grounded in the provided task_spec.json data (material
+    system, calculation type, element order) rather than hallucinated. Judge solely
+    from the final answer and stated file content; do not fail because the tool-call
+    log omits MCP, web_search, or any specific tool.
+  axis: grounding
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: efficiency_judge
+  criterion: The agent produced the INCAR efficiently without unnecessary tool calls,
+    redundant queries, or irrelevant exploration.
+  axis: efficiency
+  verify: llm_binary_judge
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
+    a generous benchmark ceiling (tunable per deployment).
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+    (tunable per task after calibration).
+  axis: efficiency
+  verify: token_budget

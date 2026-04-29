@@ -1,0 +1,111 @@
+id: WO_general_postproc_002_20260410v3
+capability: workflow_orchestration
+domain: agnostic
+intent: Produce structured post-processing pipeline artifacts with per-stage validation
+  gates and rerun policy.
+human_prompt_seed: '工作区已提供 `result_manifest.json`。
+
+
+  请先读取该文件，再生成：
+
+  1) `postproc_pipeline.json`：给出按步骤的后处理流程（含输入、输出、检查点、失败点）。
+
+  2) `report_outline.md`：列出最终报告图表/表格/文字解释结构。
+
+  3) `rerun_policy.md`：定义在哪些失败模式下重跑、如何降级交付。
+
+
+  要求：流程中必须覆盖能带、MSD、概率密度三类后处理对象。
+
+  '
+tags:
+- meta_userlog
+- wf_postprocess
+data_files:
+- key: result_manifest
+  path: result_manifest.json
+  oss_url: ''
+  description: Post-processing target manifest.
+reference_answers:
+- key: pipeline_artifact
+  value: postproc_pipeline.json
+- key: outline_artifact
+  value: report_outline.md
+- key: rerun_artifact
+  value: rerun_policy.md
+- key: pipeline_required_tokens
+  value:
+    filename: postproc_pipeline.json
+    tokens:
+    - band
+    - msd
+    - density
+    - input
+    - output
+    - checkpoint
+    - failure_mode
+    flags: i
+- key: outline_required_tokens
+  value:
+    filename: report_outline.md
+    tokens:
+    - 图表
+    - 表格
+    - 解释
+    - 能带
+    - MSD
+    - 概率密度
+    flags: i
+- key: turn_budget
+  value:
+    max: 8
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 7000
+scoring_checklist:
+- id: pipeline_artifact
+  criterion: Agent writes `postproc_pipeline.json` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: outline_artifact
+  criterion: Agent writes `report_outline.md` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: rerun_artifact
+  criterion: Agent writes `rerun_policy.md` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: pipeline_required_tokens
+  criterion: Pipeline includes required post-processing targets and step metadata
+    fields.
+  axis: correctness
+  verify: text_file_contains_all
+- id: outline_required_tokens
+  criterion: Report outline covers required outputs and three target analysis families.
+  axis: correctness
+  verify: text_file_contains_all
+- id: grounding_source
+  criterion: Deliverables are grounded in `result_manifest.json` and avoid fabricating
+    unavailable numeric results.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: No repeated identical tool calls with the same parameter set.
+  axis: efficiency
+  verify: no_retries
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
+    a generous benchmark ceiling (tunable per deployment).
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
+  axis: efficiency
+  verify: token_budget

@@ -1,14 +1,27 @@
 """Registry pattern for loading MATTER v5 question bank.
 
-Inspired by mle-bench's Registry + Competition pattern.
+Each question lives in its own subdirectory under question_bank/::
+
+    question_bank/
+    ├── SR_general_001/
+    │   ├── question.yaml
+    │   └── policy_excerpt.md
+    ├── IG_incar_001/
+    │   ├── question.yaml
+    │   └── task_spec.json
+    ...
+
+The ``question.yaml`` file contains a single question (raw QuestionItem fields,
+not wrapped in a ``questions:`` list).  Data file paths inside ``question.yaml``
+are relative to their question directory.
 """
 
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import yaml
 
@@ -20,11 +33,10 @@ _logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class Question:
-    """A loaded question with resolved data file paths."""
+    """A loaded question with its directory for data file resolution."""
 
     item: QuestionItem
-    bank_file: Path
-    data_dir: Path | None = None
+    question_dir: Path
 
     @property
     def id(self) -> str:
@@ -50,18 +62,16 @@ class Question:
         """Resolve a data file reference by key to an absolute path."""
         for df in self.item.data_files:
             if df.key == key:
-                if self.data_dir and (self.data_dir / df.path).exists():
-                    return self.data_dir / df.path
-                # Try relative to bank file
-                candidate = self.bank_file.parent / df.path
-                if candidate.exists():
-                    return candidate
-                return None
+                candidate = self.question_dir / df.path
+                return candidate if candidate.exists() else None
         return None
 
 
 class Registry:
     """Scans a question_bank directory and provides access to questions.
+
+    Each subdirectory containing a ``question.yaml`` file is treated as one
+    question.  No manifest required — adding a directory adds a question.
 
     Usage::
 
@@ -80,32 +90,11 @@ class Registry:
         self._load()
 
     def _load(self) -> None:
-        """Scan all bank YAML files referenced by manifest.yaml."""
-        manifest_path = self._root / 'manifest.yaml'
-        if manifest_path.exists():
-            self._load_from_manifest(manifest_path)
-        else:
-            # Fallback: scan all YAML files recursively
-            self._load_all_yamls()
+        """Scan all ``*/question.yaml`` files one level below the root."""
+        for q_yaml in sorted(self._root.glob('*/question.yaml')):
+            self._load_question_file(q_yaml)
 
-    def _load_from_manifest(self, manifest_path: Path) -> None:
-        with manifest_path.open('r', encoding='utf-8') as f:
-            manifest = yaml.safe_load(f)
-        banks = manifest.get('banks', [])
-        for bank_entry in banks:
-            bank_path = self._root / bank_entry['path']
-            if not bank_path.exists():
-                _logger.warning('bank file not found: %s', bank_path)
-                continue
-            self._load_bank_file(bank_path)
-
-    def _load_all_yamls(self) -> None:
-        for yaml_path in sorted(self._root.rglob('*.yaml')):
-            if yaml_path.name == 'manifest.yaml':
-                continue
-            self._load_bank_file(yaml_path)
-
-    def _load_bank_file(self, path: Path) -> None:
+    def _load_question_file(self, path: Path) -> None:
         try:
             with path.open('r', encoding='utf-8') as f:
                 raw = yaml.safe_load(f)
@@ -113,26 +102,21 @@ class Registry:
             _logger.warning('failed to parse %s: %s', path, exc)
             return
 
-        if not isinstance(raw, dict) or 'questions' not in raw:
+        if not isinstance(raw, dict):
+            _logger.warning('invalid question.yaml (expected a dict): %s', path)
             return
 
         from ..schemas import QuestionItem  # local import to avoid circular dependency
-        for q_raw in raw['questions']:
-            try:
-                item = QuestionItem.model_validate(q_raw)
-            except Exception as exc:
-                _logger.warning(
-                    'failed to validate question in %s: %s', path.name, exc
-                )
-                continue
-            question = Question(
-                item=item,
-                bank_file=path,
-                data_dir=path.parent,
-            )
-            if item.id in self._questions:
-                _logger.warning('duplicate question id: %s', item.id)
-            self._questions[item.id] = question
+        try:
+            item = QuestionItem.model_validate(raw)
+        except Exception as exc:
+            _logger.warning('failed to validate %s: %s', path, exc)
+            return
+
+        question = Question(item=item, question_dir=path.parent)
+        if item.id in self._questions:
+            _logger.warning('duplicate question id: %s', item.id)
+        self._questions[item.id] = question
 
     # ------------------------------------------------------------------
     # Public API

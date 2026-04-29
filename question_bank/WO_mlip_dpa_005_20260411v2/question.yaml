@@ -1,0 +1,77 @@
+id: WO_mlip_dpa_005_20260411v2
+capability: workflow_orchestration
+domain: agnostic
+intent: Compute Cu FCC single-vacancy migration barrier with DPA via NEB; report forward
+  barrier energy.
+human_prompt_seed: '计算 FCC Cu 中单空位的迁移能垒。
+
+  从数据库获取或构建 Cu FCC 原胞，扩展为 3×3×3 超胞，
+
+  移除一个原子形成空位结构作为初态，将相邻原子移至空位位置形成末态。
+
+  分别优化初态和末态结构，然后使用 DPA 机器学习势做 NEB 计算（5 个中间像）。
+
+  报告正向迁移能垒 (eV) 和能量曲线趋势。
+
+  '
+tags:
+- code_mlip
+- code_dpa
+- phy_defect
+- phy_surface
+data_files: []
+reference_answers:
+- key: forward_barrier_eV
+  value: 0.7
+  tolerance: 0.2
+- key: required_fields
+  value:
+  - initial_state
+  - final_state
+  - forward_barrier
+  - energy_profile
+- key: turn_budget
+  value:
+    max: 24
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 10000
+scoring_checklist:
+- id: forward_barrier_eV
+  criterion: Cu vacancy forward migration barrier is within tolerance (~0.7 eV).
+  axis: correctness
+  verify: numerical_range
+- id: required_fields
+  criterion: Report includes description of initial and final states, forward barrier
+    value, and energy profile along the migration path.
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: The migration barrier is derived from NEB calculation outputs, not literature
+    values. Judge solely from the final answer.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: No repeated identical NEB or optimization submissions with the same parameters.
+  axis: efficiency
+  verify: no_retries
+- id: efficiency_judge
+  criterion: NEB workflow (build defect states → optimize endpoints → NEB → parse
+    barrier) completes without unnecessary steps.
+  axis: efficiency
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration does not exceed benchmark ceiling.
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling.
+  axis: efficiency
+  verify: token_budget

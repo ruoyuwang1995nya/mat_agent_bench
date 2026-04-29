@@ -1,0 +1,130 @@
+id: WO_general_intake_001_20260410v3
+capability: workflow_orchestration
+domain: agnostic
+intent: Build a structured intake-and-analysis protocol with attachment-level triage
+  priority and rejection criteria.
+human_prompt_seed: '工作区已提供 `attachment_manifest.json`。
+
+
+  请先读取该文件，再生成：
+
+  1) `intake_checklist.json`：列出每个附件的补充信息需求；
+
+  2) `analysis_protocol.md`：包含分析流程、质量检查、异常处理；
+
+  3) `delivery_plan.md`：明确图/表/文字说明交付项。
+
+  4) `triage_policy.md`：给出附件优先级与“拒绝处理”条件（如关键元数据缺失）。
+
+
+  注意：不要假设未在清单出现的附件类型。
+
+  '
+tags:
+- meta_userlog
+- phy_surface
+data_files:
+- key: attachment_manifest
+  path: attachment_manifest.json
+  oss_url: ''
+  description: Attachment metadata list for protocol planning.
+reference_answers:
+- key: intake_artifact
+  value: intake_checklist.json
+- key: protocol_artifact
+  value: analysis_protocol.md
+- key: delivery_artifact
+  value: delivery_plan.md
+- key: triage_artifact
+  value: triage_policy.md
+- key: intake_required_tokens
+  value:
+    filename: intake_checklist.json
+    tokens:
+    - dsc_curve.csv
+    - sem_image.png
+    - 文件类型
+    - 单位
+    - 标尺
+    - 测试条件
+    flags: i
+- key: protocol_required_tokens
+  value:
+    filename: analysis_protocol.md
+    tokens:
+    - 分析流程
+    - 质量检查
+    - 异常处理
+    - 缺失值
+    - 单位一致性
+    flags: i
+- key: delivery_required_tokens
+  value:
+    filename: delivery_plan.md
+    tokens:
+    - 图
+    - 表
+    - 文字说明
+    flags: i
+- key: turn_budget
+  value:
+    max: 8
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 7000
+scoring_checklist:
+- id: intake_artifact
+  criterion: Agent writes `intake_checklist.json` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: protocol_artifact
+  criterion: Agent writes `analysis_protocol.md` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: delivery_artifact
+  criterion: Agent writes `delivery_plan.md` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: triage_artifact
+  criterion: Agent writes `triage_policy.md` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: intake_required_tokens
+  criterion: Intake checklist is grounded in attachment manifest entries and requests
+    concrete missing metadata.
+  axis: correctness
+  verify: text_file_contains_all
+- id: protocol_required_tokens
+  criterion: Analysis protocol includes workflow, quality checks, and abnormal-case
+    handling.
+  axis: correctness
+  verify: text_file_contains_all
+- id: delivery_required_tokens
+  criterion: Delivery plan explicitly includes figures, tables, and explanatory text.
+  axis: correctness
+  verify: text_file_contains_all
+- id: grounding_source
+  criterion: The response stays grounded in `attachment_manifest.json` and does not
+    fabricate unseen attachment content.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: No repeated identical tool calls with the same parameter set.
+  axis: efficiency
+  verify: no_retries
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
+    a generous benchmark ceiling (tunable per deployment).
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
+  axis: efficiency
+  verify: token_budget
