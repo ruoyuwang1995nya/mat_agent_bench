@@ -27,7 +27,22 @@ uv pip install -e ".[validators]"
 
 ## Quick Start
 
-### 1. List available questions
+### 1. Start the benchmark server
+
+```bash
+# Install server dependencies
+uv pip install -e ".[server]"
+
+# Start on default host/port (127.0.0.1:8765)
+mat-bench serve
+
+# Optional: custom host/port with an LLM judge
+mat-bench serve --host 0.0.0.0 --port 9000 \
+    --llm-judge anthropic/claude-sonnet-4-20250514 \
+    --output-dir runs/my_run
+```
+
+### 2. List available questions
 
 ```bash
 mat-bench list
@@ -40,176 +55,39 @@ mat-bench list --capability input_generation
 mat-bench list --tags vasp incar
 ```
 
-### 2. Run an agent
+### 3. Run an agent against the server
+
+`scripts/run_question.sh` automates token registration, session creation, and agent invocation:
 
 ```bash
-mat-bench run --agent agents/claude_code.sh --limit 3 --skip-grading
+# Run one question (server must already be running)
+./scripts/run_question.sh SR_db_001_20260411v2
+
+# Override model and turn limit
+MODEL=claude-opus-4-6 MAX_TURNS=30 ./scripts/run_question.sh SR_db_001_20260411v2
 ```
+The agent would show the test result.
 
-See the [Running Agents](#running-agents) section for full options and instructions on implementing your own agent.
-
-### 3. Grade results
-
-Agent runs must be provided as a JSONL file where each line is an `EvalRunRecord` (see `mat_bench/schemas.py`).
+### 4. Check results
 
 ```bash
-mat-bench grade runs/my_agent_raw_runs.jsonl --output-dir runs/results/
-```
-
-### 4. Re-generate reports from existing results
-
-```bash
-mat-bench report runs/results/raw_runs.jsonl --output-dir runs/results/ --prefix final_
+curl -H "X-API-Token: <token>" "http://127.0.0.1:8765/results?session_id=<session>"
 ```
 
 ---
 
 ## Running Agents
 
-Use `mat-bench run` to run any agent against the question bank. Provide an agent shell script via `--agent` — the harness handles workspace setup, grading, and output.
+The recommended way to run agents is via the [Harness-less Server Mode](#harness-less-server-mode). Start the server, then point your agent at the REST API.
 
-### Built-in: Claude Code
-
-```bash
-# Quick smoke test (2 questions, no LLM grading)
-mat-bench run --agent agents/claude_code.sh --limit 2 --skip-grading
-
-# Run in parallel with LLM judge and generate full reports
-mat-bench run --agent agents/claude_code.sh \
-    --limit 5 -j 2 \
-    --llm-judge anthropic/claude-sonnet-4-20250514 \
-    --report
-
-# Override Claude model / turn limit via env vars
-mat-bench run --agent agents/claude_code.sh \
-    --agent-env MODEL=opus MAX_TURNS=20 \
-    --limit 3
-```
-
-### Implementing Your Own Agent
-
-An agent is a shell script that receives three arguments and writes a JSON result file:
-
-```
-./my_agent.sh <workspace_dir> <prompt_file> <output_file>
-```
-
-| Argument | Description |
-|---|---|
-| `workspace_dir` | Working directory. Data files for the question are already copied here. Run your agent with this as cwd. |
-| `prompt_file` | Path to a file containing the question prompt text. |
-| `output_file` | Your script must write a JSON result here before exiting. |
-
-**Output JSON format** (only `answer` is required):
-
-```json
-{
-  "answer":      "the agent's final answer text",
-  "model_name":  "gpt-4o",
-  "num_turns":   5,
-  "is_error":    false,
-  "duration_ms": 12345,
-  "usage": {
-    "prompt_tokens":     1200,
-    "completion_tokens":  450,
-    "total_tokens":      1650
-  }
-}
-```
-
-Exit code 0 = success. Non-zero = error (recorded but run continues).
-
-**Minimal template** (copy from `agents/example.sh`):
+For a quick smoke test using the built-in Claude Code agent:
 
 ```bash
-#!/usr/bin/env bash
-set -euo pipefail
-
-WORKSPACE="$1"
-PROMPT_FILE="$2"
-OUTPUT_FILE="$3"
-
-PROMPT=$(cat "$PROMPT_FILE")
-
-# TODO: invoke your agent here, cwd is $WORKSPACE
-ANSWER="my agent's answer"
-
-cat > "$OUTPUT_FILE" <<EOF
-{
-  "answer": "$ANSWER",
-  "model_name": "my-agent"
-}
-EOF
+mat-bench serve &
+./scripts/run_question.sh SR_db_001_20260411v2
 ```
 
-**OpenAI API example:**
-
-```bash
-#!/usr/bin/env bash
-set -euo pipefail
-
-WORKSPACE="$1"
-PROMPT_FILE="$2"
-OUTPUT_FILE="$3"
-
-PROMPT=$(cat "$PROMPT_FILE")
-
-python3 - <<PYEOF
-import json, os
-from openai import OpenAI
-
-client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-resp = client.chat.completions.create(
-    model=os.environ.get("MODEL", "gpt-4o"),
-    messages=[{"role": "user", "content": open("$PROMPT_FILE").read()}],
-)
-msg = resp.choices[0].message
-json.dump({
-    "answer":     msg.content or "",
-    "model_name": resp.model,
-    "num_turns":  1,
-    "usage": {
-        "prompt_tokens":     resp.usage.prompt_tokens,
-        "completion_tokens": resp.usage.completion_tokens,
-        "total_tokens":      resp.usage.total_tokens,
-    },
-}, open("$OUTPUT_FILE", "w"))
-PYEOF
-```
-
-Once written, run it with:
-
-```bash
-mat-bench run --agent agents/my_agent.sh --limit 5 \
-    --agent-env OPENAI_API_KEY=sk-xxx MODEL=gpt-4o \
-    --report
-```
-
-### All `mat-bench run` Options
-
-```
---agent AGENT             Path to agent shell script (required)
---agent-env KEY=VALUE     Environment variables passed to the agent
---questions ID [ID ...]   Run specific question IDs
---capability CAPABILITY   Filter by capability
---domain DOMAIN           Filter by domain
---limit N                 Run only the first N questions
---output-dir DIR          Output directory (default: runs/<agent>_<timestamp>)
---timeout SECONDS         Per-question timeout (default: 600)
---mode {direct,planner}   Evaluation mode (default: direct)
---llm-judge PROVIDER/MODEL  LLM for llm_binary_judge criteria
---skip-grading            Skip grading, output pre-grading JSONL only
---report                  Generate full reports after grading
--j N, --jobs N            Parallel tasks (default: 1)
-```
-
-### Grading Later
-
-If you used `--skip-grading`, grade the output separately:
-
-```bash
-mat-bench grade runs/<output>/raw_runs.jsonl --output-dir runs/<output>/
-```
+See [Harness-less Server Mode → Implementing your own agent](#implementing-your-own-agent-against-the-server) for how to build a custom agent against the API.
 
 ---
 
