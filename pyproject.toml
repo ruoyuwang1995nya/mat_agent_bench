@@ -23,3 +23,22 @@ mat-bench = "mat_bench.cli:main"
 
 [tool.setuptools]
 packages = { find = { include = ["mat_bench", "mat_bench.*"] } }
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+branch = "main"
+commit_parser = "angular"
+tag_format = "v{version}"
+commit_message = "chore(release): bump version to {version} [skip ci]"
+major_on_zero = false
+commit_author = "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+
+[tool.semantic_release.remote]
+type = "github"
+
+[tool.semantic_release.changelog]
+changelog_file = "CHANGELOG.md"
+
+[tool.semantic_release.publish]
+dist_glob_patterns = []
+upload_to_vcs_release = true
