@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.2.0 (2026-04-29)
+
+### Features
+
+- Restructure the question bank
+  ([`ff3e3d0`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/ff3e3d0cb3ce0006351042fa6dcc80dd2db1ba60))
+
+
 ## v0.1.0 (2026-04-29)
 
 ### Bug Fixes
