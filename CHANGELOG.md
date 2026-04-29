@@ -1,0 +1,29 @@
+# CHANGELOG
+
+
+## v0.1.0 (2026-04-29)
+
+### Bug Fixes
+
+- Add release workflow
+  ([`ac6e2b9`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/ac6e2b9e35afe8701ef5bdcafc61d6241f801499))
+
+- Initial commit
+  ([`d1a04a6`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/d1a04a648089368903f9e2641b5f506e60896629))
+
+- Issues with importing registry and tags
+  ([`09b92f8`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/09b92f8413546814ff17d100afd2700292072b28))
+
+- Reformulate mat_bench
+  ([`2b778b3`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/2b778b3f12f64f3242a6c7d8a8956d95bb951bba))
+
+- Update agent test template
+  ([`079b81d`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/079b81db9d16533eb4d8f910d525bb65691a2500))
+
+- Update CLI
+  ([`c8807fc`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/c8807fc2373bfb53ac5d1b3e6c6d7fc1e75bb221))
+
+### Features
+
+- Add harness-less server mode
+  ([`01fff1d`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/01fff1dfec7afd6d418ae965ada87437ad903903))
