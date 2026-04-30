@@ -23,16 +23,19 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 TEMPLATE="$REPO_ROOT/agents/run_question.md"
 
-# Register a token if not provided
+# Require a token — registration is not allowed here
 if [ -z "${TOKEN:-}" ]; then
-  TOKEN=$(curl -sf -X POST "$SERVER_URL/token" | jq -r .token)
-  echo "Registered token: $TOKEN" >&2
+  echo "Error: TOKEN environment variable is not set. Export a valid API token first." >&2
+  exit 1
 fi
+echo "Using token:      $TOKEN" >&2
 
 # Create a session if not provided
 if [ -z "${SESSION:-}" ]; then
   SESSION=$(curl -sf -X POST "$SERVER_URL/sessions" -H "X-API-Token: $TOKEN" | jq -r .session_id)
   echo "Created session:  $SESSION" >&2
+else
+  echo "Using session:    $SESSION" >&2
 fi
 
 # Fill in the template
