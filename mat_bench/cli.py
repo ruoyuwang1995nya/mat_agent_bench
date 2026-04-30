@@ -151,12 +151,6 @@ def _add_serve_parser(subparsers: argparse._SubParsersAction) -> None:
         help='Path to question_bank directory (default: question_bank).',
     )
     p.add_argument(
-        '--output-dir',
-        type=str,
-        default=None,
-        help='Directory for workspaces and raw_runs.jsonl (default: runs/serve_<timestamp>).',
-    )
-    p.add_argument(
         '--llm-judge',
         type=str,
         default=os.environ.get('MAT_BENCH_LLM_JUDGE'),
@@ -179,6 +173,13 @@ def _add_serve_parser(subparsers: argparse._SubParsersAction) -> None:
         type=int,
         default=4,
         help='Number of parallel grading threads (default: 4).',
+    )
+    p.add_argument(
+        '--store-dir',
+        type=str,
+        default=None,
+        metavar='DIR',
+        help='Directory for persistent data: DBs, workspaces, and logs (default: ~/.matbench).',
     )
     p.add_argument(
         '--log-level',
@@ -240,12 +241,10 @@ def _cmd_serve(args: argparse.Namespace) -> None:
     registry = Registry(qb_dir)
     print(f'Loaded {len(registry)} questions from {qb_dir}', file=sys.stderr)
 
-    if args.output_dir:
-        output_dir = Path(args.output_dir)
-    else:
-        from datetime import datetime
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        output_dir = _REPO_ROOT / 'runs' / f'serve_{timestamp}'
+    from datetime import datetime
+    store_dir = Path(args.store_dir) if args.store_dir else Path.home() / ".matbench"
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    output_dir = store_dir / 'runs' / f'serve_{timestamp}'
 
     llm_cfg = None
     has_env = os.environ.get('MAT_BENCH_LLM_MODEL') and os.environ.get('MAT_BENCH_LLM_API_KEY')
@@ -261,10 +260,66 @@ def _cmd_serve(args: argparse.Namespace) -> None:
         output_dir=output_dir,
         llm_cfg=llm_cfg,
         grading_workers=args.grading_workers,
+        store_dir=store_dir,
     )
+    log_file = str(output_dir / "server.log")
+    log_config = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "default": {
+                "()": "uvicorn.logging.DefaultFormatter",
+                "fmt": "%(levelprefix)s %(message)s",
+                "use_colors": None,
+            },
+            "access": {
+                "()": "uvicorn.logging.AccessFormatter",
+                "fmt": '%(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s',
+            },
+            "file": {
+                "format": "%(asctime)s %(levelname)-8s %(name)s  %(message)s",
+                "datefmt": "%Y-%m-%d %H:%M:%S",
+            },
+        },
+        "handlers": {
+            "default": {
+                "formatter": "default",
+                "class": "logging.StreamHandler",
+                "stream": "ext://sys.stderr",
+            },
+            "access": {
+                "formatter": "access",
+                "class": "logging.StreamHandler",
+                "stream": "ext://sys.stdout",
+            },
+            "file": {
+                "formatter": "file",
+                "class": "logging.FileHandler",
+                "filename": log_file,
+            },
+        },
+        "loggers": {
+            "uvicorn": {
+                "handlers": ["default", "file"],
+                "level": args.log_level.upper(),
+                "propagate": False,
+            },
+            "uvicorn.error": {
+                "handlers": ["default", "file"],
+                "level": args.log_level.upper(),
+                "propagate": False,
+            },
+            "uvicorn.access": {
+                "handlers": ["access", "file"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+        },
+    }
     print(f'Output directory: {output_dir}', file=sys.stderr)
+    print(f'Server log: {log_file}', file=sys.stderr)
     print(f'Starting server at http://{args.host}:{args.port}', file=sys.stderr)
-    uvicorn.run(app, host=args.host, port=args.port, log_level=args.log_level)
+    uvicorn.run(app, host=args.host, port=args.port, log_level=args.log_level, log_config=log_config)
 
 
 

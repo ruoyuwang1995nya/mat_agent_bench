@@ -34,7 +34,9 @@ from __future__ import annotations
 import asyncio
 import functools
 import json
+import random
 import secrets
+import string
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
@@ -43,18 +45,18 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from .evaluation.evidence import (
+from ..evaluation.evidence import (
     ArtifactRecord,
     CallStatus,
     EvidenceBundle,
     ToolCallRecord,
     TokenUsage,
 )
-from .evaluation.grade import grade_question
-from .harness import build_token_usage_record
-from .registry import Registry
-from .reporting.aggregator import build_summary
-from .schemas import EvalRunRecord, LLMConfig, TokenUsageRecord
+from ..evaluation.grade import grade_question
+from ..harness import build_token_usage_record
+from ..registry import Registry
+from ..reporting.aggregator import build_summary
+from ..schemas import EvalRunRecord, LLMConfig, TokenUsageRecord
 
 # ---------------------------------------------------------------------------
 # Server-internal models
@@ -85,85 +87,14 @@ _tokens: dict[str, TokenRecord] = {}
 _tokens_lock = threading.Lock()
 
 _sessions: dict[str, SessionRecord] = {}
-_session_counter: int = 0
 _sessions_lock = threading.Lock()
 
 # key = f"{token}:{session_id}:{question_id}" → (token, session_id, record)
 _results: dict[str, tuple[str, str, EvalRunRecord]] = {}
 _results_lock = threading.Lock()
 
-
-# ---------------------------------------------------------------------------
-# Disk persistence helpers
-# ---------------------------------------------------------------------------
-
-
-def _load_tokens() -> None:
-    """Load tokens from disk. Called once from init_server."""
-    global _tokens
-    if _output_dir is None:
-        return
-    path = _output_dir / "tokens.json"
-    if not path.exists():
-        return
-    with _tokens_lock:
-        data = json.loads(path.read_text(encoding="utf-8"))
-        _tokens = {
-            entry["token"]: TokenRecord(**entry)
-            for entry in data.get("tokens", [])
-        }
-
-
-def _flush_tokens() -> None:
-    """Write _tokens to disk. Caller must hold _tokens_lock."""
-    if _output_dir is None:
-        return
-    path = _output_dir / "tokens.json"
-    payload = {"tokens": [t.model_dump(mode="json") for t in _tokens.values()]}
-    path.write_text(json.dumps(payload, ensure_ascii=False, default=str), encoding="utf-8")
-
-
-def _load_sessions() -> None:
-    """Load sessions and counter from disk. Called once from init_server."""
-    global _sessions, _session_counter
-    if _output_dir is None:
-        return
-    path = _output_dir / "sessions.json"
-    if not path.exists():
-        return
-    with _sessions_lock:
-        data = json.loads(path.read_text(encoding="utf-8"))
-        _session_counter = int(data.get("counter", 0))
-        _sessions = {
-            entry["session_id"]: SessionRecord(**entry)
-            for entry in data.get("sessions", [])
-        }
-
-
-def _flush_sessions() -> None:
-    """Write _sessions and _session_counter to disk. Caller must hold _sessions_lock."""
-    if _output_dir is None:
-        return
-    path = _output_dir / "sessions.json"
-    payload = {
-        "counter": _session_counter,
-        "sessions": [s.model_dump(mode="json") for s in _sessions.values()],
-    }
-    path.write_text(json.dumps(payload, ensure_ascii=False, default=str), encoding="utf-8")
-
-
-def _flush_results() -> None:
-    """Write all results to raw_runs.jsonl. Caller must hold _results_lock."""
-    if _output_dir is None:
-        return
-    raw_runs_path = _output_dir / "raw_runs.jsonl"
-    with raw_runs_path.open("w", encoding="utf-8") as f:
-        for token, session_id, record in _results.values():
-            row = record.model_dump(mode="json")
-            row["_token"] = token
-            row["_session_id"] = session_id
-            f.write(json.dumps(row, ensure_ascii=False, default=str))
-            f.write("\n")
+_token_store: "TokenStore | None" = None
+_session_store: "SessionStore | None" = None
 
 
 # ---------------------------------------------------------------------------
@@ -176,17 +107,34 @@ def init_server(
     output_dir: Path,
     llm_cfg: LLMConfig | None = None,
     grading_workers: int = 4,
+    store_dir: Path | None = None,
 ) -> None:
     """Initialise server state. Must be called before uvicorn.run()."""
     global _registry, _llm_cfg, _output_dir, _results, _grading_executor
+    global _token_store, _session_store
     _registry = registry
     _llm_cfg = llm_cfg
     _output_dir = output_dir
     _results = {}
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    _load_tokens()
-    _load_sessions()
+    from .store import TokenStore, SessionStore
+    _store_dir = store_dir or Path.home() / ".matbench"
+    _token_store = TokenStore(_store_dir / "tokens.db")
+    _session_store = SessionStore(_store_dir / "sessions.db")
+
+    with _tokens_lock:
+        for t, data in _token_store.load_tokens().items():
+            _tokens[t] = TokenRecord(**data)
+
+    with _sessions_lock:
+        raw_sessions = _session_store.load_sessions()
+        for sid, data in raw_sessions.items():
+            _sessions[sid] = SessionRecord(**data)
+
+    with _results_lock:
+        for key, (tok, sid, rec_dict) in _session_store.load_results().items():
+            _results[key] = (tok, sid, EvalRunRecord(**rec_dict))
 
     _grading_executor = ThreadPoolExecutor(max_workers=grading_workers)
 
@@ -286,23 +234,23 @@ try:
         record = TokenRecord(token=token_str, created_at=datetime.now(timezone.utc))
         with _tokens_lock:
             _tokens[token_str] = record
-            _flush_tokens()
+        _token_store.save_token(token_str, record.created_at)
         return {"token": token_str, "created_at": record.created_at.isoformat()}
 
     @app.post("/sessions")
     async def create_session(token: str = Depends(_require_token)) -> dict:
         """Create a new session for the authenticated token."""
-        global _session_counter
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+        session_id = f"S{ts}_{suffix}"
         with _sessions_lock:
-            _session_counter += 1
-            session_id = f"S{_session_counter:04d}"
             record = SessionRecord(
                 session_id=session_id,
                 token=token,
                 created_at=datetime.now(timezone.utc),
             )
             _sessions[session_id] = record
-            _flush_sessions()
+        _session_store.save_session(session_id, token, record.created_at)
         return {"session_id": session_id, "created_at": record.created_at.isoformat()}
 
     # ------------------------------------------------------------------
@@ -509,7 +457,8 @@ try:
         composite_key = f"{token}:{session_id}:{question_id}"
         with _results_lock:
             _results[composite_key] = (token, session_id, record)
-            _flush_results()
+        record_json = json.dumps(record.model_dump(mode="json"), ensure_ascii=False, default=str)
+        _session_store.save_result(composite_key, token, session_id, record_json)
 
         return {
             "question_id": record.question_id,
