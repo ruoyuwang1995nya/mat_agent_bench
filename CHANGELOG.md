@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.2.1 (2026-04-30)
+
+### Bug Fixes
+
+- Update server
+  ([`b937c80`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/b937c801f5f8ee0ecda1171b1be6dafd18197fed))
+
+
 ## v0.2.0 (2026-04-29)
 
 ### Features
