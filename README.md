@@ -27,7 +27,19 @@ uv pip install -e ".[validators]"
 
 ## Quick Start
 
-### 1. Start the benchmark server
+### 1. Configure your LLM
+
+Create a `.env` file in the repo root with your LLM provider settings:
+
+```bash
+MAT_BENCH_LLM_API_KEY="your-api-key"
+MAT_BENCH_LLM_MODEL="your-model-name"
+MAT_BENCH_LLM_BASE_URL="https://your-provider-base-url/v1"
+```
+
+The server loads this file automatically (override with `--env-file`).
+
+### 2. Start the benchmark server
 
 ```bash
 # Install server dependencies
@@ -35,14 +47,20 @@ uv pip install -e ".[server]"
 
 # Start on default host/port (127.0.0.1:8765)
 mat-bench serve
-
-# Optional: custom host/port with an LLM judge
-mat-bench serve --host 0.0.0.0 --port 9000 \
-    --llm-judge anthropic/claude-sonnet-4-20250514 \
-    --output-dir runs/my_run
 ```
 
-### 2. List available questions
+### 3. Register an API token
+
+Before running any agent, register a token with the server and export it:
+
+```bash
+TOKEN=$(curl -sf -X POST http://127.0.0.1:8765/token | jq -r .token)
+export TOKEN
+```
+
+> **Note:** You must register a token manually. The `run_question.sh` script requires `TOKEN` to be set and will not register one automatically.
+
+### 4. List available questions
 
 ```bash
 mat-bench list
@@ -55,9 +73,9 @@ mat-bench list --capability input_generation
 mat-bench list --tags vasp incar
 ```
 
-### 3. Run an agent against the server
+### 5. Run an agent against the server
 
-`scripts/run_question.sh` automates token registration, session creation, and agent invocation:
+`scripts/run_question.sh` requires `TOKEN` to be set, creates a session, and invokes the agent:
 
 ```bash
 # Run one question (server must already be running)
@@ -68,7 +86,7 @@ MODEL=claude-opus-4-6 MAX_TURNS=30 ./scripts/run_question.sh SR_db_001_20260411v
 ```
 The agent would show the test result.
 
-### 4. Check results
+### 6. Check results
 
 ```bash
 curl -H "X-API-Token: <token>" "http://127.0.0.1:8765/results?session_id=<session>"
@@ -139,9 +157,13 @@ Authentication is required for `/submit` and `/results` — obtain a token via `
 
 ### Run a single question via the server (Claude Code)
 
-`scripts/run_question.sh` automates token registration, session creation, and agent invocation against the server:
+`scripts/run_question.sh` requires a pre-registered `TOKEN` environment variable, creates a session, and invokes the agent against the server:
 
 ```bash
+# Register a token first (if not already done)
+TOKEN=$(curl -sf -X POST http://127.0.0.1:8765/token | jq -r .token)
+export TOKEN
+
 # Run one question (server must already be running)
 ./scripts/run_question.sh SR_db_001_20260411v2
 
@@ -152,7 +174,7 @@ Authentication is required for `/submit` and `/results` — obtain a token via `
 MODEL=claude-opus-4-6 MAX_TURNS=30 ./scripts/run_question.sh SR_db_001_20260411v2
 ```
 
-The script registers a token, creates a session, fills in the prompt template at `agents/run_question.md`, and invokes `claude` with `--dangerously-skip-permissions`. After the run, check scores with:
+The script requires `TOKEN` to be exported beforehand, creates a session, fills in the prompt template at `agents/run_question.md`, and invokes `claude` with `--dangerously-skip-permissions`. After the run, check scores with:
 
 ```bash
 curl -H "X-API-Token: <token>" "http://127.0.0.1:8765/results?session_id=<session>"
