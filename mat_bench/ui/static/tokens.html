@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tokens — mat-bench</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">MAT-BENCH</div>
+    <div class="nav-links">
+      <a href="/static/index.html">Home</a>
+      <a href="/static/questions.html">Questions</a>
+      <a href="/static/leaderboard.html">Leaderboard</a>
+      <a href="/static/tokens.html" class="active">Tokens</a>
+    </div>
+    <div style="display:flex;align-items:center;gap:.75rem">
+      <span id="nav-user" style="font-size:.8rem;color:var(--text-dim);font-family:var(--font-data)"></span>
+      <button class="btn btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="page-header">
+      <h1 class="page-title">API Tokens</h1>
+    </div>
+
+    <p style="font-size:.875rem;color:var(--text-dim);margin-bottom:1.5rem">
+      Generate tokens to authenticate agents with the mat-bench backend
+      (<code style="color:var(--cyan)">X-API-Token</code> header).
+      You can see your full token values here at any time after logging in.
+    </p>
+
+    <!-- Request new token form -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1.5rem;margin-bottom:1.5rem">
+      <h2 style="font-family:var(--font-title);font-size:.85rem;color:var(--cyan);letter-spacing:.1em;margin-bottom:1rem">
+        REQUEST TOKEN
+      </h2>
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
+        <div style="flex:1;min-width:220px">
+          <label style="display:block;font-size:.78rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem">
+            Agent Name
+          </label>
+          <input id="agent-name" type="text" class="search-input" style="width:100%"
+            placeholder="e.g. claude-opus-agent" maxlength="80">
+        </div>
+        <button class="btn btn-primary" id="req-btn" onclick="requestToken()">Generate</button>
+      </div>
+      <div id="req-error" style="display:none;margin-top:.75rem;font-size:.85rem;color:var(--red)"></div>
+    </div>
+
+    <!-- Token list -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:160px">Agent Name</th>
+            <th>Token</th>
+            <th style="width:160px">Created</th>
+            <th style="width:110px;text-align:center">Evaluations</th>
+            <th>Models used</th>
+          </tr>
+        </thead>
+        <tbody id="token-body">
+          <tr><td colspan="5" style="text-align:center;padding:3rem"><div class="spinner" style="margin:auto"></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toasts"></div>
+  <script src="/static/js/auth.js"></script>
+  <script src="/static/js/tokens.js"></script>
+</body>
+</html>

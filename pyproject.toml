@@ -15,7 +15,7 @@ dependencies = [
 
 [project.optional-dependencies]
 validators = ["pymatgen>=2024.1.1"]
-server = ["fastapi>=0.100.0", "uvicorn>=0.20.0"]
+server = ["fastapi>=0.100.0", "uvicorn>=0.20.0", "python-multipart>=0.0.9"]
 dev = ["pytest>=8.0"]
 
 [project.scripts]

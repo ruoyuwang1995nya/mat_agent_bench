@@ -323,6 +323,78 @@ def _cmd_serve(args: argparse.Namespace) -> None:
 
 
 
+def _add_serve_ui_parser(subparsers: argparse._SubParsersAction) -> None:
+    p = subparsers.add_parser(
+        'serve-ui',
+        help='Start the mat-bench web UI (question bank + leaderboard)',
+        description=(
+            'Launch a web interface for managing the question bank and '
+            'visualising leaderboard results from past evaluation runs.'
+        ),
+    )
+    p.add_argument(
+        '--host',
+        type=str,
+        default='0.0.0.0',
+        help='Host to bind to (default: 0.0.0.0).',
+    )
+    p.add_argument(
+        '--port',
+        type=int,
+        default=8080,
+        help='Port to listen on (default: 8080).',
+    )
+    p.add_argument(
+        '--question-bank-dir',
+        type=str,
+        default=None,
+        help='Path to question_bank directory (default: question_bank next to the package).',
+    )
+    p.add_argument(
+        '--store-dir',
+        type=str,
+        default=None,
+        metavar='DIR',
+        help='mat-bench store directory for leaderboard data (default: ~/.matbench).',
+    )
+    p.add_argument(
+        '--backend-url',
+        type=str,
+        default='http://localhost:8765',
+        metavar='URL',
+        help='URL of the running mat-bench backend server, used for token generation (default: http://localhost:8765).',
+    )
+    p.add_argument(
+        '--log-level',
+        type=str,
+        default='info',
+        choices=['debug', 'info', 'warning', 'error', 'critical'],
+        help='Uvicorn log level (default: info).',
+    )
+    p.set_defaults(func=_cmd_serve_ui)
+
+
+def _cmd_serve_ui(args: argparse.Namespace) -> None:
+    try:
+        import uvicorn
+    except ImportError:
+        print(
+            'error: uvicorn is required for mat-bench serve-ui.\n'
+            'Install it with: pip install "mat-bench[server]"',
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    from .ui.app import create_app
+
+    qb_dir = Path(args.question_bank_dir) if args.question_bank_dir else None
+    store_dir = Path(args.store_dir) if args.store_dir else None
+    app = create_app(question_bank_dir=qb_dir, store_dir=store_dir, backend_url=args.backend_url)
+
+    print(f'Starting mat-bench UI at http://{args.host}:{args.port}', file=sys.stderr)
+    uvicorn.run(app, host=args.host, port=args.port, log_level=args.log_level)
+
+
 def _add_list_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser('list', help='List questions in the question bank')
     p.add_argument(
@@ -433,6 +505,7 @@ def main() -> None:
 
     _add_run_parser(subparsers)
     _add_serve_parser(subparsers)
+    _add_serve_ui_parser(subparsers)
     _add_list_parser(subparsers)
     _add_grade_parser(subparsers)
     _add_report_parser(subparsers)
