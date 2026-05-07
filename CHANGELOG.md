@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.3.0 (2026-05-07)
+
+### Features
+
+- Add web UI for MatBench
+  ([`ddd5456`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/ddd5456a5eae65e3ae746e0351245e4e41bc2321))
+
+
 ## v0.2.1 (2026-04-30)
 
 ### Bug Fixes
