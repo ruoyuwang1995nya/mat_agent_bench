@@ -3,6 +3,8 @@
 ─────────────────────────────── */
 
 let allQuestions = [];
+let benchmarkTemplate = '';
+let questionTemplate = '';
 
 function toast(msg, type = 'info') {
   const c = document.getElementById('toasts');
@@ -12,6 +14,129 @@ function toast(msg, type = 'info') {
   c.appendChild(t);
   setTimeout(() => t.remove(), 4000);
 }
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── Template loading ───────────────────────────────────────────────────────
+
+async function loadTemplates() {
+  try {
+    const [bt, qt] = await Promise.all([
+      fetch('/api/templates/benchmark').then(r => r.json()),
+      fetch('/api/templates/question').then(r => r.json()),
+    ]);
+    benchmarkTemplate = bt.content;
+    questionTemplate = qt.content;
+  } catch (_) {
+    // templates are optional; modal will show an error if unavailable
+  }
+}
+
+// ─── Modal ──────────────────────────────────────────────────────────────────
+
+function handleModalClick(e) {
+  if (e.target === document.getElementById('prompt-modal')) closeModal();
+}
+
+function closeModal() {
+  document.getElementById('prompt-modal').style.display = 'none';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+function _renderModal(title, fields, templateFn) {
+  document.getElementById('modal-title').textContent = title;
+
+  const fieldsEl = document.getElementById('modal-fields');
+  fieldsEl.innerHTML = fields.map(f => `
+    <div class="modal-field-row">
+      <label>${f.label}</label>
+      <input id="modal-field-${f.key}" type="text" value="${esc(f.value)}"
+             ${f.readonly ? 'readonly' : ''}
+             placeholder="${esc(f.placeholder || '')}"
+             oninput="_updateModalPrompt()">
+    </div>
+  `).join('');
+
+  // store template fn so live-update can call it
+  fieldsEl._templateFn = templateFn;
+  _updateModalPrompt();
+
+  document.getElementById('prompt-modal').style.display = 'flex';
+}
+
+function _getFieldValues() {
+  const values = {};
+  document.querySelectorAll('#modal-fields input').forEach(el => {
+    const key = el.id.replace('modal-field-', '');
+    values[key] = el.value;
+  });
+  return values;
+}
+
+function _updateModalPrompt() {
+  const fn = document.getElementById('modal-fields')._templateFn;
+  if (fn) {
+    document.getElementById('modal-prompt').value = fn(_getFieldValues());
+  }
+}
+
+function openBenchmarkModal() {
+  if (!benchmarkTemplate) {
+    toast('Template not loaded yet', 'error');
+    return;
+  }
+  _renderModal(
+    'BENCHMARK PROMPT',
+    [
+      { key: 'server_url', label: 'Server URL', value: 'http://127.0.0.1:8765', placeholder: 'http://127.0.0.1:8765' },
+    ],
+    ({ server_url }) => {
+      const url = server_url || 'http://127.0.0.1:8765';
+      return benchmarkTemplate
+        .replace(/\$SERVER_URL/g, url)
+        .replace(/\{SERVER_URL\}/g, url);
+    }
+  );
+}
+
+function openQuestionModal(questionId) {
+  if (!questionTemplate) {
+    toast('Template not loaded yet', 'error');
+    return;
+  }
+  _renderModal(
+    `QUESTION PROMPT — ${questionId}`,
+    [
+      { key: 'question_id', label: 'Question ID', value: questionId, readonly: true },
+      { key: 'server_url', label: 'Server URL', value: 'http://127.0.0.1:8765', placeholder: 'http://127.0.0.1:8765' },
+      { key: 'token',      label: 'Token',      value: '', placeholder: 'your API token' },
+      { key: 'session',    label: 'Session ID', value: '', placeholder: 'auto (leave blank for new session)' },
+    ],
+    ({ question_id, server_url, token, session }) => {
+      const url = server_url || 'http://127.0.0.1:8765';
+      return questionTemplate
+        .replace(/\{QUESTION_ID\}/g, question_id || questionId)
+        .replace(/\{SERVER_URL\}/g, url)
+        .replace(/\{TOKEN\}/g, token || '<TOKEN>')
+        .replace(/\{SESSION\}/g, session || '<SESSION>');
+    }
+  );
+}
+
+function copyPrompt() {
+  const text = document.getElementById('modal-prompt').value;
+  navigator.clipboard.writeText(text).then(
+    () => toast('Copied to clipboard', 'success'),
+    () => toast('Copy failed — select text manually', 'error')
+  );
+}
+
+// ─── Questions table ─────────────────────────────────────────────────────────
 
 async function loadQuestions() {
   const cap = document.getElementById('filter-cap').value;
@@ -43,7 +168,7 @@ function renderTable() {
 
   if (!rows.length) {
     document.getElementById('q-body').innerHTML =
-      `<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:3rem">No questions found.</td></tr>`;
+      `<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:3rem">No questions found.</td></tr>`;
     return;
   }
 
@@ -56,15 +181,15 @@ function renderTable() {
         ${q.tags.slice(0, 5).map(t => esc(t)).join(', ')}${q.tag_count > 5 ? ' …' : ''}
       </td>
       <td style="text-align:center;font-family:var(--font-data);font-size:.8rem">${q.checklist_count}</td>
+      <td style="text-align:center">
+        <button class="btn btn-sm" onclick="openQuestionModal('${esc(q.id)}')" title="Show prompt for this question">📋</button>
+      </td>
     </tr>
   `).join('');
 }
 
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+// ─── Upload ──────────────────────────────────────────────────────────────────
 
-// Upload
 const dropZone = document.getElementById('drop-zone');
 const fileInput = document.getElementById('file-input');
 
@@ -116,9 +241,11 @@ async function handleUpload(file) {
   fileInput.value = '';
 }
 
-// Filters & search
+// ─── Filters & search ────────────────────────────────────────────────────────
+
 document.getElementById('search').addEventListener('input', renderTable);
 document.getElementById('filter-cap').addEventListener('change', loadQuestions);
 document.getElementById('filter-dom').addEventListener('change', loadQuestions);
 
+loadTemplates();
 loadQuestions();

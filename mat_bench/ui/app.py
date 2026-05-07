@@ -297,6 +297,69 @@ def create_app(
         return data
 
     # ------------------------------------------------------------------
+    # Sessions endpoint (auth required)
+    # ------------------------------------------------------------------
+
+    @app.get("/api/sessions")
+    async def list_sessions(username: str = Depends(_require_user)):
+        user_tokens = ui_db.get_user_tokens(username)
+        token_to_agent = {t["token"]: t["agent_name"] for t in user_tokens}
+        token_set = set(token_to_agent)
+
+        # Build session metadata from the sessions table (authoritative source)
+        session_meta: dict[str, dict] = {}
+        for session_id, token, created_at in _read_sessions(sessions_db):
+            if token not in token_set:
+                continue
+            session_meta[session_id] = {
+                "session_id": session_id,
+                "token": token,
+                "agent_name": token_to_agent[token],
+                "created_at": created_at,
+                "records": [],
+            }
+
+        # Attach results to their sessions
+        for token, session_id, rec in _read_results(sessions_db):
+            if session_id in session_meta:
+                session_meta[session_id]["records"].append(rec)
+
+        result = []
+        for sd in session_meta.values():
+            recs = sd["records"]
+            ms = build_summary(recs) if recs else None
+            result.append(
+                {
+                    "session_id": sd["session_id"],
+                    "token": sd["token"],
+                    "agent_name": sd["agent_name"],
+                    "question_count": len({r.question_id for r in recs}),
+                    "eval_count": len(recs),
+                    "pass_rate": round(ms.pass_rate, 4) if ms else None,
+                    "weighted_score": round(ms.weighted_pass_rate, 4) if ms else None,
+                    "models": sorted({r.model_name for r in recs if r.model_name}),
+                    "created_at": sd["created_at"],
+                }
+            )
+
+        result.sort(key=lambda x: x["created_at"], reverse=True)
+        return result
+
+    # ------------------------------------------------------------------
+    # Template endpoints
+    # ------------------------------------------------------------------
+
+    @app.get("/api/templates/benchmark")
+    async def get_benchmark_template():
+        path = _REPO_ROOT / "agents" / "mat_bench_skill.md"
+        return {"content": path.read_text()}
+
+    @app.get("/api/templates/question")
+    async def get_question_template():
+        path = _REPO_ROOT / "agents" / "run_question.md"
+        return {"content": path.read_text()}
+
+    # ------------------------------------------------------------------
     # Leaderboard endpoints
     # ------------------------------------------------------------------
 
@@ -364,3 +427,17 @@ def _read_results(sessions_db: Path) -> list[tuple[str, str, EvalRunRecord]]:
     except Exception as exc:
         _logger.warning("cannot read sessions.db: %s", exc)
     return out
+
+
+def _read_sessions(sessions_db: Path) -> list[tuple[str, str, str]]:
+    """Read all (session_id, token, created_at) rows from sessions.db."""
+    if not sessions_db.exists():
+        return []
+    try:
+        conn = sqlite3.connect(str(sessions_db), check_same_thread=False)
+        rows = conn.execute("SELECT session_id, token, created_at FROM sessions").fetchall()
+        conn.close()
+        return [(r[0], r[1], r[2]) for r in rows]
+    except Exception as exc:
+        _logger.warning("cannot read sessions table: %s", exc)
+        return []

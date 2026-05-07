@@ -22,6 +22,7 @@ async function init() {
   if (!currentUser) return;
   document.getElementById('nav-user').textContent = currentUser;
   loadTokens();
+  loadSessions();
 }
 
 async function loadTokens() {
@@ -119,3 +120,59 @@ function copyTok(token, btn) {
 }
 
 init();
+
+async function loadSessions() {
+  try {
+    const res = await fetch('/api/sessions');
+    if (res.status === 401) { window.location.replace('/static/login.html'); return; }
+    if (!res.ok) throw new Error(await res.text());
+    renderSessions(await res.json());
+  } catch (err) {
+    document.getElementById('session-body').innerHTML =
+      `<tr><td colspan="7" style="text-align:center;color:var(--red);padding:2rem">${esc(err.message)}</td></tr>`;
+  }
+}
+
+function renderSessions(sessions) {
+  if (!sessions.length) {
+    document.getElementById('session-body').innerHTML =
+      `<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:3rem">
+        No sessions yet. Run an evaluation to see results here.
+      </td></tr>`;
+    return;
+  }
+
+  document.getElementById('session-body').innerHTML = sessions.map(s => {
+    const date = s.created_at ? new Date(s.created_at).toLocaleString() : '—';
+    const score = s.weighted_score != null ? (s.weighted_score * 100).toFixed(1) + '%' : '—';
+    const models = s.models.length
+      ? s.models.map(m => `<span class="badge badge-cap" style="font-size:.7rem">${esc(m)}</span>`).join(' ')
+      : '<span style="color:var(--text-dim)">—</span>';
+    const shortId = s.session_id.length > 16 ? s.session_id.slice(0, 14) + '…' : s.session_id;
+    return `
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:.4rem">
+            <code style="font-family:var(--font-data);font-size:.78rem;color:var(--text-dim)" title="${esc(s.session_id)}">${esc(shortId)}</code>
+            <button class="btn btn-sm" style="flex-shrink:0;padding:.15rem .45rem;font-size:.7rem"
+              onclick="copySid('${esc(s.session_id)}', this)">Copy</button>
+          </div>
+        </td>
+        <td style="font-weight:600;color:var(--cyan)">${esc(s.agent_name)}</td>
+        <td style="text-align:center;font-family:var(--font-data);font-size:.85rem">${s.question_count}</td>
+        <td style="text-align:center;font-family:var(--font-data);font-size:.85rem">${s.eval_count}</td>
+        <td style="font-family:var(--font-data);font-size:.85rem;color:var(--cyan)">${score}</td>
+        <td style="font-size:.8rem">${models}</td>
+        <td style="font-size:.82rem;color:var(--text-dim)">${date}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function copySid(sid, btn) {
+  navigator.clipboard.writeText(sid).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 2000);
+  });
+}

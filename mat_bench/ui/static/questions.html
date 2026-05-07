@@ -15,16 +15,19 @@
       <a href="/static/index.html">Home</a>
       <a href="/static/questions.html" class="active">Questions</a>
       <a href="/static/leaderboard.html">Leaderboard</a>
-      <a href="/static/tokens.html">Tokens</a>
+      <a href="/static/tokens.html">Agents</a>
     </div>
   </nav>
 
   <div class="page">
     <div class="page-header">
       <h1 class="page-title">Question Bank</h1>
-      <button class="btn btn-primary" onclick="document.getElementById('upload-section').scrollIntoView({behavior:'smooth'})">
-        + Upload Question
-      </button>
+      <div style="display:flex;gap:.75rem;align-items:center">
+        <button class="btn" onclick="openBenchmarkModal()">⚡ Benchmark Prompt</button>
+        <button class="btn btn-primary" onclick="document.getElementById('upload-section').scrollIntoView({behavior:'smooth'})">
+          + Upload Question
+        </button>
+      </div>
     </div>
 
     <div class="controls">
@@ -62,10 +65,11 @@
             <th>Domain</th>
             <th>Tags</th>
             <th style="width:70px;text-align:center">Checks</th>
+            <th style="width:70px;text-align:center">Prompt</th>
           </tr>
         </thead>
         <tbody id="q-body">
-          <tr><td colspan="5" style="text-align:center;padding:3rem"><div class="spinner" style="margin:auto"></div></td></tr>
+          <tr><td colspan="6" style="text-align:center;padding:3rem"><div class="spinner" style="margin:auto"></div></td></tr>
         </tbody>
       </table>
     </div>
@@ -94,6 +98,21 @@
   </div>
 
   <div class="toast-container" id="toasts"></div>
+
+  <!-- Prompt modal -->
+  <div id="prompt-modal" class="modal-overlay" onclick="handleModalClick(event)" style="display:none">
+    <div class="modal-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+        <span id="modal-title" style="font-family:var(--font-title);font-size:.95rem;color:var(--cyan);letter-spacing:.08em"></span>
+        <button class="btn btn-sm" onclick="closeModal()">✕</button>
+      </div>
+      <div id="modal-fields" style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem"></div>
+      <textarea id="modal-prompt" class="prompt-textarea" readonly></textarea>
+      <div style="display:flex;justify-content:flex-end;margin-top:.75rem">
+        <button class="btn btn-primary btn-sm" onclick="copyPrompt()">Copy to Clipboard</button>
+      </div>
+    </div>
+  </div>
 
   <script src="/static/js/questions.js"></script>
 </body>

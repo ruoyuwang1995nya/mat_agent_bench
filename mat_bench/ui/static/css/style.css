@@ -445,3 +445,64 @@ tbody td {
 .medal-1 { color: #ffd700; }
 .medal-2 { color: #c0c0c0; }
 .medal-3 { color: #cd7f32; }
+
+/* ─── Prompt modal ─── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5rem;
+  width: min(640px, 95vw);
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 0 40px rgba(0, 240, 255, 0.08);
+}
+
+.modal-field-row {
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+}
+
+.modal-field-row label {
+  font-size: .75rem;
+  color: var(--text-dim);
+  letter-spacing: .05em;
+}
+
+.modal-field-row input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: var(--font-data);
+  font-size: .85rem;
+  padding: .4rem .6rem;
+}
+
+.modal-field-row input:focus { outline: none; border-color: var(--cyan); }
+
+.prompt-textarea {
+  width: 100%;
+  min-height: 280px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--font-data);
+  font-size: .78rem;
+  line-height: 1.5;
+  padding: .75rem;
+  resize: vertical;
+  box-sizing: border-box;
+}
