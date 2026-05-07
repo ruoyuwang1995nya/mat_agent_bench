@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.3.2 (2026-05-07)
+
+### Bug Fixes
+
+- Update UI
+  ([`ad1a9d0`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/ad1a9d0d9a5865f5cd57e9133c124e0cf38f2a16))
+
+
 ## v0.3.1 (2026-05-07)
 
 ### Bug Fixes
