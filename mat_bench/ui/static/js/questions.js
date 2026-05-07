@@ -5,6 +5,12 @@
 let allQuestions = [];
 let benchmarkTemplate = '';
 let questionTemplate = '';
+let defaultServerUrl = 'http://127.0.0.1:8765';
+
+fetch('/api/config')
+  .then(r => r.json())
+  .then(cfg => { if (cfg.server_url) defaultServerUrl = cfg.server_url; })
+  .catch(() => {});
 
 function toast(msg, type = 'info') {
   const c = document.getElementById('toasts');
@@ -93,10 +99,10 @@ function openBenchmarkModal() {
   _renderModal(
     'BENCHMARK PROMPT',
     [
-      { key: 'server_url', label: 'Server URL', value: 'http://127.0.0.1:8765', placeholder: 'http://127.0.0.1:8765' },
+      { key: 'server_url', label: 'Server URL', value: defaultServerUrl, placeholder: 'http://127.0.0.1:8765' },
     ],
     ({ server_url }) => {
-      const url = server_url || 'http://127.0.0.1:8765';
+      const url = server_url || defaultServerUrl;
       return benchmarkTemplate
         .replace(/\$SERVER_URL/g, url)
         .replace(/\{SERVER_URL\}/g, url);
@@ -113,12 +119,12 @@ function openQuestionModal(questionId) {
     `QUESTION PROMPT — ${questionId}`,
     [
       { key: 'question_id', label: 'Question ID', value: questionId, readonly: true },
-      { key: 'server_url', label: 'Server URL', value: 'http://127.0.0.1:8765', placeholder: 'http://127.0.0.1:8765' },
+      { key: 'server_url', label: 'Server URL', value: defaultServerUrl, placeholder: 'http://127.0.0.1:8765' },
       { key: 'token',      label: 'Token',      value: '', placeholder: 'your API token' },
       { key: 'session',    label: 'Session ID', value: '', placeholder: 'auto (leave blank for new session)' },
     ],
     ({ question_id, server_url, token, session }) => {
-      const url = server_url || 'http://127.0.0.1:8765';
+      const url = server_url || defaultServerUrl;
       return questionTemplate
         .replace(/\{QUESTION_ID\}/g, question_id || questionId)
         .replace(/\{SERVER_URL\}/g, url)
