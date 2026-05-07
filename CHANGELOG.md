@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.3.1 (2026-05-07)
+
+### Bug Fixes
+
+- Add start_server.sh for easier local testing
+  ([`1995e64`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/1995e64abe45a15268c820161f6048367b19ba88))
+
+
 ## v0.3.0 (2026-05-07)
 
 ### Features
