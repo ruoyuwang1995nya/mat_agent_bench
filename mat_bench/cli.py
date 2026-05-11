@@ -395,6 +395,130 @@ def _cmd_serve_ui(args: argparse.Namespace) -> None:
     uvicorn.run(app, host=args.host, port=args.port, log_level=args.log_level)
 
 
+def _add_serve_all_parser(subparsers: argparse._SubParsersAction) -> None:
+    p = subparsers.add_parser(
+        'serve-all',
+        help='Start benchmark API and web UI together on a single port',
+        description=(
+            'Launch both the benchmark API and the web UI in one process on a '
+            'single port. The API is mounted at /bench, the UI at /. '
+            'Eliminates the need for a separate backend server.'
+        ),
+    )
+    p.add_argument(
+        '--host',
+        type=str,
+        default='0.0.0.0',
+        help='Host to bind to (default: 0.0.0.0).',
+    )
+    p.add_argument(
+        '--port',
+        type=int,
+        default=8080,
+        help='Port to listen on (default: 8080).',
+    )
+    p.add_argument(
+        '--question-bank-dir',
+        type=str,
+        default=None,
+        help='Path to question_bank directory (default: question_bank next to the package).',
+    )
+    p.add_argument(
+        '--store-dir',
+        type=str,
+        default=None,
+        metavar='DIR',
+        help='mat-bench store directory for data (default: ~/.matbench).',
+    )
+    p.add_argument(
+        '--llm-judge',
+        type=str,
+        default=os.environ.get('MAT_BENCH_LLM_JUDGE'),
+        metavar='PROVIDER/MODEL',
+        help=(
+            "LLM judge for llm_binary_judge criteria, e.g. "
+            "'anthropic/claude-sonnet-4-20250514'. "
+            "Falls back to MAT_BENCH_LLM_JUDGE env var."
+        ),
+    )
+    p.add_argument(
+        '--env-file',
+        type=str,
+        default='.env',
+        metavar='FILE',
+        help='Path to .env file for LLM config (default: .env if it exists).',
+    )
+    p.add_argument(
+        '--grading-workers',
+        type=int,
+        default=4,
+        help='Number of parallel grading threads (default: 4).',
+    )
+    p.add_argument(
+        '--log-level',
+        type=str,
+        default='info',
+        choices=['debug', 'info', 'warning', 'error', 'critical'],
+        help='Uvicorn log level (default: info).',
+    )
+    p.set_defaults(func=_cmd_serve_all)
+
+
+def _cmd_serve_all(args: argparse.Namespace) -> None:
+    _load_env_file(args.env_file)
+    try:
+        import uvicorn
+    except ImportError:
+        print(
+            'error: uvicorn is required for mat-bench serve-all.\n'
+            'Install it with: pip install "mat-bench[server]"',
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    from .registry import Registry
+    from .harness import parse_llm_judge_config
+    from .ui.app import create_app
+    from datetime import datetime
+
+    _REPO_ROOT = Path(__file__).resolve().parent.parent
+
+    qb_dir = Path(args.question_bank_dir) if args.question_bank_dir else _REPO_ROOT / "question_bank"
+    if not qb_dir.is_absolute():
+        qb_dir = _REPO_ROOT / qb_dir
+
+    registry = Registry(qb_dir)
+    print(f'Loaded {len(registry)} questions from {qb_dir}', file=sys.stderr)
+
+    store_dir = Path(args.store_dir) if args.store_dir else Path.home() / ".matbench"
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    output_dir = store_dir / 'runs' / f'serve_{timestamp}'
+
+    llm_cfg = None
+    has_env = os.environ.get('MAT_BENCH_LLM_MODEL') and os.environ.get('MAT_BENCH_LLM_API_KEY')
+    if args.llm_judge or has_env:
+        try:
+            llm_cfg = parse_llm_judge_config(args.llm_judge or None)
+        except ValueError as exc:
+            print(f'error: {exc}', file=sys.stderr)
+            sys.exit(1)
+
+    app = create_app(
+        question_bank_dir=qb_dir,
+        store_dir=store_dir,
+        registry=registry,
+        llm_cfg=llm_cfg,
+        grading_workers=args.grading_workers,
+        output_dir=output_dir,
+    )
+
+    print(f'Starting mat-bench (combined) at http://{args.host}:{args.port}', file=sys.stderr)
+    print(f'  UI:      http://{args.host}:{args.port}/', file=sys.stderr)
+    print(f'  API:     http://{args.host}:{args.port}/bench', file=sys.stderr)
+    print(f'  API docs: http://{args.host}:{args.port}/bench/docs', file=sys.stderr)
+    uvicorn.run(app, host=args.host, port=args.port, log_level=args.log_level)
+
+
 def _add_list_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser('list', help='List questions in the question bank')
     p.add_argument(
@@ -506,6 +630,7 @@ def main() -> None:
     _add_run_parser(subparsers)
     _add_serve_parser(subparsers)
     _add_serve_ui_parser(subparsers)
+    _add_serve_all_parser(subparsers)
     _add_list_parser(subparsers)
     _add_grade_parser(subparsers)
     _add_report_parser(subparsers)

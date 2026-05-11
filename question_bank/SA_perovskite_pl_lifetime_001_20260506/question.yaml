@@ -1,0 +1,105 @@
+id: SA_perovskite_pl_lifetime_001_20260506
+capability: scientific_analysis
+domain: semiconductor
+intent: Extract photoluminescence peak, band width, and lifetime metrics from uploaded
+  Mn-doped perovskite spectra.
+human_prompt_seed: '请下载并分析以下通过 OSS URL 提供的两个光谱数据文件：
+
+  - `mn_perovskite_em_ex365.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_perovskite_pl_lifetime_001/1778080963_mn_perovskite_em_ex365.txt`（365
+  nm 激发下的 Mn 发光发射谱）
+
+  - `mn_perovskite_decay_ex365_pl520.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_perovskite_pl_lifetime_001/1778080962_mn_perovskite_decay_ex365_pl520.txt`（同一样品在
+  520 nm 附近监测的时间衰减曲线）
+
+  请完成以下分析：
+
+  1. 从发射谱中确定主要发光峰位置和发射带宽； 2. 从衰减曲线中提取一个代表性的发光寿命； 3. 判断该发光是否符合 Mn 掺杂卤化物发光材料常见的宽带绿光特征；
+  4. 简要说明背景、噪声或尾部拟合对结果的影响。
+
+  最终回答末尾请追加 `<eval_results>...</eval_results>` JSON，至少包含： `pl.lambda_max_nm`, `pl.fwhm_nm`,
+  `decay.tau_avg_us`。
+
+  JSON 中字段名形如 `a.b` 表示嵌套对象（顶层 `a` 下的子键 `b`），请使用嵌套结构而不要写成扁平字符串键。结构示例（数值仅占位）：
+
+  ```json {"pl": {"lambda_max_nm": 0, "fwhm_nm": 0}, "decay": {"tau_avg_us": 0}} ```'
+tags:
+- char_optical_spectrum
+- char_time_resolved
+data_files:
+- key: emission_spectrum
+  path: mn_perovskite_em_ex365.txt
+  oss_url: https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_perovskite_pl_lifetime_001/1778080963_mn_perovskite_em_ex365.txt
+  description: Mn-doped perovskite emission spectrum under 365 nm excitation.
+- key: lifetime_decay
+  path: mn_perovskite_decay_ex365_pl520.txt
+  oss_url: https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_perovskite_pl_lifetime_001/1778080962_mn_perovskite_decay_ex365_pl520.txt
+  description: Mn-doped perovskite photoluminescence decay trace monitored near 520
+    nm.
+reference_answers:
+- key: lambda_max
+  value:
+    json_path: pl.lambda_max_nm
+    target: 518.0
+    tolerance: 3.0
+  unit: nm
+- key: fwhm
+  value:
+    json_path: pl.fwhm_nm
+    target: 49.900441952351684
+    tolerance: 10.0
+  unit: nm
+- key: tau_avg
+  value:
+    json_path: decay.tau_avg_us
+    target: 350.99747059656994
+    tolerance: 80.0
+  unit: us
+- key: turn_budget
+  value:
+    max: 30
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 20000
+scoring_checklist:
+- id: lambda_max
+  criterion: The emission maximum reported in eval_results is consistent with the
+    uploaded emission spectrum.
+  axis: correctness
+  verify: answer_json_numeric
+  weight: 1.5
+- id: fwhm
+  criterion: The emission bandwidth reported in eval_results is consistent with the
+    uploaded emission spectrum.
+  axis: correctness
+  verify: answer_json_numeric
+- id: tau_avg
+  criterion: The representative lifetime reported in eval_results is consistent with
+    the uploaded decay trace.
+  axis: correctness
+  verify: answer_json_numeric
+  weight: 1.5
+- id: photophysics_interpretation
+  criterion: The final answer recognizes the broad green Mn-related emission and discusses
+    uncertainty from background or tail fitting.
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: The reported photophysical metrics are derived from the uploaded spectrum
+    and decay trace.
+  axis: grounding
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration does not exceed ceiling.
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling.
+  axis: efficiency
+  verify: token_budget

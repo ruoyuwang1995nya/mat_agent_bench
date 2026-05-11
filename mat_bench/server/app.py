@@ -8,7 +8,7 @@ Endpoints::
     POST /token                           Register a new persistent API token
     POST /sessions                        Create a new session (requires X-API-Token header)
     GET  /questions                       List questions (filter: capability, domain, limit)
-    GET  /questions/{id}                  Full question details + data file list
+    GET  /questions/{id}                  Full question details + data file list (requires session_id; starts duration timer)
     GET  /questions/{id}/data/{fname}     Download a data file
     POST /submit/{id}?session_id=S0001    Submit result files + metadata (multipart)
     GET  /results/{id}                    Grading result(s) for one question
@@ -93,6 +93,10 @@ _sessions_lock = threading.Lock()
 _results: dict[str, tuple[str, str, EvalRunRecord]] = {}
 _results_lock = threading.Lock()
 
+# key = (session_id, question_id) → task start time (bench-measured)
+_task_starts: dict[tuple[str, str], datetime] = {}
+_task_starts_lock = threading.Lock()
+
 _token_store: "TokenStore | None" = None
 _session_store: "SessionStore | None" = None
 
@@ -111,11 +115,12 @@ def init_server(
 ) -> None:
     """Initialise server state. Must be called before uvicorn.run()."""
     global _registry, _llm_cfg, _output_dir, _results, _grading_executor
-    global _token_store, _session_store
+    global _token_store, _session_store, _task_starts
     _registry = registry
     _llm_cfg = llm_cfg
     _output_dir = output_dir
     _results = {}
+    _task_starts = {}
     output_dir.mkdir(parents=True, exist_ok=True)
 
     from .store import TokenStore, SessionStore
@@ -136,7 +141,21 @@ def init_server(
         for key, (tok, sid, rec_dict) in _session_store.load_results().items():
             _results[key] = (tok, sid, EvalRunRecord(**rec_dict))
 
+    with _task_starts_lock:
+        _task_starts.update(_session_store.load_task_starts())
+
     _grading_executor = ThreadPoolExecutor(max_workers=grading_workers)
+
+
+def create_token_direct() -> dict:
+    """Create a new API token in-process (for combined serve-all mode)."""
+    token_str = secrets.token_hex(32)
+    record = TokenRecord(token=token_str, created_at=datetime.now(timezone.utc))
+    with _tokens_lock:
+        _tokens[token_str] = record
+    if _token_store:
+        _token_store.save_token(token_str, record.created_at)
+    return {"token": token_str, "created_at": record.created_at.isoformat()}
 
 
 def _require_registry() -> Registry:
@@ -280,13 +299,30 @@ try:
         ]
 
     @app.get("/questions/{question_id}")
-    async def get_question(question_id: str) -> dict:
-        """Get full question details: prompt, data file list, tags."""
+    async def get_question(
+        question_id: str,
+        session_id: str = Query(..., description="Session ID from POST /sessions"),
+    ) -> dict:
+        """Get full question details: prompt, data file list, tags.
+
+        Calling this endpoint records the task start time for bench-side
+        duration tracking. Re-fetching the question resets the timer.
+        """
         registry = _require_registry()
         try:
             q = registry.get_question(question_id)
         except KeyError:
             raise HTTPException(404, detail=f"Question '{question_id}' not found")
+
+        with _sessions_lock:
+            if session_id not in _sessions:
+                raise HTTPException(404, detail=f"Session '{session_id}' not found")
+
+        t_start = datetime.now(timezone.utc)
+        with _task_starts_lock:
+            _task_starts[(session_id, question_id)] = t_start
+        _session_store.record_task_start(session_id, question_id, t_start)
+
         return {
             "id": q.id,
             "capability": q.capability,
@@ -359,6 +395,24 @@ try:
         except Exception as exc:
             raise HTTPException(400, detail=f"Failed to parse form data: {exc}")
 
+        t_submit = datetime.now(timezone.utc)
+
+        # Compute bench-measured duration from question fetch time
+        with _task_starts_lock:
+            t_start = _task_starts.get((session_id, question_id))
+        if t_start is None:
+            t_start = _session_store.get_task_start(session_id, question_id)
+        if t_start is None:
+            raise HTTPException(
+                400,
+                detail=(
+                    f"No task start time recorded for question '{question_id}' "
+                    f"in session '{session_id}'. Fetch the question via "
+                    "GET /questions/{id}?session_id=... before submitting."
+                ),
+            )
+        bench_duration_ms = int((t_submit - t_start).total_seconds() * 1000)
+
         meta_raw = form_data.get("meta", "{}")
         if not isinstance(meta_raw, str):
             meta_raw = "{}"
@@ -397,7 +451,6 @@ try:
         answer = str(meta.get("answer", ""))
         model_name = str(meta.get("model_name", "unknown"))
         num_turns = int(meta.get("num_turns") or 0)
-        duration_ms = int(meta.get("duration_ms") or 0)
         is_error = bool(meta.get("is_error", False))
         usage: dict[str, Any] = meta.get("usage") or {}
         run_status = "error" if is_error else "completed"
@@ -433,7 +486,7 @@ try:
             token_usage_run=token_usage_run,
             total_steps=num_turns,
             run_status=run_status,
-            duration_ms=duration_ms,
+            duration_ms=bench_duration_ms,
             workspace_dir=str(workspace),
         )
         token_usage_record = build_token_usage_record(usage)
@@ -450,7 +503,7 @@ try:
                 token_usage_record,
                 run_status,
                 model_name,
-                duration_ms,
+                bench_duration_ms,
             ),
         )
 

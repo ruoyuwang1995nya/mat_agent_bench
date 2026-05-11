@@ -1,0 +1,45 @@
+id: WO_gpumdnep_002_20260428
+capability: workflow_orchestration
+domain: agnostic
+intent: Predict Si phonon spectrum using Si_Fan_2019 Tersoff mini potential and assess
+  optical-branch frequency.
+human_prompt_seed: 获取https://raw.githubusercontent.com/brucefan1983/GPUMD/master/potentials/tersoff/Si_Fan_2019.txt，使用这个势函数采取gpumd计算Si的声子谱，计算出Si光学支频率
+tags:
+- eng_gpumd
+data_files: []
+reference_answers:
+- key: run_input_artifact
+  value: run.in
+- key: si_fan_potential_token
+  value:
+    filename: run.in
+    tokens:
+    - potential
+    - Si_Fan_2019.txt
+    flags: i
+- key: phonon_core_tokens
+  value:
+    filename: run.in
+    tokens:
+    - replicate
+    - compute_phonon
+    flags: i
+- key: si_optical_branch_15thz
+  value: {}
+scoring_checklist:
+- id: run_input_artifact
+  criterion: 生成 `run.in`。
+  axis: correctness
+  verify: artifact_exists
+- id: si_fan_potential_token
+  criterion: '`run.in` 使用 `Si_Fan_2019.txt` 势函数。'
+  axis: correctness
+  verify: text_file_contains_all
+- id: phonon_core_tokens
+  criterion: '`run.in` 包含 `replicate` 与 `compute_phonon` 两个关键设置。'
+  axis: correctness
+  verify: text_file_contains_all
+- id: si_optical_branch_15thz
+  criterion: Si 光学支结果在约 15 THz 量级（可接受小范围偏差）。
+  axis: correctness
+  verify: llm_binary_judge

@@ -11,10 +11,8 @@ human_prompt_seed: '计算 Fe BCC(110) 表面能（ABACUS LCAO 场景，含 BSSE
 
   '
 tags:
-- abacus
-- bsse
-- phy_surface
-- log_diagnosis
+- eng_abacus
+- struct_surface
 data_files: []
 reference_answers:
 - key: sigma_J_m2

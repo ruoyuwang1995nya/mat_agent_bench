@@ -9,10 +9,8 @@ human_prompt_seed: '对 Ag 体相切出 (001) 与 (011) 两个表面；分别计
 
   '
 tags:
-- catalysis_lab
-- phy_surface
+- struct_surface
 - code_mlip
-- wf_batch
 data_files: []
 reference_answers:
 - key: turn_budget

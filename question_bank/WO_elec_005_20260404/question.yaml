@@ -9,8 +9,7 @@ human_prompt_seed: "计算CO在Ag(001)表面的吸附能：\n1. 获取Ag FCC体�
   \ - E_adsorbed = -121.50 eV\n5. 按公式 E_ads = E(adsorbed) - E(slab) - E(CO) 计算吸附能；\n\
   6. 输出吸附能(eV)及三个结构的能量值。\n"
 tags:
-- chem_co2rr
-- phy_surface
+- struct_surface
 priority: P0
 data_files: []
 reference_answers:

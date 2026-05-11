@@ -1,0 +1,97 @@
+id: pl_donor_20260422
+capability: scientific_analysis
+domain: polymer
+intent: Pre-screen PM6, PTB7-Th, D18, and P3HT donor polymers for a Y6-like acceptor
+  window using curated oligomer, conformational, and ranking data.
+human_prompt_seed: '文件 `donor_prescreen_bundle.json` 提供了 PM6、PTB7-Th、D18 和 P3HT 四类给体聚合物的低聚体建模、量化、构象采样和简化
+  ranking 结果。
+
+  请完成一个给体预筛选报告：
+
+  1. 比较 HOMO/LUMO、带隙、主链扭转角和平面性；
+
+  2. 结合 1/n 外推结果，判断哪些体系更适合与 Y6 类受体匹配；
+
+  3. 输出最终 shortlist，并分别说明“综合最优”和“高 Voc 候选”；
+
+  4. 写出至少一个不确定性来源。
+
+  '
+tags: []
+data_files:
+- key: donor_bundle
+  path: donor_prescreen_bundle.json
+  description: Curated donor-polymer bundle with oligomer-level electronic structure,
+    torsional descriptors, extrapolated gaps, and ranking metrics.
+reference_answers:
+- key: best_candidate
+  value: D18
+- key: d18_gap_extrapolated_eV
+  value: 1.84
+  tolerance: 0.08
+- key: pm6_homo_eV
+  value: -5.45
+  tolerance: 0.1
+- key: required_fields
+  value:
+  - ranking_table
+  - gap_extrapolation
+  - conformational_note
+  - shortlist
+  - uncertainty_note
+- key: grounding_source
+  value:
+    filename: donor_prescreen_bundle.json
+- key: turn_budget
+  value:
+    max: 24
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 14000
+scoring_checklist:
+- id: d18_gap_extrapolated_eV
+  criterion: D18 extrapolated polymer-limit gap is reported within tolerance of the
+    curated value (~1.84 eV).
+  axis: correctness
+  verify: numerical_range
+- id: pm6_homo_eV
+  criterion: PM6 HOMO is reported within tolerance of the curated oligomer/QM value
+    (~-5.45 eV).
+  axis: correctness
+  verify: numerical_range
+- id: shortlist_correctness
+  criterion: Final shortlist identifies D18 as the best-balanced overall donor and
+    places PM6 ahead of PTB7-Th and P3HT for the specified Y6-like acceptor window.
+  axis: correctness
+  verify: llm_binary_judge
+- id: required_fields
+  criterion: Report includes a ranking table, band-gap extrapolation discussion, conformational-planarity
+    note, final shortlist, and at least one uncertainty note.
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: Conclusions are explicitly tied to the provided HOMO/LUMO, extrapolated
+    gap, and torsional descriptors from donor_prescreen_bundle.json rather than literature
+    recall alone.
+  axis: grounding
+  verify: llm_binary_judge
+- id: efficiency_judge
+  criterion: Completes donor pre-screening in a linear evidence-synthesis workflow
+    without redundant analysis loops.
+  axis: efficiency
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration does not exceed benchmark ceiling.
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling.
+  axis: efficiency
+  verify: token_budget

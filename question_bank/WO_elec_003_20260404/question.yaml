@@ -9,9 +9,7 @@ human_prompt_seed: "计算NFPP的Al掺杂形成能：\n1. 获取NFPP（Na₄Fe�
   \ - μ_Al（金属Al参考态）= -3.75 eV/atom\n4. 按公式 E_f = E(doped) - E(pristine) + μ_P - μ_Al\
   \ 计算形成能；\n5. 计算体积变化率（掺杂后体积约1313.17 Å³，原始约1316.68 Å³）；\n6. 输出掺杂形成能(eV)、体积变化率(%)。\n"
 tags:
-- wf_inputs
-- phy_defect
-- wf_postprocess
+- struct_transform
 priority: P0
 data_files: []
 reference_answers:

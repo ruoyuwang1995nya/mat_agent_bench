@@ -14,9 +14,6 @@ human_prompt_seed: '计算金刚石结构 Si 的声子色散关系。
   '
 tags:
 - code_mlip
-- code_dpa
-- phy_phonon
-- phy_surface
 data_files: []
 reference_answers:
 - key: gamma_optical_max_cm1

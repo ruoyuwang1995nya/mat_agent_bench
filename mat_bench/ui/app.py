@@ -128,17 +128,45 @@ def create_app(
     question_bank_dir: Path | None = None,
     store_dir: Path | None = None,
     backend_url: str = "http://localhost:8765",
+    registry=None,
+    llm_cfg=None,
+    grading_workers: int = 4,
+    output_dir: Path | None = None,
 ) -> FastAPI:
-    """Create and return the UI FastAPI application."""
+    """Create and return the UI FastAPI application.
+
+    When *registry* is supplied the benchmark backend is mounted at ``/bench``
+    on the same process — no separate backend server is needed.
+    """
     _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
     qb_dir = Path(question_bank_dir or _REPO_ROOT / "question_bank")
     store = Path(store_dir or Path.home() / ".matbench")
     sessions_db = store / "sessions.db"
     ui_db = _UiDb(store / "ui.db")
-    _backend_url = backend_url.rstrip("/")
+
+    _combined = registry is not None
+    if _combined:
+        from datetime import datetime as _dt
+        from ..server.app import app as _bench_app, init_server, create_token_direct as _mint_token
+        _ts = _dt.now().strftime('%Y%m%d_%H%M%S')
+        _out_dir = output_dir or (store / 'runs' / f'serve_{_ts}')
+        init_server(
+            registry=registry,
+            output_dir=_out_dir,
+            llm_cfg=llm_cfg,
+            grading_workers=grading_workers,
+            store_dir=store,
+        )
+        _backend_url = ""
+    else:
+        _bench_app = None
+        _mint_token = None
+        _backend_url = backend_url.rstrip("/")
 
     app = FastAPI(title="mat-bench UI", docs_url=None, redoc_url=None)
     app.mount("/static", StaticFiles(directory=_STATIC_DIR, html=True), name="static")
+    if _combined:
+        app.mount("/bench", _bench_app)
 
     # ------------------------------------------------------------------
     # Auth dependency
@@ -212,7 +240,7 @@ def create_app(
 
     @app.get("/api/config")
     async def config():
-        return {"server_url": _backend_url}
+        return {"server_url": "/bench" if _combined else _backend_url}
 
     # ------------------------------------------------------------------
     # Question bank endpoints
@@ -293,14 +321,17 @@ def create_app(
     def generate_token(body: _TokenRequestBody, username: str = Depends(_require_user)):
         if not body.agent_name.strip():
             raise HTTPException(422, "agent_name cannot be empty")
-        try:
-            req = urllib.request.Request(f"{_backend_url}/token", data=b"", method="POST")
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                data = json.loads(resp.read())
-        except urllib.error.HTTPError as exc:
-            raise HTTPException(exc.code, exc.read().decode()) from exc
-        except Exception as exc:
-            raise HTTPException(503, f"Backend unavailable at {_backend_url}: {exc}") from exc
+        if _combined:
+            data = _mint_token()
+        else:
+            try:
+                req = urllib.request.Request(f"{_backend_url}/token", data=b"", method="POST")
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    data = json.loads(resp.read())
+            except urllib.error.HTTPError as exc:
+                raise HTTPException(exc.code, exc.read().decode()) from exc
+            except Exception as exc:
+                raise HTTPException(503, f"Backend unavailable at {_backend_url}: {exc}") from exc
         ui_db.save_token(data["token"], username, body.agent_name.strip())
         return data
 

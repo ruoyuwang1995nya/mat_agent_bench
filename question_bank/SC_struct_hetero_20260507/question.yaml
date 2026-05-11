@@ -1,0 +1,134 @@
+id: SC_struct_hetero_20260507
+capability: structure_construction
+domain: semiconductor
+intent: Build a graphene/h-BN vertical van der Waals heterostructure with controlled
+  lattice mismatch.
+human_prompt_seed: '读取 `hetero_spec.json`，构建 graphene/h-BN 垂直范德华异质结。 要求：(1) 构建共度超胞使晶格失配
+  < 2%；(2) AB 堆叠，层间距 3.35 A； (3) z 方向加 15 A 真空层。输出 `hetero_graphene_hBN.cif` 和 `hetero_graphene_hBN_POSCAR`，报告实际失配度和总原子数。
+
+  最终答案必须包含 `<eval_results>{"lattice_mismatch_percent": <number>}</eval_results>`，其中
+  `lattice_mismatch_percent` 为实际晶格失配百分比。
+
+  '
+tags:
+- struct_surface
+data_files:
+- key: hetero_spec
+  path: hetero_spec.json
+  oss_url: ''
+  description: Specification for graphene/h-BN heterostructure construction.
+reference_answers:
+- key: poscar_exists
+  value: hetero_graphene_hBN_POSCAR
+- key: poscar_parsable
+  value:
+    filename: hetero_graphene_hBN_POSCAR
+- key: mismatch_percent
+  value:
+    json_path: lattice_mismatch_percent
+    target: 1.6
+    tolerance: 1.0
+- key: b_n_ratio
+  value:
+    filename: hetero_graphene_hBN.cif
+    element_a: B
+    element_b: N
+    expected_ratio: 1.0
+    tolerance: 0.01
+- key: c_b_ratio
+  value:
+    filename: hetero_graphene_hBN.cif
+    element_a: C
+    element_b: B
+    expected_ratio: 2.0
+    tolerance: 0.05
+- key: interlayer_distance_A
+  value:
+    filename: hetero_graphene_hBN.cif
+    element_a: C
+    element_b: B
+    cutoff_A: 5.0
+    expected: 3.35
+    tolerance: 0.3
+- key: required_fields
+  value:
+  - structure_file
+  - lattice_mismatch_percent
+  - total_atoms
+  - interlayer_distance_A
+  - stacking
+  - vacuum_A
+- key: turn_budget
+  value:
+    max: 20
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 8000
+scoring_checklist:
+- id: poscar_exists
+  criterion: Agent writes `hetero_graphene_hBN_POSCAR` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: poscar_parsable
+  criterion: The POSCAR deliverable can be parsed as a structure file.
+  axis: correctness
+  verify: struct_file_parsable
+- id: mismatch_percent
+  criterion: Lattice mismatch reported in `<eval_results>` is below 2% and close to
+    the reference.
+  axis: correctness
+  verify: answer_json_numeric
+- id: b_n_ratio
+  criterion: The output CIF preserves B:N = 1:1 stoichiometry for the h-BN layer.
+  axis: correctness
+  verify: struct_file_stoichiometry_ratio
+- id: c_b_ratio
+  criterion: The output CIF preserves C:B = 2:1, equivalent to graphene/h-BN composition
+    BC2N up to supercell scaling.
+  axis: correctness
+  verify: struct_file_stoichiometry_ratio
+- id: interlayer_distance_A
+  criterion: The mean C-B interlayer distance read from the output CIF is near 3.35
+    A.
+  axis: correctness
+  verify: struct_file_bond_length
+- id: required_fields
+  criterion: Output includes structure file, lattice mismatch percentage below 2%,
+    total atom count, interlayer distance near 3.35 A, AB stacking, and vacuum thickness
+    near 15 A.
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: The answer states the physical picture (lattice matching, AB stacking,
+    interlayer spacing, vacuum, how mismatch is defined) and ties it to the delivered
+    POSCAR/CIF, not generic claims disconnected from those files. Judge solely from
+    the final answer and named deliverables; do not fail because the tool-call log
+    omits MCP, web_search, or any specific tool.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: No excessive retries with the same parameter set during structure construction.
+  axis: efficiency
+  verify: no_retries
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: efficiency_judge
+  criterion: Heterostructure construction completes in a direct workflow without redundant
+    structure rebuilds.
+  axis: efficiency
+  verify: llm_binary_judge
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
+    a generous benchmark ceiling (tunable per deployment).
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+    (tunable per task after calibration).
+  axis: efficiency
+  verify: token_budget

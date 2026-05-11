@@ -11,7 +11,8 @@ human_prompt_seed: '工作区里有 `run_spec.json`，请按其中给出的参�
   我这边做类似单点时习惯用 ENCUT=520、ISMEAR=0、SIGMA=0.2，供你对照。
 
   '
-tags: []
+tags:
+- eng_vasp
 data_files:
 - key: run_spec
   path: run_spec.json

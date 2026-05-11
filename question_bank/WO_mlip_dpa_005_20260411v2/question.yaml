@@ -15,10 +15,8 @@ human_prompt_seed: '计算 FCC Cu 中单空位的迁移能垒。
 
   '
 tags:
+- struct_transform
 - code_mlip
-- code_dpa
-- phy_defect
-- phy_surface
 data_files: []
 reference_answers:
 - key: forward_barrier_eV

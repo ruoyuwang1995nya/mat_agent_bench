@@ -71,6 +71,13 @@ class SessionStore:
         session_id  TEXT NOT NULL,
         record_json TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS task_starts (
+        session_id  TEXT NOT NULL,
+        question_id TEXT NOT NULL,
+        started_at  TEXT NOT NULL,
+        PRIMARY KEY (session_id, question_id)
+    );
     """
 
     def __init__(self, path: Path) -> None:
@@ -131,3 +138,33 @@ class SessionStore:
                 (key, token, session_id, record_json),
             )
             self._conn.commit()
+
+    def load_task_starts(self) -> dict[tuple[str, str], datetime]:
+        """Return all task start times as {(session_id, question_id): started_at}."""
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT session_id, question_id, started_at FROM task_starts"
+            ).fetchall()
+        return {(r[0], r[1]): datetime.fromisoformat(r[2]) for r in rows}
+
+    def record_task_start(
+        self, session_id: str, question_id: str, started_at: datetime
+    ) -> None:
+        with self._lock:
+            self._conn.execute(
+                "INSERT OR REPLACE INTO task_starts(session_id, question_id, started_at)"
+                " VALUES (?, ?, ?)",
+                (session_id, question_id, started_at.isoformat()),
+            )
+            self._conn.commit()
+
+    def get_task_start(
+        self, session_id: str, question_id: str
+    ) -> datetime | None:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT started_at FROM task_starts"
+                " WHERE session_id = ? AND question_id = ?",
+                (session_id, question_id),
+            ).fetchone()
+        return datetime.fromisoformat(row[0]) if row else None
