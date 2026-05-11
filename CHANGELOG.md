@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.3.3 (2026-05-11)
+
+### Bug Fixes
+
+- Major update for question and grading
+  ([`0a064d4`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/0a064d482abceedba91603af1a7bb43c67018ff9))
+
+
 ## v0.3.2 (2026-05-07)
 
 ### Bug Fixes
