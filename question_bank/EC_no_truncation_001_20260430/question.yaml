@@ -1,0 +1,53 @@
+id: EC_no_truncation_001_20260430
+capability: execution_contract
+domain: agnostic
+intent: Agent must output complete tabular data without truncating with ellipsis.
+human_prompt_seed: '请生成一个包含 20 种常见金属元素的表格，列出每种元素的符号、原子序数、晶体结构类型（FCC/BCC/HCP）和常温晶格常数（Å）。
+
+  将完整表格写入 `metals_table.md`，不要省略任何行。'
+tags: []
+data_files: []
+reference_answers:
+- key: output_artifact
+  value: metals_table.md
+- key: row_count
+  value:
+    filename: metals_table.md
+    pattern: ^\|?\s*[A-Z][a-z]?\s*\|
+    flags: m
+- key: turn_budget
+  value:
+    max: 8
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 8000
+scoring_checklist:
+- id: output_artifact
+  criterion: Agent writes `metals_table.md` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: no_truncation
+  criterion: The file metals_table.md must not contain any truncation indicators such
+    as '...' (ellipsis) that would indicate omitted rows. Check the file content for
+    any occurrence of '...'.
+  axis: correctness
+  verify: llm_binary_judge
+- id: row_count
+  criterion: The table contains at least 20 data rows (excluding header/separator).
+  axis: correctness
+  verify: text_file_regex
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration does not exceed ceiling.
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling.
+  axis: efficiency
+  verify: token_budget

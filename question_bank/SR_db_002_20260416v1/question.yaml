@@ -1,0 +1,94 @@
+id: SR_db_002_20260416v1
+capability: structure_retrieval
+domain: agnostic
+intent: Retrieve a target prototype crystal structure from an open database and summarize
+  the returned structural metadata.
+human_prompt_seed: '从开源数据库获取一个 MgB2 晶体结构。
+
+
+  请完成以下交付：
+
+  1) `mgb2_retrieval.json`：至少包含 `formula`, `database_source`, `structure_identifier`,
+  `space_group`, `lattice_summary`, `candidate_count`；
+
+  2) `mgb2_notes.md`：解释你如何确认该结果是 MgB2，以及如果返回了多个候选你是如何筛选的；
+
+  3) 在最终回答中说明这是“结构检索结果总结”，不要扩展到后续声子或电子结构计算。
+
+  '
+tags:
+- meta_database
+data_files: []
+reference_answers:
+- key: retrieval_json
+  value: mgb2_retrieval.json
+- key: notes_md
+  value: mgb2_notes.md
+- key: retrieval_required_tokens
+  value:
+    filename: mgb2_retrieval.json
+    tokens:
+    - formula
+    - database_source
+    - structure_identifier
+    - space_group
+    - lattice_summary
+    - candidate_count
+    flags: i
+- key: notes_required_tokens
+  value:
+    filename: mgb2_notes.md
+    tokens:
+    - MgB2
+    - 候选
+    - 筛选
+    - 数据库
+    flags: i
+- key: turn_budget
+  value:
+    max: 10
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 7000
+scoring_checklist:
+- id: retrieval_json
+  criterion: Agent writes `mgb2_retrieval.json` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: notes_md
+  criterion: Agent writes `mgb2_notes.md` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: retrieval_required_tokens
+  criterion: Retrieval JSON includes essential structure metadata and candidate count.
+  axis: correctness
+  verify: text_file_contains_all
+- id: notes_required_tokens
+  criterion: Notes explain candidate selection and database origin for the MgB2 result.
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: The answer stays focused on retrieval metadata and provenance, not fabricated
+    downstream calculations.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: No repeated identical retrieval calls with the same parameters.
+  axis: efficiency
+  verify: no_retries
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
+    a generous benchmark ceiling (tunable per deployment).
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling.
+  axis: efficiency
+  verify: token_budget

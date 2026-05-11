@@ -9,9 +9,8 @@ human_prompt_seed: '计算 MgO 中 O 空位的形成能：从数据库获取 MgO
 
   '
 tags:
-- phy_defect
-- wf_postprocess
-- phy_surface
+- struct_surface
+- struct_transform
 priority: P0
 data_files: []
 reference_answers:

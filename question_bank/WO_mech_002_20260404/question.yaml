@@ -9,8 +9,7 @@ human_prompt_seed: '估算 RDX (C3H6N6O6) 的爆速和爆压： 自行构造 RDX
 
   '
 tags:
-- phy_eos
-- phy_surface
+- struct_build
 data_files: []
 reference_answers:
 - key: detonation_velocity_m_s

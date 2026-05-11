@@ -59,6 +59,14 @@ VerifyLiteral = Literal[
     'text_file_kpt_path',
     'text_file_numeric_range',
     'text_file_regex',
+    'struct_file_space_group',
+    'struct_file_parsable',
+    'struct_file_min_interatomic_distance',
+    'struct_file_all_occupancy_one',
+    'struct_file_integer_stoichiometry',
+    'struct_file_replicas_distinct',
+    'answer_json_numeric',
+    'json_file_artifacts',
 ]
 
 AxisLiteral = Literal['correctness', 'grounding', 'efficiency']
@@ -267,6 +275,14 @@ class QuestionItem(BaseModel):
             'text_file_kpt_path',
             'text_file_numeric_range',
             'text_file_regex',
+            'struct_file_space_group',
+            'struct_file_parsable',
+            'struct_file_min_interatomic_distance',
+            'struct_file_all_occupancy_one',
+            'struct_file_integer_stoichiometry',
+            'struct_file_replicas_distinct',
+            'answer_json_numeric',
+            'json_file_artifacts',
         }
         for item in self.scoring_checklist:
             if item.verify in _needs_ref and item.id not in ref_keys:

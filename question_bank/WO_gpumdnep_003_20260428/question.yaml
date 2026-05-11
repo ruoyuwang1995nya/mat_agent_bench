@@ -1,0 +1,46 @@
+id: WO_gpumdnep_003_20260428
+capability: workflow_orchestration
+domain: agnostic
+intent: Compute graphene DOS and heat capacity with GPUMD using Graphene_Lindsay_2010_modified
+  potential.
+human_prompt_seed: 获取 https://raw.githubusercontent.com/brucefan1983/GPUMD/master/potentials/tersoff/Graphene_Lindsay_2010_modified.txt，生成可直接运行的
+  `run.in`,采用 GPUMD 计算石墨烯 DOS 与热容。
+tags:
+- eng_gpumd
+data_files: []
+reference_answers:
+- key: run_input_artifact
+  value: run.in
+- key: graphene_potential_token
+  value:
+    filename: run.in
+    tokens:
+    - potential
+    - Graphene_Lindsay_2010_modified.txt
+    flags: i
+- key: dos_core_tokens
+  value:
+    filename: run.in
+    tokens:
+    - ensemble nve
+    - compute_dos
+    flags: i
+- key: heat_capacity_3kb_per_atom
+  value: {}
+scoring_checklist:
+- id: run_input_artifact
+  criterion: 生成 `run.in`。
+  axis: correctness
+  verify: artifact_exists
+- id: graphene_potential_token
+  criterion: '`run.in` 使用 `Graphene_Lindsay_2010_modified.txt` 势函数。'
+  axis: correctness
+  verify: text_file_contains_all
+- id: dos_core_tokens
+  criterion: '`run.in` 包含 `ensemble nve` 与 `compute_dos` 两个关键参数。'
+  axis: correctness
+  verify: text_file_contains_all
+- id: heat_capacity_3kb_per_atom
+  criterion: 石墨烯热容结果应在约 `3.0 k_B/atom`（可接受小范围偏差）。
+  axis: correctness
+  verify: llm_binary_judge

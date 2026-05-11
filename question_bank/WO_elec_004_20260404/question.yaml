@@ -9,7 +9,7 @@ human_prompt_seed: "计算NFPP的平均嵌钠电压：\n1. 获取NFPP（Na₄Fe�
   \ × Z=4）\n4. 按公式 V = -[E(sodiated) - E(desodiated) - n·μ_Na] / n 计算平均电压；\n5. 输出平均电压(V\
   \ vs Na/Na⁺)、n值、各能量值。\n"
 tags:
-- wf_inputs
+- code_mlip
 data_files: []
 reference_answers:
 - key: avg_voltage_V

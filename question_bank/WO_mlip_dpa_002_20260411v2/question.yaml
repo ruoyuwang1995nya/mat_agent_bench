@@ -13,9 +13,6 @@ human_prompt_seed: '计算 FCC Cu 的弹性常数。
   '
 tags:
 - code_mlip
-- code_dpa
-- phy_elastic
-- phy_surface
 data_files: []
 reference_answers:
 - key: C11_GPa

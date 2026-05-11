@@ -4,41 +4,50 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
-BACKEND_PORT="${1:-8765}"
-FRONTEND_PORT="${2:-8080}"
-HOST="${3:-0.0.0.0}"
-SERVER_URL="${4:-http://${HOST}:${BACKEND_PORT}}"
+PORT="${1:-8080}"
+HOST="${2:-127.0.0.1}"
 
 cleanup() {
-    echo "Shutting down servers..."
-    kill "${BACKEND_PID:-}" "${FRONTEND_PID:-}" 2>/dev/null || true
-    wait "${BACKEND_PID:-}" "${FRONTEND_PID:-}" 2>/dev/null || true
+    echo "Shutting down server..."
+    kill "${SERVER_PID:-}" 2>/dev/null || true
+    wait "${SERVER_PID:-}" 2>/dev/null || true
 }
 trap cleanup INT TERM
 
+kill_port() {
+    local port="$1"
+    local pid
+    pid=$(netstat -tlnp 2>/dev/null | awk -v port=":$port" '$4 ~ port"$" {split($7,a,"/"); print a[1]}' || true)
+    if [ -n "$pid" ]; then
+        echo "Killing process $pid on port $port..."
+        kill "$pid" 2>/dev/null || true
+        sleep 1
+    fi
+}
+
 cd "$ROOT_DIR"
 
-echo "Starting backend server on port $BACKEND_PORT..."
-nohup mat-bench serve --host "$HOST" --port "$BACKEND_PORT" >"$ROOT_DIR/backend.log" 2>&1 &
-BACKEND_PID=$!
+kill_port "$PORT"
 
-echo "Waiting for backend to be ready..."
+echo "Starting mat-bench (combined) on port $PORT..."
+nohup mat-bench serve-all --host "$HOST" --port "$PORT" >"$ROOT_DIR/server.log" 2>&1 &
+SERVER_PID=$!
+
+echo "Waiting for server to be ready..."
 for i in $(seq 1 20); do
-    if curl -sf "http://${HOST}:${BACKEND_PORT}/questions" >/dev/null 2>&1; then
-        echo "Backend is ready."
+    if curl -sf "http://${HOST}:${PORT}/bench/questions" >/dev/null 2>&1; then
+        echo "Server is ready."
         break
     fi
     sleep 1
     if [ "$i" -eq 20 ]; then
-        echo "Warning: backend did not respond after 20s, starting frontend anyway."
+        echo "Warning: server did not respond after 20s."
     fi
 done
 
-echo "Starting frontend server on port $FRONTEND_PORT..."
-nohup mat-bench serve-ui --host "$HOST" --port "$FRONTEND_PORT" --backend-url "$SERVER_URL" >"$ROOT_DIR/frontend.log" 2>&1 &
-FRONTEND_PID=$!
-
-echo "Both servers are running."
-echo "  Backend:  http://${HOST}:${BACKEND_PORT}  (log: backend.log)"
-echo "  Frontend: http://${HOST}:${FRONTEND_PORT}  (log: frontend.log)"
+echo "Server is running."
+echo "  UI:      http://${HOST}:${PORT}/"
+echo "  API:     http://${HOST}:${PORT}/bench"
+echo "  API docs: http://${HOST}:${PORT}/bench/docs"
+echo "  Log:     server.log"
 echo "Startup complete. This script will now exit."

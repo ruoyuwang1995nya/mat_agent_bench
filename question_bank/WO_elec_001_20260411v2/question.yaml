@@ -8,8 +8,7 @@ human_prompt_seed: '计算 Si 的能带结构：从数据库获取金刚石结�
 
   '
 tags:
-- phy_electronic
-- phy_surface
+- code_mlip
 priority: P0
 data_files: []
 reference_answers:

@@ -9,7 +9,7 @@ human_prompt_seed: '计算 MgO(100) 的表面能：从数据库获取 MgO 岩盐
 
   '
 tags:
-- phy_surface
+- struct_surface
 data_files: []
 reference_answers:
 - key: surface_energy_J_m2

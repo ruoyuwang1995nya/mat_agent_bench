@@ -1,0 +1,98 @@
+id: SR_db_008_20260416v1
+capability: structure_retrieval
+domain: agnostic
+intent: Retrieve up to five ternary rare-earth transition-metal oxides excluding Fe
+  and Ni.
+human_prompt_seed: '检索并返回不超过 5 个三元氧化物，约束如下：
+
+  - 同时包含：1 个稀土元素 + 1 个过渡金属元素 + O； - 元素总数为 3（ternary）； - 排除 Fe 和 Ni。
+
+  请完成以下交付：
+
+  1) `re_tm_oxide_candidates.json`：至少包含 `rank`, `formula`, `elements`, `database_source`,
+  `structure_identifier`, `selection_basis`； 2) `re_tm_oxide_report.md`：说明筛选逻辑（稀土、过渡金属、三元、排除
+  Fe/Ni）及结果不确定性。
+
+  最终回答中确认每条候选如何满足上述组合约束。'
+tags:
+- meta_database
+data_files: []
+reference_answers:
+- key: candidates_json
+  value: re_tm_oxide_candidates.json
+- key: retrieval_report
+  value: re_tm_oxide_report.md
+- key: candidates_required_tokens
+  value:
+    filename: re_tm_oxide_candidates.json
+    tokens:
+    - rank
+    - formula
+    - elements
+    - database_source
+    - structure_identifier
+    - selection_basis
+    - O
+    flags: i
+- key: report_required_tokens
+  value:
+    filename: re_tm_oxide_report.md
+    tokens:
+    - 稀土
+    - 过渡金属
+    - 三元
+    - 排除
+    - Fe
+    - Ni
+    - 不确定性
+    flags: i
+- key: turn_budget
+  value:
+    max: 10
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 9000
+scoring_checklist:
+- id: candidates_json
+  criterion: Agent writes `re_tm_oxide_candidates.json` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: retrieval_report
+  criterion: Agent writes `re_tm_oxide_report.md` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: candidates_required_tokens
+  criterion: Candidate JSON includes provenance fields and explicit element composition
+    entries.
+  axis: correctness
+  verify: text_file_contains_all
+- id: report_required_tokens
+  criterion: Report describes rare-earth/transition-metal/ternary constraints and
+    Fe/Ni exclusion handling.
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: The final answer is grounded in retrieved candidates and avoids fabricating
+    unsupported compositions.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: No repeated identical retrieval calls with the same parameters.
+  axis: efficiency
+  verify: no_retries
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
+    a generous benchmark ceiling (tunable per deployment).
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling.
+  axis: efficiency
+  verify: token_budget

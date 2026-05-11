@@ -23,9 +23,7 @@ human_prompt_seed: '文件 `A23050102A0375.hkl` 和 `A23050102A0375.p4p` 是一�
 
   '
 tags:
-- char_xrd
-- char_cif_validation
-- phy_defect
+- char_diffraction
 data_files:
 - key: hkl_file
   path: A23050102A0375.hkl
