@@ -1,6 +1,31 @@
 # CHANGELOG
 
 
+## v0.4.0 (2026-05-12)
+
+### Bug Fixes
+
+- Tags related review suggestions
+  ([`5d773a2`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/5d773a246ea2e8a1b86e252461453a6e5208295e))
+
+- Update grading concurrency and logging
+  ([`7b6ed9d`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/7b6ed9d48717ea803d40754ed8e88f6f633c8b09))
+
+- Update grading criteria
+  ([`a73532d`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/a73532daf4e6917b94c1858d32a7655bb46b6861))
+
+### Features
+
+- Add atomworld tasks
+  ([`18b1993`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/18b1993f1be96b71a8a9076289459c41b8a9c071))
+
+- Add remote server deployment config backup
+  ([`cb5fae9`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/cb5fae9ad97aae9988a95d3e8799d3b69d11ae9f))
+
+Includes mat_agent_bench project source, supervisor config, .env configuration, GitHub workflows,
+  and question bank.
+
+
 ## v0.3.3 (2026-05-11)
 
 ### Bug Fixes
