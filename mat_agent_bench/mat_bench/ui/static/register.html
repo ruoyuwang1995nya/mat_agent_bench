@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — mat-bench</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    .auth-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 60px);
+      padding: 2rem;
+    }
+    .auth-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2.5rem;
+    }
+    .auth-title {
+      font-family: var(--font-title);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--cyan);
+      letter-spacing: .12em;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    .field { display: flex; flex-direction: column; gap: .4rem; margin-bottom: 1.1rem; }
+    .field label { font-size: .8rem; color: var(--text-dim); letter-spacing: .06em; text-transform: uppercase; }
+    .field input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--font-data);
+      font-size: .95rem;
+      padding: .6rem .85rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .field input:focus { border-color: var(--border-hover); }
+    .field small { font-size: .75rem; color: var(--text-dim); }
+    .auth-submit {
+      width: 100%;
+      padding: .7rem;
+      margin-top: .5rem;
+      background: rgba(127,90,240,.12);
+      border: 1px solid var(--purple);
+      border-radius: 6px;
+      color: var(--purple);
+      font-family: var(--font-title);
+      font-size: .85rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .auth-submit:hover { background: rgba(127,90,240,.22); }
+    .auth-submit:disabled { opacity: .5; cursor: not-allowed; }
+    .auth-error {
+      display: none;
+      margin-top: .85rem;
+      padding: .65rem .9rem;
+      background: rgba(229,49,112,.12);
+      border: 1px solid var(--red);
+      border-radius: 6px;
+      color: var(--red);
+      font-size: .85rem;
+    }
+    .auth-success {
+      display: none;
+      margin-top: .85rem;
+      padding: .65rem .9rem;
+      background: rgba(44,182,125,.12);
+      border: 1px solid var(--green);
+      border-radius: 6px;
+      color: var(--green);
+      font-size: .85rem;
+    }
+    .auth-link { text-align: center; margin-top: 1.25rem; font-size: .85rem; color: var(--text-dim); }
+    .auth-link a { color: var(--cyan); text-decoration: none; }
+    .auth-link a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">MAT-BENCH</div>
+    <div class="nav-links">
+      <a href="/static/index.html">Home</a>
+      <a href="/static/questions.html">Questions</a>
+      <a href="/static/leaderboard.html">Leaderboard</a>
+      <a href="/static/tokens.html" class="active">Agents</a>
+    </div>
+  </nav>
+
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-title">CREATE ACCOUNT</div>
+      <form id="reg-form" onsubmit="doRegister(event)">
+        <div class="field">
+          <label>Username</label>
+          <input id="username" type="text" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input id="password" type="password" autocomplete="new-password" required minlength="6">
+          <small>Minimum 6 characters</small>
+        </div>
+        <button class="auth-submit" type="submit" id="submit-btn">REGISTER</button>
+        <div class="auth-error" id="error-msg"></div>
+        <div class="auth-success" id="success-msg"></div>
+      </form>
+      <div class="auth-link">
+        Already have an account? <a href="/static/login.html">Login</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function doRegister(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      const err = document.getElementById('error-msg');
+      const ok = document.getElementById('success-msg');
+      btn.disabled = true;
+      btn.textContent = 'CREATING…';
+      err.style.display = 'none';
+      ok.style.display = 'none';
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value,
+          }),
+        });
+        if (res.ok) {
+          ok.textContent = 'Account created! Redirecting to login…';
+          ok.style.display = 'block';
+          setTimeout(() => window.location.replace('/static/login.html'), 1200);
+        } else {
+          const data = await res.json();
+          err.textContent = data.detail || 'Registration failed';
+          err.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = 'REGISTER';
+        }
+      } catch {
+        err.textContent = 'Network error — is the server running?';
+        err.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'REGISTER';
+      }
+    }
+  </script>
+</body>
+</html>

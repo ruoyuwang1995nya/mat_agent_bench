@@ -68,3 +68,4 @@ class QuestionTag(StrEnum):
     char_optical_spectrum = 'char_optical_spectrum'
     char_time_resolved = 'char_time_resolved'
     char_battery_cycling = 'char_battery_cycling'
+    atomworld = 'atomworld'

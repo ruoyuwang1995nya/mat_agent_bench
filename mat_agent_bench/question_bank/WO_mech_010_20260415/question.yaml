@@ -1,0 +1,92 @@
+id: WO_mech_010_20260415
+capability: workflow_orchestration
+domain: agnostic
+intent: Evaluate phase-forming tendencies of AlCr0.8CoFeNi HEA using descriptor calculations,
+  binary-phase cues, and solid-solution prediction.
+human_prompt_seed: '评估 AlCr0.8CoFeNi 高熵合金（HEA）的相形成倾向，需覆盖以下信息：
+
+  1) 价电子浓度（VEC）、混合焓、混合熵等关键描述符； 2) 二元形成能/相图相关信息（用于辅助稳定性判断）； 3) 是否倾向形成固溶体，以及可能晶体结构。
+
+  请完成以下交付： - `hea_alcr0.8cofeni_summary.json`：至少包含 `vec`, `mixing_enthalpy`, `mixing_entropy`,
+  `binary_formation_energy_summary`, `solid_solution_prediction`, `possible_structure`；
+  - `hea_alcr0.8cofeni_report.md`：解释判据、结论与不确定性。
+
+  最终回答中简要给出”是否可能形成固溶体”的结论与依据。'
+tags:
+- code_mlip
+data_files: []
+reference_answers:
+- key: hea_summary_json
+  value: hea_alcr0.8cofeni_summary.json
+- key: hea_report_md
+  value: hea_alcr0.8cofeni_report.md
+- key: json_required_tokens
+  value:
+    filename: hea_alcr0.8cofeni_summary.json
+    must_cover:
+    - vec
+    - mixing_enthalpy
+    - mixing_entropy
+    - binary_formation_energy_summary
+    - solid_solution_prediction
+    - possible_structure
+- key: report_required_tokens
+  value:
+    filename: hea_alcr0.8cofeni_report.md
+    must_cover:
+    - AlCr0.8CoFeNi
+    - VEC
+    - 混合焓
+    - 混合熵
+    - 固溶体
+    - 不确定性
+- key: turn_budget
+  value:
+    max: 16
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 10000
+scoring_checklist:
+- id: hea_summary_json
+  criterion: Agent writes `hea_alcr0.8cofeni_summary.json` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: hea_report_md
+  criterion: Agent writes `hea_alcr0.8cofeni_report.md` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: json_required_tokens
+  criterion: Summary JSON contains required HEA descriptor, binary-energy summary,
+    and solid-solution prediction fields.
+  axis: correctness
+  verify: llm_binary_judge
+- id: report_required_tokens
+  criterion: Report explains prediction rationale and uncertainty caveats.
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: Final answer is grounded in generated HEA-analysis artifacts and does
+    not fabricate unsupported phase conclusions.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: No repeated identical calls with the same parameter set.
+  axis: efficiency
+  verify: no_retries
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
+    a generous benchmark ceiling (tunable per deployment).
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+    (tunable per task after calibration).
+  axis: efficiency
+  verify: token_budget

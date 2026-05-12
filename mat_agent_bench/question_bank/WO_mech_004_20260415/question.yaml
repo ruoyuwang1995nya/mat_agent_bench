@@ -1,0 +1,93 @@
+id: WO_mech_004_20260415
+capability: workflow_orchestration
+domain: alloy
+intent: Optimize an alloy structure with APEX and summarize geometry-change evidence
+  with machine-checkable artifacts.
+human_prompt_seed: '使用 APEX 对给定合金结构执行几何优化，并输出优化结果。
+
+  请完成以下交付：
+
+  1) `alloy_optimized.cif`：优化后的结构文件； 2) `alloy_opt_summary.json`：至少包含 `method`, `input_structure`,
+  `output_structure`, `optimization_status`, `notes`； 3) `alloy_opt_report.md`：说明优化目标、关键设置与结果可信度/不确定性。
+
+  最终回答中简要说明：优化后结构相对输入结构的主要变化（可定性描述）。'
+tags:
+- code_mlip
+data_files: []
+reference_answers:
+- key: optimized_structure
+  value: alloy_optimized.cif
+- key: summary_json
+  value: alloy_opt_summary.json
+- key: report_md
+  value: alloy_opt_report.md
+- key: summary_required_tokens
+  value:
+    filename: alloy_opt_summary.json
+    must_cover:
+    - method
+    - input_structure
+    - output_structure
+    - optimization_status
+    - APEX
+- key: report_required_tokens
+  value:
+    filename: alloy_opt_report.md
+    must_cover:
+    - optimization
+    - alloy
+    - structure
+    - 不确定性
+- key: turn_budget
+  value:
+    max: 14
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 9000
+scoring_checklist:
+- id: optimized_structure
+  criterion: Agent writes `alloy_optimized.cif` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: summary_json
+  criterion: Agent writes `alloy_opt_summary.json` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: report_md
+  criterion: Agent writes `alloy_opt_report.md` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: summary_required_tokens
+  criterion: Summary JSON includes optimization metadata and APEX method context.
+  axis: correctness
+  verify: llm_binary_judge
+- id: report_required_tokens
+  criterion: Report explains optimization setup and uncertainty notes.
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: Final answer is grounded in generated optimization artifacts and does
+    not invent unsupported structural changes.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: No repeated identical optimization calls with the same parameters.
+  axis: efficiency
+  verify: no_retries
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
+    a generous benchmark ceiling (tunable per deployment).
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+    (tunable per task after calibration).
+  axis: efficiency
+  verify: token_budget

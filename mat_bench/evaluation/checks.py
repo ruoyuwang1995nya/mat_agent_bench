@@ -7,6 +7,7 @@ into a single module with all non-LLM verification logic.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from .evidence import EvidenceBundle, TokenUsage
@@ -19,6 +20,7 @@ from ..schemas import (
     TokenUsageRecord,
 )
 from ..validators import (
+    check_atomworld_active_task,
     check_atom_count,
     check_bond_angle,
     check_bond_count,
@@ -385,6 +387,39 @@ def check_molcrys_local_env_from_evidence(
         filename=filename,
         expected_formula=expected_formula,
         z_value=z_value,
+    )
+
+
+def check_atomworld_active_task_from_evidence(
+    *,
+    evidence: EvidenceBundle | None,
+    ref: ReferenceAnswer,
+    question_dir: Path | None,
+) -> tuple[bool, str]:
+    ws, err = _get_workspace(evidence)
+    if err:
+        return False, err
+    cfg = _cfg(ref)
+    target_rel_path = str(cfg.get('target_path', '')).strip()
+    target_cif = str(cfg.get('target_cif', '')).strip()
+    if not target_cif:
+        if not target_rel_path:
+            return False, 'reference answer missing target_path or target_cif'
+        if question_dir is None:
+            return False, 'question_dir unavailable for target_path resolution'
+        target_path = question_dir / target_rel_path
+        if not target_path.is_file():
+            return False, f'target file not found: {target_path.name}'
+        try:
+            target_cif = target_path.read_text(encoding='utf-8')
+        except Exception as exc:
+            return False, f'could not read target file {target_path.name}: {exc}'
+
+    return check_atomworld_active_task(
+        ws,
+        filename=str(cfg.get('filename', '*.cif')),
+        target_cif=target_cif,
+        action_name=str(cfg.get('action_name', '')).strip() or None,
     )
 
 

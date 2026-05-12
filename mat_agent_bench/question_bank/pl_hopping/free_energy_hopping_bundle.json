@@ -1,0 +1,46 @@
+{
+  "expected_deliverables": [
+    "pmf_profile",
+    "barrier_table",
+    "reaction_coordinate_note",
+    "hopping_mechanism",
+    "validation_suggestion"
+  ],
+  "notes": [
+    "EO/Li = 20 is the lower-barrier condition in this curated bundle.",
+    "Higher coordination number and longer residence time correlate with the larger PMF barrier here."
+  ],
+  "reaction_coordinate_definition": "Projected Li-site transfer coordinate between two neighboring ether-oxygen coordination environments.",
+  "systems": [
+    {
+      "condition": "EO_Li_20",
+      "md": {
+        "coordination_number": 5.3,
+        "li_diffusion_cm2_s": 2.4e-07,
+        "site_residence_time_ns": 3.1
+      },
+      "pmf": {
+        "main_barrier_eV": 0.18,
+        "minimum_position": 0.15,
+        "secondary_metastable_well_eV": 0.04,
+        "transition_state_position": 0.52
+      }
+    },
+    {
+      "condition": "EO_Li_10",
+      "md": {
+        "coordination_number": 6.1,
+        "li_diffusion_cm2_s": 1.2e-07,
+        "site_residence_time_ns": 6.4
+      },
+      "pmf": {
+        "main_barrier_eV": 0.33,
+        "minimum_position": 0.19,
+        "secondary_metastable_well_eV": 0.09,
+        "transition_state_position": 0.56
+      }
+    }
+  ],
+  "task": "polymer_free_energy_hopping",
+  "title": "Li+ hopping PMF analysis in PEO-LiTFSI under two salt-ratio conditions"
+}

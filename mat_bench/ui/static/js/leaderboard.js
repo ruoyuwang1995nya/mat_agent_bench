@@ -50,23 +50,28 @@ function renderLeaderboard() {
       .sort((a, b) => b._sort_score - a._sort_score);
   }
 
+  // Update chart title
+  const titleEl = document.getElementById('chart-title');
+  if (titleEl) titleEl.textContent = capFilter ? `Score (${capFilter}) by Agent` : 'Questions Passed by Agent';
+
   // Build chart
   buildChart(entries, capFilter);
 
   if (!entries.length) {
     document.getElementById('lb-body').innerHTML =
-      `<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:4rem">No evaluation data found.<br>
+      `<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:4rem">No evaluation data found.<br>
       <small>Run <code style="color:var(--cyan)">mat-bench serve</code> or <code style="color:var(--cyan)">mat-bench run</code> to generate results.</small>
       </td></tr>`;
     return;
   }
 
   const medals = ['🥇', '🥈', '🥉'];
+  const maxPassed = Math.max(1, ...entries.map(e => e.questions_passed || 0));
 
   document.getElementById('lb-body').innerHTML = entries.map((e, i) => {
-    const score = capFilter ? (e.by_capability[capFilter] ?? 0) : e.weighted_score;
-    const displayScore = (score * 100).toFixed(1) + '%';
-    const passRate = (e.pass_rate * 100).toFixed(1) + '%';
+    const score = capFilter ? (e.by_capability[capFilter] ?? 0) : e.questions_passed;
+    const displayScore = capFilter ? (score * 100).toFixed(1) + '%' : String(score);
+    const barWidth = capFilter ? score * 100 : (score / maxPassed) * 100;
     const rank = i + 1;
     const rankDisplay = rank <= 3
       ? `<span title="Rank ${rank}">${medals[rank-1]}</span>`
@@ -88,11 +93,10 @@ function renderLeaderboard() {
         </td>
         <td>
           <div class="score-bar-wrap">
-            <div class="score-bar"><div class="score-bar-fill" style="width:${score*100}%"></div></div>
+            <div class="score-bar"><div class="score-bar-fill" style="width:${barWidth}%"></div></div>
             <div class="score-val">${displayScore}</div>
           </div>
         </td>
-        <td style="font-family:var(--font-data);font-size:.85rem;color:var(--text-dim)">${passRate}</td>
         <td style="text-align:center;font-family:var(--font-data);font-size:.85rem">${e.total_evaluations}</td>
         <td style="font-size:.78rem">${topCaps || '<span style="color:var(--text-dim)">—</span>'}</td>
       </tr>
@@ -102,7 +106,9 @@ function renderLeaderboard() {
 
 function buildChart(entries, capFilter) {
   const labels = entries.map(e => e.agent.length > 24 ? e.agent.slice(0, 22) + '…' : e.agent);
-  const scores = entries.map(e => capFilter ? (e.by_capability[capFilter] ?? 0) : e.weighted_score);
+  const isPercent = !!capFilter;
+  const rawScores = entries.map(e => capFilter ? (e.by_capability[capFilter] ?? 0) : (e.questions_passed ?? 0));
+  const chartData = isPercent ? rawScores.map(s => +(s * 100).toFixed(2)) : rawScores;
 
   const ctx = document.getElementById('score-chart').getContext('2d');
   if (chart) chart.destroy();
@@ -112,14 +118,14 @@ function buildChart(entries, capFilter) {
     data: {
       labels,
       datasets: [{
-        label: capFilter ? `Score (${capFilter})` : 'Weighted Score',
-        data: scores.map(s => +(s * 100).toFixed(2)),
-        backgroundColor: scores.map((_, i) => {
-          const hue = 180 + (i / Math.max(scores.length - 1, 1)) * 80;
+        label: capFilter ? `Score (${capFilter})` : 'Questions Passed',
+        data: chartData,
+        backgroundColor: chartData.map((_, i) => {
+          const hue = 180 + (i / Math.max(chartData.length - 1, 1)) * 80;
           return `hsla(${hue}, 100%, 60%, 0.45)`;
         }),
-        borderColor: scores.map((_, i) => {
-          const hue = 180 + (i / Math.max(scores.length - 1, 1)) * 80;
+        borderColor: chartData.map((_, i) => {
+          const hue = 180 + (i / Math.max(chartData.length - 1, 1)) * 80;
           return `hsla(${hue}, 100%, 70%, 0.9)`;
         }),
         borderWidth: 1,
@@ -132,10 +138,10 @@ function buildChart(entries, capFilter) {
       scales: {
         y: {
           beginAtZero: true,
-          max: 100,
+          ...(isPercent ? { max: 100 } : {}),
           ticks: {
             color: 'rgba(255,255,255,0.45)',
-            callback: v => v + '%',
+            callback: v => isPercent ? v + '%' : v,
           },
           grid: { color: 'rgba(0,240,255,0.07)' },
           border: { color: 'rgba(0,240,255,0.15)' },
@@ -150,7 +156,7 @@ function buildChart(entries, capFilter) {
         legend: { labels: { color: 'rgba(255,255,255,0.6)', font: { size: 12 } } },
         tooltip: {
           callbacks: {
-            label: ctx => ` ${ctx.parsed.y.toFixed(1)}%`,
+            label: ctx => isPercent ? ` ${ctx.parsed.y.toFixed(1)}%` : ` ${ctx.parsed.y}`,
           },
         },
       },

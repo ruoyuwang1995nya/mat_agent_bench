@@ -1,0 +1,6 @@
+{
+  "contact_area_mm2": 40,
+  "load_N": 120,
+  "material": "Mg alloy screw",
+  "notes": "Use first-pass normal-pressure estimate only."
+}

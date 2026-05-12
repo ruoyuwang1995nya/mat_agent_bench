@@ -1,0 +1,98 @@
+{
+  "acceptor_context": {
+    "design_goal": "Balance Voc, absorption, and conformational order.",
+    "name": "Y6-like acceptor window",
+    "target_acceptor_lumo_eV": -4.1
+  },
+  "expected_deliverables": [
+    "ranking_table",
+    "gap_extrapolation",
+    "conformational_note",
+    "shortlist",
+    "uncertainty_note"
+  ],
+  "notes": [
+    "Use the extrapolated gap and HOMO jointly; the most negative HOMO is not automatically the best overall donor.",
+    "Lower mean backbone dihedral and lower disorder_index indicate better packing potential in this curated bundle."
+  ],
+  "systems": [
+    {
+      "conformation": {
+        "disorder_index": 0.28,
+        "mean_backbone_dihedral_deg": 21.0,
+        "planarity_index": 0.76
+      },
+      "name": "PM6",
+      "qm": {
+        "extrapolated_gap_eV": 1.92,
+        "homo_eV": -5.45,
+        "lumo_eV": -3.36,
+        "oligomer_gap_eV": 2.09
+      },
+      "ranking": {
+        "overall_score": 0.79,
+        "packing_score": 0.73,
+        "voc_proxy_score": 0.84
+      }
+    },
+    {
+      "conformation": {
+        "disorder_index": 0.35,
+        "mean_backbone_dihedral_deg": 26.0,
+        "planarity_index": 0.69
+      },
+      "name": "PTB7-Th",
+      "qm": {
+        "extrapolated_gap_eV": 1.88,
+        "homo_eV": -5.23,
+        "lumo_eV": -3.32,
+        "oligomer_gap_eV": 1.98
+      },
+      "ranking": {
+        "overall_score": 0.64,
+        "packing_score": 0.62,
+        "voc_proxy_score": 0.68
+      }
+    },
+    {
+      "conformation": {
+        "disorder_index": 0.22,
+        "mean_backbone_dihedral_deg": 15.0,
+        "planarity_index": 0.84
+      },
+      "name": "D18",
+      "qm": {
+        "extrapolated_gap_eV": 1.84,
+        "homo_eV": -5.36,
+        "lumo_eV": -3.39,
+        "oligomer_gap_eV": 1.95
+      },
+      "ranking": {
+        "overall_score": 0.86,
+        "packing_score": 0.88,
+        "voc_proxy_score": 0.79
+      }
+    },
+    {
+      "conformation": {
+        "disorder_index": 0.47,
+        "mean_backbone_dihedral_deg": 31.0,
+        "planarity_index": 0.58
+      },
+      "name": "P3HT",
+      "qm": {
+        "extrapolated_gap_eV": 1.95,
+        "homo_eV": -5.02,
+        "lumo_eV": -2.98,
+        "oligomer_gap_eV": 2.04
+      },
+      "ranking": {
+        "overall_score": 0.44,
+        "packing_score": 0.46,
+        "voc_proxy_score": 0.52
+      }
+    }
+  ],
+  "task": "polymer_donor_prescreening",
+  "title": "Donor-polymer pre-screening for a Y6-like acceptor window"
+}

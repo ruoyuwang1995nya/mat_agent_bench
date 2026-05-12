@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  id-token: write
+
+# Never cancel an in-flight release — queue instead of kill.
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Semantic Release
+    runs-on: ubuntu-latest
+
+    steps:
+      # fetch-depth: 0 is required — PSR must walk the full commit graph to
+      # find the most recent tag and collect all commits since then.
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install python-semantic-release
+        run: pip install "python-semantic-release==9.*"
+
+      - name: Configure git identity for release commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Parses commits since the last tag, determines bump type, updates
+      # pyproject.toml, writes CHANGELOG.md, commits, tags, and pushes.
+      # Writes released=true/false to $GITHUB_OUTPUT — exits 0 either way.
+      - name: Bump version, commit, and tag
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: semantic-release version
+
+      # Only runs when a new version was actually released.
+      - name: Create GitHub Release with changelog
+        if: steps.release.outputs.released == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: semantic-release publish

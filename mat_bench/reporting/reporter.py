@@ -171,12 +171,11 @@ def _render_markdown(summary: EvaluationSummary) -> str:
     lines: list[str] = [
         '# MATTER v5 Evaluation Report',
         '',
-        f'## Overall: {summary.total_passed}/{summary.total_criteria} criteria passed ({total_pct})',
+        f'## Overall: {summary.questions_passed}/{summary.total_runs} questions passed',
         '',
         f'- Total runs: {summary.total_runs}',
         f'- Total criteria evaluated: {summary.total_criteria}',
-        f'- Criteria passed: {summary.total_passed}',
-        f'- Pass rate: {total_pct}',
+        f'- Criteria passed: {summary.total_passed} ({total_pct})',
         '',
     ]
 

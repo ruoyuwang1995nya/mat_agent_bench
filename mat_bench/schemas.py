@@ -67,6 +67,7 @@ VerifyLiteral = Literal[
     'struct_file_replicas_distinct',
     'answer_json_numeric',
     'json_file_artifacts',
+    'atomworld_active_task',
 ]
 
 AxisLiteral = Literal['correctness', 'grounding', 'efficiency']
@@ -283,6 +284,7 @@ class QuestionItem(BaseModel):
             'struct_file_replicas_distinct',
             'answer_json_numeric',
             'json_file_artifacts',
+            'atomworld_active_task',
         }
         for item in self.scoring_checklist:
             if item.verify in _needs_ref and item.id not in ref_keys:
@@ -458,6 +460,7 @@ class EvaluationSummary(BaseModel):
     total_runs: int
     total_criteria: int = 0
     total_passed: int = 0
+    questions_passed: int = 0
     pass_rate: float = 0.0
     weighted_pass_rate: float = 0.0
 

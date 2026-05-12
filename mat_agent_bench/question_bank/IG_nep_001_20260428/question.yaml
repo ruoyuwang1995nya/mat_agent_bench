@@ -1,0 +1,166 @@
+id: IG_nep_001_20260428
+capability: input_generation
+domain: agnostic
+intent: Draft a practical nep.in from provided training structures.
+human_prompt_seed: '目录里有一份 NEP 训练数据 `train.xyz`。
+
+
+  请先看数据，再给出可直接训练的 `nep.in`。
+
+  要求：
+
+  - `type` 与数据中的元素一致；
+
+  - 参数不要照抄模板，要和这份数据规模匹配；
+
+  - 不要写超出 NEP 合法范围的值。
+
+
+  同时写一份简短说明，说明你怎么定的关键参数。
+
+
+  输出到当前目录：`nep.in`、`nep_input_note.md`。'
+tags:
+- eng_gpumd
+data_files:
+- key: train_xyz
+  path: train.xyz
+  oss_url: ''
+  description: Training structures for NEP fitting.
+- key: test_xyz
+  path: test.xyz
+  oss_url: ''
+  description: Test structures for NEP validation.
+reference_answers:
+- key: must_nep_in_artifact
+  value: nep.in
+- key: must_nep_note_artifact
+  value: nep_input_note.md
+- key: must_nep_core_tokens
+  value:
+    filename: nep.in
+    tokens:
+    - type
+    - cutoff
+    - n_max
+    - basis_size
+    - l_max
+    - neuron
+    - lambda_e
+    - lambda_f
+    - lambda_v
+    - batch
+    - population
+    - generation
+    flags: i
+- key: must_type_statement
+  value:
+    filename: nep.in
+    pattern: ^\s*type\s+\d+\s+[A-Z][a-z]?(?:\s+[A-Z][a-z]?)*\s*$
+    flags: m
+- key: must_cutoff_range
+  value:
+    filename: nep.in
+    pattern: ^\s*cutoff\s+([3-9](?:\.\d+)?|10(?:\.0+)?)\s+([3-9](?:\.\d+)?|10(?:\.0+)?)\s*$
+    flags: m
+- key: variable_cutoff_consistency
+  value: {}
+- key: variable_dataset_reading_quality
+  value: {}
+- key: suggested_hparam_ranges
+  value:
+    filename: nep.in
+    checks:
+    - key: neuron
+      min: 1
+      max: 120
+    - key: population
+      min: 10
+      max: 100
+    - key: generation
+      min: 10000
+      max: 1000000
+- key: variable_scale_aware_setup
+  value: {}
+- key: grounding_source
+  value:
+    filename: train.xyz
+- key: turn_budget
+  value:
+    max: 14
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 18000
+scoring_checklist:
+- id: must_nep_in_artifact
+  criterion: '[Must] `nep.in` is generated.'
+  axis: correctness
+  verify: artifact_exists
+  weight: 1.0
+- id: must_nep_note_artifact
+  criterion: '[Must] `nep_input_note.md` is generated.'
+  axis: correctness
+  verify: artifact_exists
+  weight: 0.6
+- id: must_nep_core_tokens
+  criterion: '[Must] `nep.in` includes core NEP training keywords.'
+  axis: correctness
+  verify: text_file_contains_all
+  weight: 1.0
+- id: must_type_statement
+  criterion: '[Must] `type` line is syntactically valid and species tokens are well-formed.'
+  axis: correctness
+  verify: text_file_regex
+  weight: 1.0
+- id: must_cutoff_range
+  criterion: '[Must] cutoff values stay in documented valid range.'
+  axis: correctness
+  verify: text_file_regex
+  weight: 1.0
+- id: variable_cutoff_consistency
+  criterion: '[Variable] Angular/radial cutoff relation follows documented constraints
+    (including reasonable angular <= radial setup).'
+  axis: correctness
+  verify: llm_binary_judge
+  weight: 0.5
+- id: variable_dataset_reading_quality
+  criterion: '[Variable] `type` and parameter choices reflect actual reading of train.xyz
+    (species/composition/scale), not a generic boilerplate file.'
+  axis: correctness
+  verify: llm_binary_judge
+  weight: 0.8
+- id: suggested_hparam_ranges
+  criterion: '[Suggested] major hyperparameters are within recommended NEP boundaries.'
+  axis: correctness
+  verify: text_file_numeric_range
+  weight: 0.7
+- id: variable_scale_aware_setup
+  criterion: '[Variable] Hyperparameter choices are adapted to observed data scale/composition
+    (not copied as fixed template).'
+  axis: correctness
+  verify: llm_binary_judge
+  weight: 0.7
+- id: grounding_source
+  criterion: Type ordering and setup must be grounded in provided train/test inputs,
+    without fabricating unseen species.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: No repeated identical tool calls.
+  axis: efficiency
+  verify: no_retries
+- id: turn_budget
+  criterion: Agent completes within turn budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Duration is within budget.
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total tokens are within budget.
+  axis: efficiency
+  verify: token_budget

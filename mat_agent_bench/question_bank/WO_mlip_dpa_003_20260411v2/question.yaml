@@ -1,0 +1,72 @@
+id: WO_mlip_dpa_003_20260411v2
+capability: workflow_orchestration
+domain: agnostic
+intent: Compute phonon dispersion for Si diamond with DPA; report Gamma-point optical
+  frequency and check for imaginary modes.
+human_prompt_seed: '计算金刚石结构 Si 的声子色散关系。
+
+  从数据库获取或构建 Si 金刚石原胞，使用 DPA 机器学习势计算力常数矩阵，
+
+  沿 Γ-X-K-Γ-L 高对称路径绘制声子色散曲线。
+
+  报告 Γ 点最高光学支频率 (cm⁻¹) 以及是否存在虚频（判断动力学稳定性）。
+
+  '
+tags:
+- code_mlip
+data_files: []
+reference_answers:
+- key: gamma_optical_max_cm1
+  value: 520.0
+  tolerance: 50.0
+- key: required_fields
+  value:
+  - dispersion_path
+  - gamma_frequency
+  - imaginary_check
+- key: turn_budget
+  value:
+    max: 18
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 8000
+scoring_checklist:
+- id: gamma_optical_max_cm1
+  criterion: Si Gamma-point highest optical phonon frequency is within tolerance (~520
+    cm⁻¹).
+  axis: correctness
+  verify: numerical_range
+- id: required_fields
+  criterion: Report includes phonon dispersion k-path specification, Gamma-point frequency
+    value, and statement about presence/absence of imaginary modes.
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: The reported phonon frequency is tied to force-constant calculation outputs,
+    not textbook values. Judge solely from the final answer.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: No repeated identical phonon calculation submissions.
+  axis: efficiency
+  verify: no_retries
+- id: efficiency_judge
+  criterion: Phonon workflow (build → calculate force constants → dispersion → extract)
+    completes without redundant steps.
+  axis: efficiency
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration does not exceed benchmark ceiling.
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling.
+  axis: efficiency
+  verify: token_budget

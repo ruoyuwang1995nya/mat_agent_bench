@@ -6,6 +6,7 @@ ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
 PORT="${1:-8080}"
 HOST="${2:-127.0.0.1}"
+CHECKLIST_WORKERS="${3:-4}"
 
 cleanup() {
     echo "Shutting down server..."
@@ -30,7 +31,7 @@ cd "$ROOT_DIR"
 kill_port "$PORT"
 
 echo "Starting mat-bench (combined) on port $PORT..."
-nohup mat-bench serve-all --host "$HOST" --port "$PORT" >"$ROOT_DIR/server.log" 2>&1 &
+nohup mat-bench serve-all --host "$HOST" --port "$PORT" --parallel-checklist-workers "$CHECKLIST_WORKERS" >"$ROOT_DIR/server.log" 2>&1 &
 SERVER_PID=$!
 
 echo "Waiting for server to be ready..."

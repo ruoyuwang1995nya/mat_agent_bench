@@ -1,0 +1,73 @@
+{
+  "expected_deliverables": [
+    "rheology_window",
+    "viscosity_conductivity_tradeoff",
+    "mechanism_note",
+    "process_recommendation",
+    "risk_note"
+  ],
+  "notes": [
+    "The best-balanced processing window in this bundle is 20 wt% LiTFSI at 353 K.",
+    "Higher salt content strengthens transient coordination networks and raises viscosity faster than conductivity."
+  ],
+  "systems": [
+    {
+      "condition_id": "10wt_333K",
+      "rheology": {
+        "relaxation_time_ns": 5.6,
+        "shear_thinning_onset_s-1": 52.0,
+        "zero_shear_viscosity_Pa_s": 41.0
+      },
+      "salt_wt_percent": 10,
+      "temperature_K": 333,
+      "transport": {
+        "conductivity_proxy_mS_cm": 0.44,
+        "li_diffusion_cm2_s": 2e-07
+      }
+    },
+    {
+      "condition_id": "20wt_333K",
+      "rheology": {
+        "relaxation_time_ns": 8.4,
+        "shear_thinning_onset_s-1": 31.0,
+        "zero_shear_viscosity_Pa_s": 66.0
+      },
+      "salt_wt_percent": 20,
+      "temperature_K": 333,
+      "transport": {
+        "conductivity_proxy_mS_cm": 0.51,
+        "li_diffusion_cm2_s": 1.6e-07
+      }
+    },
+    {
+      "condition_id": "20wt_353K",
+      "rheology": {
+        "relaxation_time_ns": 4.8,
+        "shear_thinning_onset_s-1": 64.0,
+        "zero_shear_viscosity_Pa_s": 38.0
+      },
+      "salt_wt_percent": 20,
+      "temperature_K": 353,
+      "transport": {
+        "conductivity_proxy_mS_cm": 0.62,
+        "li_diffusion_cm2_s": 2.7e-07
+      }
+    },
+    {
+      "condition_id": "30wt_353K",
+      "rheology": {
+        "relaxation_time_ns": 11.2,
+        "shear_thinning_onset_s-1": 18.0,
+        "zero_shear_viscosity_Pa_s": 92.0
+      },
+      "salt_wt_percent": 30,
+      "temperature_K": 353,
+      "transport": {
+        "conductivity_proxy_mS_cm": 0.49,
+        "li_diffusion_cm2_s": 1.3e-07
+      }
+    }
+  ],
+  "task": "polymer_rheology_window",
+  "title": "PEO-LiTFSI viscosity-conductivity processing window"
+}

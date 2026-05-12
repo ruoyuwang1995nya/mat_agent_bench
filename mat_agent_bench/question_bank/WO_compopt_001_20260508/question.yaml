@@ -1,0 +1,93 @@
+id: WO_compopt_001_20260508
+capability: workflow_orchestration
+domain: alloy
+intent: Use DART GA to search for an optimal high-entropy alloy composition with target
+  hardness properties under element-fraction constraints.
+human_prompt_seed: 'I am designing a CrCoNiFe-based high-entropy alloy and need to
+  find compositions that maximize Vickers hardness. Each element must stay between
+  10-40 at%. Please search the composition space and return the top 3 candidate compositions
+  with their predicted hardness values. Output results to `candidates.csv` with columns:
+  rank, Cr, Co, Ni, Fe, predicted_hardness_HV.'
+tags: []
+data_files: []
+reference_answers:
+- key: candidates_csv
+  value: candidates.csv
+- key: csv_has_elements
+  value:
+    filename: candidates.csv
+    must_cover:
+    - Cr
+    - Co
+    - Ni
+    - Fe
+- key: csv_has_hardness
+  value:
+    filename: candidates.csv
+    pattern: hardness
+- key: turn_budget
+  value:
+    max: 18
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 12000
+- key: hardness_range
+  value:
+    filename: candidates.csv
+    checks:
+    - key: hardness
+      min: 100
+      max: 1200
+scoring_checklist:
+- id: candidates_csv
+  criterion: Agent writes `candidates.csv` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: csv_has_elements
+  criterion: The candidates.csv file contains all four element names (Cr, Co, Ni,
+    Fe) as column headers or within data rows.
+  axis: correctness
+  verify: text_file_contains_all
+  params:
+    path: candidates.csv
+    substrings:
+    - Cr
+    - Co
+    - Ni
+    - Fe
+- id: csv_has_hardness
+  criterion: The candidates.csv file contains a hardness column with numeric predictions.
+  axis: correctness
+  verify: text_file_regex
+  params:
+    path: candidates.csv
+    pattern: hardness
+- id: hardness_range
+  criterion: Predicted hardness values in candidates.csv are within physically plausible
+    range for HEAs (100-1200 HV).
+  axis: correctness
+  verify: text_file_numeric_range
+- id: grounding_source
+  criterion: Results are grounded in optimization outputs and do not fabricate composition-property
+    values without tool evidence.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: No repeated identical tool calls with the same parameter set.
+  axis: efficiency
+  verify: no_retries
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) does not exceed benchmark ceiling.
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling.
+  axis: efficiency
+  verify: token_budget

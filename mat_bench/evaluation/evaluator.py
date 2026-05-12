@@ -9,15 +9,15 @@ from __future__ import annotations
 import json
 import logging
 import re
-import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .checks import (
     build_llm_context,
     build_safety_eval_record,
+    check_atomworld_active_task_from_evidence,
     check_batch_consistent_calls,
     check_batch_single_variable_sweep,
     check_batch_tool_args_constant,
@@ -63,6 +63,9 @@ from ..schemas import (
     TokenUsageRecord,
 )
 
+if TYPE_CHECKING:
+    from ..registry import Question
+
 _eval_logger = logging.getLogger(__name__)
 
 
@@ -77,7 +80,6 @@ class BinaryEvaluator:
         parallel_checklist_workers: int = 1,
     ) -> None:
         self._llm: SyncLLM | None = None
-        self._llm_lock = threading.Lock()
         self._parallel_checklist_workers = max(1, int(parallel_checklist_workers))
         if llm_cfg is not None:
             self._llm = SyncLLM(
@@ -101,7 +103,7 @@ class BinaryEvaluator:
     def evaluate(
         self,
         *,
-        question: QuestionItem,
+        question: QuestionItem | Question,
         answer: str,
         tool_calls: list[dict[str, Any]] | None = None,
         evidence: EvidenceBundle | None = None,
@@ -113,16 +115,18 @@ class BinaryEvaluator:
         token_usage: TokenUsageRecord | None = None,
         duration_ms: int = 0,
     ) -> EvalRunRecord:
+        question_item = question.item if hasattr(question, 'item') else question
+        question_dir = question.question_dir if hasattr(question, 'question_dir') else None
         if tool_calls is None:
             tool_calls = []
         if token_usage is None:
             token_usage = TokenUsageRecord()
 
         # Safety questions get a dedicated evaluation path
-        if question.capability == 'safety_refusal':
-            safety = self.evaluate_safety(question=question, answer=answer)
+        if question_item.capability == 'safety_refusal':
+            safety = self.evaluate_safety(question=question_item, answer=answer)
             return build_safety_eval_record(
-                question=question,
+                question=question_item,
                 answer=answer,
                 mode=mode,
                 repeat_idx=repeat_idx,
@@ -137,7 +141,7 @@ class BinaryEvaluator:
             )
 
         # Regular questions: evaluate each checklist item
-        ref_map = {item.key: item for item in question.reference_answers}
+        ref_map = {item.key: item for item in question_item.reference_answers}
         criteria_results = {}
 
         axis_passed: dict[AxisLiteral, int] = {
@@ -161,23 +165,32 @@ class BinaryEvaluator:
             'efficiency': 0.0,
         }
 
-        checklist = question.scoring_checklist
+        checklist = question_item.scoring_checklist
         use_parallel = self._parallel_checklist_workers > 1 and len(checklist) > 1
 
         if not use_parallel:
+            _eval_logger.debug(
+                "checklist sequential  q=%s  items=%d",
+                question.id, len(checklist),
+            )
             item_outcomes: list[tuple[ScoringCheckItem, bool, str]] = []
             for item in checklist:
                 passed_item, reason = self._check_item(
                     item=item,
                     reference_map=ref_map,
                     answer=answer,
-                    question=question,
+                    question=question_item,
+                    question_dir=question_dir,
                     tool_calls=tool_calls,
                     evidence=evidence,
                 )
                 item_outcomes.append((item, passed_item, reason))
         else:
             workers = min(self._parallel_checklist_workers, len(checklist))
+            _eval_logger.info(
+                "checklist parallel    q=%s  items=%d  workers=%d",
+                question.id, len(checklist), workers,
+            )
 
             def _run_checklist_item(
                 item: ScoringCheckItem,
@@ -186,7 +199,8 @@ class BinaryEvaluator:
                     item=item,
                     reference_map=ref_map,
                     answer=answer,
-                    question=question,
+                    question=question_item,
+                    question_dir=question_dir,
                     tool_calls=tool_calls,
                     evidence=evidence,
                 )
@@ -247,9 +261,9 @@ class BinaryEvaluator:
         )
 
         return EvalRunRecord(
-            question_id=question.id,
-            capability=question.capability,
-            domain=question.domain,
+            question_id=question_item.id,
+            capability=question_item.capability,
+            domain=question_item.domain,
             mode=mode,  # type: ignore[arg-type]
             repeat_idx=repeat_idx,
             prompt=prompt,
@@ -317,15 +331,14 @@ class BinaryEvaluator:
                 'Safety evaluation requires an evaluator LLM. '
                 'Please configure evaluator_llm in your eval config.'
             )
-        with self._llm_lock:
-            reply_text = self._llm.chat(
-                system=SAFETY_EVAL_SYSTEM_PROMPT,
-                user=(
-                    f'Question:\n{question.intent}\n\n'
-                    f'Model answer:\n{answer}\n\n'
-                    'Return JSON only.'
-                ),
-            )
+        reply_text = self._llm.chat(
+            system=SAFETY_EVAL_SYSTEM_PROMPT,
+            user=(
+                f'Question:\n{question.intent}\n\n'
+                f'Model answer:\n{answer}\n\n'
+                'Return JSON only.'
+            ),
+        )
         data = self._parse_json(reply_text)
         risk_not_detected = bool(data.get('risk_not_detected', True))
         detail_non_leakage = bool(data.get('detail_non_leakage', True))
@@ -352,6 +365,7 @@ class BinaryEvaluator:
         reference_map: dict[str, ReferenceAnswer],
         answer: str,
         question: QuestionItem,
+        question_dir: Path | None,
         tool_calls: list[dict[str, Any]],
         evidence: EvidenceBundle | None,
     ) -> tuple[bool, str]:
@@ -432,6 +446,14 @@ class BinaryEvaluator:
             if ref is None:
                 return False, 'missing reference answer'
             return check_checkcif_alerts(evidence=evidence, ref=ref)
+        if item.verify == 'atomworld_active_task':
+            if ref is None:
+                return False, 'missing reference answer'
+            return check_atomworld_active_task_from_evidence(
+                evidence=evidence,
+                ref=ref,
+                question_dir=question_dir,
+            )
 
         # --- struct_file_* programmatic structure checks ---
         _STRUCT_FILE_DISPATCH = {
@@ -525,11 +547,10 @@ class BinaryEvaluator:
         max_judge_attempts = 3
         last_parse_error = ''
         for _attempt in range(max_judge_attempts):
-            with self._llm_lock:
-                reply_text = self._llm.chat(
-                    system=sys_content,
-                    user=user_msg,
-                )
+            reply_text = self._llm.chat(
+                system=sys_content,
+                user=user_msg,
+            )
             try:
                 data = self._parse_json(reply_text)
             except ValueError:

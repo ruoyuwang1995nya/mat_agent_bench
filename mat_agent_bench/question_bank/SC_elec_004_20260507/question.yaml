@@ -1,0 +1,137 @@
+id: SC_elec_004_20260507
+capability: structure_construction
+domain: catalysis
+intent: Build Ag(001) surface slab and place CO molecule at ontop site for adsorption
+  calculation.
+human_prompt_seed: '构建CO在Ag(001)表面的吸附结构：
+
+  1. 获取Ag FCC体相结构（空间群Fm-3m，a=4.086 Å）；
+
+  2. 切出(001)表面slab：4个原子层（即沿z方向4个不等价原子平面，3×3扩胞共36个Ag原子），真空层15 Å；
+
+  3. 在slab顶层ontop位点放置CO分子（C端朝下，初始距离~2.0 Å）；
+
+  4. 输出三个结构文件：bare_slab.vasp, CO_molecule.vasp, adsorbed_system.vasp。
+
+  '
+tags:
+- struct_surface
+data_files: []
+reference_answers:
+- key: bare_slab_file
+  value: bare_slab.vasp
+- key: molecule_file
+  value: CO_molecule.vasp
+- key: adsorbed_system_file
+  value: adsorbed_system.vasp
+- key: slab_layers
+  value:
+    filename: bare_slab.vasp
+    expected: 4
+    tolerance: 0
+    axis: z
+    element: Ag
+    layer_tol_A: 0.5
+- key: slab_ag_count
+  value:
+    filename: bare_slab.vasp
+    element: Ag
+    expected: 36
+    tolerance: 0
+- key: co_c_count
+  value:
+    filename: CO_molecule.vasp
+    element: C
+    expected: 1
+    tolerance: 0
+- key: co_o_count
+  value:
+    filename: CO_molecule.vasp
+    element: O
+    expected: 1
+    tolerance: 0
+- key: required_fields
+  value:
+  - bare_slab_file
+  - molecule_file
+  - adsorbed_system_file
+  - slab_layers
+  - vacuum_thickness
+  - adsorption_site
+- key: turn_budget
+  value:
+    max: 10
+- key: duration_budget
+  value:
+    max: 3600000
+- key: token_budget_total
+  value:
+    max: 8000
+scoring_checklist:
+- id: bare_slab_file
+  criterion: Agent writes `bare_slab.vasp` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: molecule_file
+  criterion: Agent writes `CO_molecule.vasp` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: adsorbed_system_file
+  criterion: Agent writes `adsorbed_system.vasp` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: slab_layers
+  criterion: The file `bare_slab.vasp` has exactly 4 Ag atomic layers along z.
+  axis: correctness
+  verify: struct_file_layer_count
+- id: slab_ag_count
+  criterion: The file `bare_slab.vasp` contains exactly 36 Ag atoms for the 3x3 four-layer
+    slab.
+  axis: correctness
+  verify: struct_file_atom_count
+- id: co_c_count
+  criterion: The file `CO_molecule.vasp` contains exactly one C atom.
+  axis: correctness
+  verify: struct_file_atom_count
+- id: co_o_count
+  criterion: The file `CO_molecule.vasp` contains exactly one O atom.
+  axis: correctness
+  verify: struct_file_atom_count
+- id: required_fields
+  criterion: Output includes three structure files, layer count, vacuum thickness,
+    and adsorption site description.
+  axis: correctness
+  verify: llm_binary_judge
+- id: structure_validity
+  criterion: Slab has 4 atomic layers (4 z-distinct planes, 36 Ag atoms), vacuum ≥
+    15 Å, CO is placed at ontop site with C-down orientation.
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: Ag bulk structure uses correct FCC lattice constant; slab is built with
+    proper crystallographic orientation and parameters; CO placement uses physically
+    motivated coordinates, tied to named deliverables. Judge solely from the final
+    answer; do not fail because the tool-call log omits MCP, web_search, or any specific
+    tool.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: No repeated identical slab construction calls.
+  axis: efficiency
+  verify: no_retries
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: efficiency_judge
+  criterion: Adsorption structure built in direct workflow without unnecessary rebuilds.
+  axis: efficiency
+  verify: llm_binary_judge
+- id: duration_budget
+  criterion: Wall-clock run duration does not exceed benchmark ceiling.
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling.
+  axis: efficiency
+  verify: token_budget

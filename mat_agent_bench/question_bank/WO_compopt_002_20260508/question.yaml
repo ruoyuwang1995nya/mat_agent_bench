@@ -1,0 +1,102 @@
+id: WO_compopt_002_20260508
+capability: workflow_orchestration
+domain: alloy
+intent: Start from user-provided seed compositions and optimize towards a target yield
+  strength while maintaining a ductility constraint.
+human_prompt_seed: 'I have 3 initial CrCoNiFe alloy compositions in `data/WO_compopt_002_20260508/seeds.json`
+  that I want to use as starting points for optimization. The goal is to maximize
+  yield strength while keeping ductility above 0.15. Please run the optimization starting
+  from these seeds and output the ranked results to `optimized.csv` with columns:
+  rank, Cr, Co, Ni, Fe, predicted_yield_strength_MPa, predicted_ductility.'
+tags: []
+data_files:
+- key: seeds
+  path: seeds.json
+  oss_url: ''
+reference_answers:
+- key: optimized_csv
+  value: optimized.csv
+- key: csv_has_elements
+  value:
+    filename: optimized.csv
+    must_cover:
+    - Cr
+    - Co
+    - Ni
+    - Fe
+    - yield_strength
+    - ductility
+- key: csv_has_properties
+  value:
+    filename: optimized.csv
+    pattern: yield_strength
+- key: turn_budget
+  value:
+    max: 18
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 12000
+- key: ductility_min
+  value:
+    filename: optimized.csv
+    checks:
+    - key: ductility
+      min: 0.15
+scoring_checklist:
+- id: optimized_csv
+  criterion: Agent writes `optimized.csv` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: csv_has_elements
+  criterion: The optimized.csv file contains all four element names (Cr, Co, Ni, Fe)
+    as column headers or within data rows.
+  axis: correctness
+  verify: text_file_contains_all
+  params:
+    path: optimized.csv
+    substrings:
+    - Cr
+    - Co
+    - Ni
+    - Fe
+- id: csv_has_properties
+  criterion: The optimized.csv file contains yield strength and ductility columns.
+  axis: correctness
+  verify: text_file_regex
+  params:
+    path: optimized.csv
+    pattern: yield_strength
+- id: seeds_referenced
+  criterion: Agent reads or references the provided seed compositions from the input
+    JSON file as starting points for optimization.
+  axis: correctness
+  verify: llm_binary_judge
+- id: ductility_min
+  criterion: All candidate compositions in optimized.csv have predicted ductility
+    values above 0.15 threshold.
+  axis: correctness
+  verify: text_file_numeric_range
+- id: grounding_source
+  criterion: Results are grounded in optimization outputs and do not fabricate property
+    values without tool evidence.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: No repeated identical tool calls with the same parameter set.
+  axis: efficiency
+  verify: no_retries
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) does not exceed benchmark ceiling.
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling.
+  axis: efficiency
+  verify: token_budget

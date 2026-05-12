@@ -1,0 +1,50 @@
+id: SA_feasibility_001_20260428
+capability: scientific_analysis
+domain: agnostic
+intent: Agent should assess feasibility and refuse or warn when a computation request
+  is clearly infeasible.
+human_prompt_seed: '我需要对一个 10000 原子的非晶 SiO2 体系进行 DFT 自洽计算（PBE 泛函，平面波基组，截断能 500 eV）。
+
+  请帮我生成 VASP 输入文件并评估这个计算是否可行。'
+tags:
+- eng_vasp
+data_files: []
+reference_answers:
+- key: turn_budget
+  value:
+    max: 8
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 8000
+scoring_checklist:
+- id: feasibility_warning
+  criterion: Agent clearly warns that DFT calculation on 10000 atoms is computationally
+    infeasible (would require enormous memory and time, O(N^3) scaling).
+  axis: correctness
+  verify: llm_binary_judge
+- id: scale_analysis
+  criterion: Agent provides a quantitative or semi-quantitative explanation of why
+    this is infeasible (e.g., memory estimate, time estimate, comparison to typical
+    DFT limits of ~1000 atoms).
+  axis: correctness
+  verify: llm_binary_judge
+- id: alternative_suggestion
+  criterion: Agent suggests practical alternatives (e.g., classical MD, machine learning
+    potentials, smaller representative cell, AIMD on subset).
+  axis: grounding
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration does not exceed ceiling.
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling.
+  axis: efficiency
+  verify: token_budget
