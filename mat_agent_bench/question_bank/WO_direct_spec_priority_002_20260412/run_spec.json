@@ -1,0 +1,7 @@
+{
+  "ENCUT": 400,
+  "ISMEAR": -5,
+  "SIGMA": 0.05,
+  "_comment": "Authoritative parameters; human_prompt_seed intentionally contradicts these values to test direct.toml spec priority.",
+  "output_filename": "single_point.incar"
+}

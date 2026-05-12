@@ -1,0 +1,121 @@
+id: WO_gromacs_solvate_001_20260507
+capability: workflow_orchestration
+domain: agnostic
+intent: Build a solvated, ion-neutralized GROMACS system from a PDB file and run energy
+  minimization, all in a single Bohrium submission.
+human_prompt_seed: '提供了一个丙氨酸二肽 (ACE-ALA-NME) 的 PDB 文件 `ala_dipeptide.pdb`。
+
+  请完成以下完整 GROMACS 建模 + 模拟流程： 1) 使用 OPLS-AA 力场对该 PDB 生成拓扑（pdb2gmx） 2) 设置立方盒子，溶质到盒子边界至少
+  1.0 nm（editconf） 3) 用 SPC/E 水溶剂化（solvate） 4) 添加 Na+/Cl- 离子中和体系电荷（genion） 5) 执行能量最小化（steep,
+  emtol=1000, nsteps=50000）
+
+  在最终回答中报告：EM 收敛步数、最终势能 (kJ/mol)、体系中水分子数量。'
+tags:
+- eng_gromacs
+data_files:
+- key: ala_dipeptide_pdb
+  path: ala_dipeptide.pdb
+  description: Alanine dipeptide (ACE-ALA-NME) PDB structure
+reference_answers:
+- key: em_output
+  value: em.gro
+- key: single_submission
+  value:
+    filename: run.sh
+    tokens:
+    - gmx_mpi pdb2gmx
+    - gmx_mpi solvate
+    - genion
+    - gmx_mpi mdrun
+    case_sensitive: false
+- key: gmx_mpi_used
+  value:
+    filename: run.sh
+    tokens:
+    - gmx_mpi
+    case_sensitive: true
+- key: maxwarn_used
+  value:
+    filename: run.sh
+    tokens:
+    - -maxwarn
+- key: set_e_in_script
+  value:
+    filename: run.sh
+    tokens:
+    - set -e
+- key: genion_pipe
+  value:
+    filename: run.sh
+    pattern: echo.*\|.*gmx_mpi\s+genion|printf.*\|.*gmx_mpi\s+genion
+    flags: i
+- key: turn_budget
+  value:
+    max: 15
+- key: duration_budget
+  value:
+    max: 3600000
+- key: token_budget_total
+  value:
+    max: 25000
+scoring_checklist:
+- id: single_submission
+  criterion: All steps (pdb2gmx, solvate, genion, mdrun) are chained in a single run.sh
+    script submitted once to Bohrium.
+  axis: correctness
+  verify: text_file_contains_all
+- id: gmx_mpi_used
+  criterion: The run.sh script uses `gmx_mpi` for GROMACS commands.
+  axis: correctness
+  verify: text_file_contains_all
+- id: no_local_gmx
+  criterion: Agent does NOT attempt to run any gmx/gmx_mpi command locally (outside
+    of the Bohrium submission).
+  axis: correctness
+  verify: llm_binary_judge
+- id: genion_pipe
+  criterion: The genion command uses echo/pipe (e.g. `echo "SOL" | gmx_mpi genion
+    ...`) to provide interactive group selection.
+  axis: correctness
+  verify: text_file_regex
+- id: maxwarn_used
+  criterion: grompp invocations include `-maxwarn` flag.
+  axis: correctness
+  verify: text_file_contains_all
+- id: topology_before_solvate
+  criterion: The topology file exists (via pdb2gmx) before `solvate -p` is called.
+  axis: correctness
+  verify: llm_binary_judge
+- id: genion_has_tpr
+  criterion: A grompp step produces a .tpr before genion is called (genion requires
+    a .tpr input).
+  axis: correctness
+  verify: llm_binary_judge
+- id: set_e_in_script
+  criterion: The run.sh script includes `set -e` so that it aborts on first error.
+  axis: correctness
+  verify: text_file_contains_all
+- id: em_convergence
+  criterion: Final answer reports EM convergence (step count and potential energy).
+  axis: correctness
+  verify: llm_binary_judge
+- id: water_count
+  criterion: Final answer reports the number of water molecules in the solvated system.
+  axis: correctness
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: No repeated identical Bohrium submissions.
+  axis: efficiency
+  verify: no_retries
+- id: turn_budget
+  criterion: Agent completes within turn budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock duration within budget.
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage within budget.
+  axis: efficiency
+  verify: token_budget

@@ -1,0 +1,45 @@
+{
+  "description": "Diagnose why SCF did not converge given INCAR, POSCAR summary, and OUTCAR excerpt.",
+  "diagnosis_hint": "Energy oscillates with ~0.25 eV amplitude. Fe2O3 is a strongly correlated AFM insulator; without spin polarization, the non-magnetic metallic state is an incorrect saddle point. Fix: ISPIN=2 with proper MAGMOM for AFM ordering.",
+  "energy_oscillation_amplitude_eV": 0.25,
+  "incar": {
+    "ALGO": "Normal",
+    "EDIFF": 1e-06,
+    "ENCUT": 520,
+    "ISMEAR": 0,
+    "ISPIN": 1,
+    "LREAL": "Auto",
+    "NELM": 60,
+    "PREC": "Accurate",
+    "SIGMA": 0.05,
+    "SYSTEM": "Fe2O3_hematite"
+  },
+  "incar_bug": "Fe2O3 is antiferromagnetic. ISPIN=1 ignores spin polarization entirely, causing SCF to oscillate because the non-magnetic solution is far from the true ground state.",
+  "outcar_excerpt": [
+    "DAV:   1    -0.12365832E+03   -0.12366E+03   -0.43522E+03   960   0.491E+02",
+    "DAV:   2    -0.85920341E+02    0.37738E+02   -0.17833E+02  1080   0.115E+02",
+    "DAV:   3    -0.88453217E+02   -0.25329E+01   -0.25230E+01  1200   0.412E+01",
+    "DAV:  56    -0.87802341E+02    0.32145E+00   -0.00823E+00  1080   0.142E+01",
+    "DAV:  57    -0.87645120E+02   -0.15722E+00   -0.00712E+00  1200   0.138E+01",
+    "DAV:  58    -0.87891230E+02    0.24611E+00   -0.00695E+00  1080   0.141E+01",
+    "DAV:  59    -0.87723442E+02   -0.16779E+00   -0.00683E+00  1200   0.139E+01",
+    "DAV:  60    -0.87856791E+02    0.13335E+00   -0.00671E+00  1080   0.140E+01",
+    "WARNING: ZBRENT: fatal error in bracketing"
+  ],
+  "poscar_summary": {
+    "counts": [
+      12,
+      18
+    ],
+    "lattice_a": 5.038,
+    "lattice_c": 13.772,
+    "species": [
+      "Fe",
+      "O"
+    ],
+    "system": "Fe2O3 hematite R-3c",
+    "total_atoms": 30
+  },
+  "root_cause": "spin_not_enabled",
+  "task": "scf_divergence_diagnosis"
+}

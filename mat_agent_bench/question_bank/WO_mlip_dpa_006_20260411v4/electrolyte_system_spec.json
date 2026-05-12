@@ -1,0 +1,37 @@
+{
+  "note": "This task focuses on box modeling artifacts. MD execution and post-processing are out of scope.",
+  "ratio_hint": {
+    "explanation": "At 1 mol/L, n(H2O):n(salt) is approximately 55.5:1.",
+    "water_to_salt_formula_units": 55.5
+  },
+  "required_outputs": [
+    "composition_plan.json",
+    "znso4_1m_box.xyz",
+    "zncl2_1m_box.xyz",
+    "znclo4_1m_box.xyz",
+    "build_workflow.md"
+  ],
+  "systems": {
+    "Zn(ClO4)2": {
+      "formula_atoms_per_unit": 11,
+      "recommended_n_formula_units": 11,
+      "recommended_n_water": 611,
+      "recommended_total_atoms": 1954
+    },
+    "ZnCl2": {
+      "formula_atoms_per_unit": 3,
+      "recommended_n_formula_units": 12,
+      "recommended_n_water": 666,
+      "recommended_total_atoms": 2034
+    },
+    "ZnSO4": {
+      "formula_atoms_per_unit": 6,
+      "recommended_n_formula_units": 12,
+      "recommended_n_water": 666,
+      "recommended_total_atoms": 2070
+    }
+  },
+  "target_concentration_mol_L": 1.0,
+  "task_name": "Zn-salt aqueous electrolyte box modeling",
+  "total_atoms_target_note": "Keep each system near 2000 atoms (acceptable window: 1900-2100)."
+}

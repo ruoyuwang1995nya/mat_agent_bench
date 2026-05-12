@@ -1,0 +1,122 @@
+id: IG_incar_012_20260507
+capability: input_generation
+domain: agnostic
+intent: 'Generate VASP INCAR for NEB transition state search with HSE06 of Prussian
+  blue analogue C24Fe8N24Na4. Fe magnetic, NUPDOWN=20.
+
+  '
+human_prompt_seed: 为普鲁士蓝类似物 C24Fe8N24Na4 生成一个 NEB(nudged elastic band)+HSE06 过渡态搜索的
+  VASP INCAR。Fe 含磁性，需要固定总磁矩。将完整的 INCAR 写入当前目录下的 `INCAR` 文件。
+tags:
+- eng_vasp
+reference_answers:
+- key: incar_artifact
+  value: INCAR
+- key: incar_critical_tokens
+  value:
+    filename: INCAR
+    tokens:
+    - HFSCREEN
+    - IBRION
+    - ISPIN
+    - LHFCALC
+    - NSW
+    flags: i
+- key: critical_HFSCREEN
+  value:
+    filename: INCAR
+    pattern: ^\s*HFSCREEN\s*=\s*\S+
+    flags: im
+- key: critical_IBRION
+  value:
+    filename: INCAR
+    pattern: ^\s*IBRION\s*=\s*3\b
+    flags: im
+- key: critical_ISPIN
+  value:
+    filename: INCAR
+    pattern: ^\s*ISPIN\s*=\s*2\b
+    flags: im
+- key: critical_LHFCALC
+  value:
+    filename: INCAR
+    pattern: ^\s*LHFCALC\s*=\s*\.?(?:TRUE|T)\.?
+    flags: im
+- key: critical_NSW
+  value:
+    filename: INCAR
+    pattern: ^\s*NSW\s*=
+    flags: im
+- key: turn_budget
+  value:
+    max: 8
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 15000
+- key: reasonable_params
+  value:
+    filename: INCAR
+scoring_checklist:
+- id: incar_artifact
+  criterion: INCAR file is generated.
+  axis: correctness
+  verify: artifact_exists
+- id: incar_critical_tokens
+  criterion: INCAR contains all critical parameter keywords.
+  axis: correctness
+  verify: text_file_contains_all
+- id: critical_HFSCREEN
+  criterion: INCAR sets HFSCREEN = 0.2 (critical param).
+  axis: correctness
+  verify: text_file_regex
+- id: critical_IBRION
+  criterion: INCAR sets IBRION = 3 (critical param).
+  axis: correctness
+  verify: text_file_regex
+- id: critical_ISPIN
+  criterion: INCAR sets ISPIN = 2 (critical param).
+  axis: correctness
+  verify: text_file_regex
+- id: critical_LHFCALC
+  criterion: INCAR sets LHFCALC = .TRUE. (critical param).
+  axis: correctness
+  verify: text_file_regex
+- id: critical_NSW
+  criterion: INCAR contains NSW assignment (critical param).
+  axis: correctness
+  verify: text_file_regex
+- id: reasonable_params
+  criterion: The INCAR uses physically reasonable general settings for a VASP hybrid
+    DFT (HSE06) calculation. ENCUT is present (unless not relevant), EDIFF is present
+    with a reasonable value, PREC is set. Machine-specific params (KPAR, NCORE, NPAR)
+    are optional and should not be penalized if absent or different from reference.
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: The generated INCAR is grounded in the user-facing prompt data (material
+    system, calculation type, critical parameters) rather than hallucinated. For the
+    fixed-total-moment requirement, do not require a specific NUPDOWN value unless
+    that numeric value is explicitly stated in the user-facing prompt; judge whether
+    the INCAR attempts a fixed total magnetic moment consistently with the prompt.
+  axis: grounding
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: efficiency_judge
+  criterion: The agent produced the INCAR efficiently without unnecessary tool calls,
+    redundant queries, or irrelevant exploration.
+  axis: efficiency
+  verify: llm_binary_judge
+- id: duration_budget
+  criterion: Wall-clock run duration does not exceed benchmark ceiling.
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling.
+  axis: efficiency
+  verify: token_budget

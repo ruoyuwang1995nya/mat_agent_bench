@@ -1,0 +1,87 @@
+id: WO_general_ferro_009_20260411v1
+capability: scientific_analysis
+domain: semiconductor
+intent: Explain principle, applications, and limitations of the double-wave method
+  in Sawyer-Tower ferroelectric measurements.
+human_prompt_seed: '请围绕 Sawyer-Tower 铁电测试中的 double-wave method，给出结构化说明。
+
+  请输出： 1) `double_wave_sawyer_tower_notes.md`：包含原理、典型应用、局限性与误差来源； 2) `double_wave_keypoints.json`：至少包含
+  `principle`, `applications`, `limitations`, `best_practices`。
+
+  最终回答请用简短段落总结：该方法最适合与最不适合的使用场景。'
+tags:
+- meta_userlog
+- phy_eos
+data_files: []
+reference_answers:
+- key: notes_md
+  value: double_wave_sawyer_tower_notes.md
+- key: keypoints_json
+  value: double_wave_keypoints.json
+- key: notes_tokens
+  value:
+    filename: double_wave_sawyer_tower_notes.md
+    tokens:
+    - 原理
+    - 应用
+    - 局限性
+    - 误差
+    - Sawyer-Tower
+    flags: i
+- key: json_tokens
+  value:
+    filename: double_wave_keypoints.json
+    tokens:
+    - principle
+    - applications
+    - limitations
+    - best_practices
+    flags: i
+- key: turn_budget
+  value:
+    max: 8
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 7000
+scoring_checklist:
+- id: notes_md
+  criterion: Agent writes `double_wave_sawyer_tower_notes.md` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: keypoints_json
+  criterion: Agent writes `double_wave_keypoints.json` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: notes_tokens
+  criterion: Notes cover principle, applications, limitations, and error sources.
+  axis: correctness
+  verify: text_file_contains_all
+- id: json_tokens
+  criterion: Keypoint JSON includes all required structured fields.
+  axis: correctness
+  verify: text_file_contains_all
+- id: grounding_source
+  criterion: Deliverables are grounded in methodological references and avoid unsupported
+    claims.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: No repeated identical tool calls with the same parameter set.
+  axis: efficiency
+  verify: no_retries
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
+    a generous benchmark ceiling (tunable per deployment).
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
+  axis: efficiency
+  verify: token_budget

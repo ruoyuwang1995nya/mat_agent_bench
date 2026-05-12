@@ -1,0 +1,84 @@
+{
+  "expected_deliverables": [
+    "permeability_table",
+    "selectivity_table",
+    "tradeoff_discussion",
+    "free_volume_note",
+    "recommendation"
+  ],
+  "formula": {
+    "permeability": "solubility_CO2 * diffusivity_CO2",
+    "selectivity": "permeability_CO2 / permeability_N2"
+  },
+  "gas_pair": "CO2/N2",
+  "notes": [
+    "PIM-1 maximizes throughput but not selectivity.",
+    "6FDA-DAM is intended to be the best balanced membrane in this curated bundle."
+  ],
+  "systems": [
+    {
+      "name": "PIM-1",
+      "ranking": {
+        "balance_score": 0.71,
+        "throughput_score": 0.97
+      },
+      "structure": {
+        "chain_rigidity_index": 0.72,
+        "fractional_free_volume": 0.25,
+        "polarity_index": 0.46
+      },
+      "transport": {
+        "diffusivity_CO2": 120.0,
+        "permeability_CO2_Barrer": 5400.0,
+        "permeability_N2_Barrer": 300.0,
+        "selectivity_CO2_N2": 18.0,
+        "solubility_CO2": 45.0
+      }
+    },
+    {
+      "name": "Matrimid",
+      "ranking": {
+        "balance_score": 0.63,
+        "throughput_score": 0.22
+      },
+      "structure": {
+        "chain_rigidity_index": 0.81,
+        "fractional_free_volume": 0.12,
+        "polarity_index": 0.61
+      },
+      "transport": {
+        "diffusivity_CO2": 15.0,
+        "permeability_CO2_Barrer": 450.0,
+        "permeability_N2_Barrer": 14.1,
+        "selectivity_CO2_N2": 31.9,
+        "solubility_CO2": 30.0
+      }
+    },
+    {
+      "name": "6FDA-DAM",
+      "ranking": {
+        "balance_score": 0.86,
+        "throughput_score": 0.54
+      },
+      "structure": {
+        "chain_rigidity_index": 0.79,
+        "fractional_free_volume": 0.18,
+        "polarity_index": 0.57
+      },
+      "transport": {
+        "diffusivity_CO2": 40.0,
+        "permeability_CO2_Barrer": 1400.0,
+        "permeability_N2_Barrer": 50.0,
+        "selectivity_CO2_N2": 28.0,
+        "solubility_CO2": 35.0
+      }
+    }
+  ],
+  "task": "polymer_membrane_screening",
+  "title": "CO2/N2 gas-separation membrane comparison",
+  "units": {
+    "diffusivity": "same_consistent_units",
+    "permeability": "Barrer",
+    "solubility": "arbitrary_consistent_units"
+  }
+}

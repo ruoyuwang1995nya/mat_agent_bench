@@ -1,0 +1,65 @@
+{
+  "expected_deliverables": [
+    "adhesion_table",
+    "orientation_discussion",
+    "surface_chemistry_mechanism",
+    "recommendation",
+    "scaleup_risk"
+  ],
+  "notes": [
+    "Carboxyl-rich GO shows the strongest adhesion in this curated bundle.",
+    "Lower peel_risk_index means better interface robustness."
+  ],
+  "systems": [
+    {
+      "interfacial_metrics": {
+        "adhesion_work_J_m2": 0.69,
+        "peel_risk_index": 0.34
+      },
+      "md": {
+        "contact_area_nm2": 5.6,
+        "orientation_order_parameter": 0.63,
+        "residence_time_ns": 7.9
+      },
+      "qm": {
+        "adsorption_energy_eV": -1.21,
+        "charge_transfer_e": 0.14
+      },
+      "surface": "GO-OH-rich"
+    },
+    {
+      "interfacial_metrics": {
+        "adhesion_work_J_m2": 0.51,
+        "peel_risk_index": 0.47
+      },
+      "md": {
+        "contact_area_nm2": 4.8,
+        "orientation_order_parameter": 0.49,
+        "residence_time_ns": 5.2
+      },
+      "qm": {
+        "adsorption_energy_eV": -0.93,
+        "charge_transfer_e": 0.09
+      },
+      "surface": "GO-epoxy-rich"
+    },
+    {
+      "interfacial_metrics": {
+        "adhesion_work_J_m2": 0.81,
+        "peel_risk_index": 0.26
+      },
+      "md": {
+        "contact_area_nm2": 6.2,
+        "orientation_order_parameter": 0.71,
+        "residence_time_ns": 9.4
+      },
+      "qm": {
+        "adsorption_energy_eV": -1.48,
+        "charge_transfer_e": 0.18
+      },
+      "surface": "GO-COOH-rich"
+    }
+  ],
+  "task": "polymer_interface_adhesion",
+  "title": "Polyimide adhesion on graphene-oxide surfaces with different oxygen functionalities"
+}

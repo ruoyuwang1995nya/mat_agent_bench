@@ -1,0 +1,110 @@
+id: CR_SC_ZnS001_20260508
+capability: structure_construction
+domain: catalysis
+intent: Build ZnS(001) polar surface slab with 3 layers and 2x2x1 supercell per doc
+  3.1.2.
+human_prompt_seed: 'ZnS 化合物 (001) 切面 slab：3 层厚度、2×2×1 扩胞，真空 ≥15 Å。若为极性表面，说明是否采用对称
+  slab 或偶极修正策略。输出 slab 结构文件为 `ZnS_001_slab.cif`，并简述终止面/化学计量处理。
+
+  '
+tags:
+- struct_surface
+data_files: []
+reference_answers:
+- key: file_exists
+  value: ZnS_001_slab.cif
+- key: slab_layer_count
+  value:
+    filename: ZnS_001_slab.cif
+    expected: 7
+    tolerance: 2
+    axis: z
+    layer_tol_A: 0.5
+- key: zn_s_ratio
+  value:
+    filename: ZnS_001_slab.cif
+    element_a: Zn
+    element_b: S
+    expected_ratio: 1.0
+    tolerance: 0.01
+- key: slab_atom_count
+  value:
+    filename: ZnS_001_slab.cif
+    expected: 24
+    tolerance: 0
+- key: turn_budget
+  value:
+    max: 22
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 24000
+scoring_checklist:
+- id: file_exists
+  criterion: The output file `ZnS_001_slab.cif` exists in the workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: slab_layer_count
+  criterion: The number of distinct atomic z-planes in ZnS_001_slab.cif is approximately
+    5-9 (expected 7 ± 2), consistent with 3 Zn-S bilayers of zinc-blende (001). Atoms
+    within 0.5 Å along z are merged into one plane.
+  axis: correctness
+  verify: struct_file_layer_count
+- id: zn_s_ratio
+  criterion: The output slab preserves Zn:S = 1:1 stoichiometry.
+  axis: correctness
+  verify: struct_file_stoichiometry_ratio
+- id: slab_atom_count
+  criterion: The 3-bilayer 2x2x1 ZnS(001) slab contains exactly 24 atoms.
+  axis: correctness
+  verify: struct_file_atom_count
+- id: supercell_vacuum_ok
+  criterion: 交付的 ZnS(001) slab 采用 2×2×1 扩胞，真空层 ≥15 Å；若只在答案中声明，必须与 `ZnS_001_slab.cif`
+    的晶胞尺寸和层厚说明一致。
+  axis: correctness
+  verify: llm_binary_judge
+  weight: 1.0
+- id: polar_handling
+  criterion: 答案说明了 ZnS(001) 表面的极性问题，并至少提出一种合理的处理策略（如构建对称 slab、施加偶极修正等），所述策略与交付的结构文件一致。
+  axis: grounding
+  verify: llm_binary_judge
+- id: tasker_type_identification
+  criterion: The agent identifies ZnS(001) as a Tasker Type-3 polar surface (alternating
+    Zn-only and S-only planes along [001] producing a net dipole moment), or equivalently
+    states that the surface is polar due to its stacking of mono-element charged layers.
+  axis: grounding
+  verify: llm_binary_judge
+- id: polar_surface_remedy
+  criterion: The agent explicitly discusses at least one physically motivated remedy
+    for the Type-3 polarity — such as constructing a symmetric slab with matching
+    top/bottom terminations, applying a dipole correction in the vacuum, or reconstructing/passivating
+    the surface to quench the macroscopic dipole.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: No repeated identical slab construction or surface cut with the same
+    parameters.
+  axis: efficiency
+  verify: no_retries
+- id: efficiency_judge
+  criterion: The ZnS(001) slab construction and polar-surface handling complete without
+    gratuitously repeated identical tool calls. Tool-discovery fallback (e.g. trying
+    an MCP tool that errors, then switching to a script-based approach) is acceptable
+    and should NOT be counted as redundancy.
+  axis: efficiency
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
+    a generous benchmark ceiling.
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within a generous benchmark ceiling.
+  axis: efficiency
+  verify: token_budget

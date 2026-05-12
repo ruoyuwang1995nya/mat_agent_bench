@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mat-bench — MATTER v5</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">MAT-BENCH</div>
+    <div class="nav-links">
+      <a href="/static/index.html" class="active">Home</a>
+      <a href="/static/questions.html">Questions</a>
+      <a href="/static/leaderboard.html">Leaderboard</a>
+      <a href="/static/tokens.html">Agents</a>
+    </div>
+  </nav>
+
+  <main class="hero">
+    <div class="hero-content">
+      <h1 class="hero-title">MATTER v5</h1>
+      <p class="hero-subtitle">Materials Agent Benchmark</p>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-questions"><div class="spinner"></div></div>
+          <div class="stat-label">Questions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-runs"><div class="spinner"></div></div>
+          <div class="stat-label">Evaluation Runs</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-models"><div class="spinner"></div></div>
+          <div class="stat-label">Models Evaluated</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <section class="nav-cards">
+    <a href="/static/questions.html" class="nav-card">
+      <div class="nav-card-icon">⬡</div>
+      <h2>Question Bank</h2>
+      <p>Browse, search, filter, and upload evaluation questions to the benchmark.</p>
+      <span class="nav-card-cta">Manage Questions →</span>
+    </a>
+    <a href="/static/leaderboard.html" class="nav-card">
+      <div class="nav-card-icon">◈</div>
+      <h2>Leaderboard</h2>
+      <p>View model performance rankings with breakdowns by capability and domain.</p>
+      <span class="nav-card-cta">View Rankings →</span>
+    </a>
+  </section>
+
+  <script>
+    async function loadStats() {
+      try {
+        const [qRes, lbRes] = await Promise.all([
+          fetch('/api/questions'),
+          fetch('/api/leaderboard'),
+        ]);
+        if (qRes.ok) {
+          const qs = await qRes.json();
+          document.getElementById('stat-questions').textContent = qs.length;
+        } else {
+          document.getElementById('stat-questions').textContent = '—';
+        }
+        if (lbRes.ok) {
+          const lb = await lbRes.json();
+          document.getElementById('stat-runs').textContent = lb.total_evaluations ?? 0;
+          document.getElementById('stat-models').textContent = lb.leaderboard?.length ?? 0;
+        } else {
+          document.getElementById('stat-runs').textContent = '—';
+          document.getElementById('stat-models').textContent = '—';
+        }
+      } catch {
+        ['stat-questions', 'stat-runs', 'stat-models'].forEach(id => {
+          document.getElementById(id).textContent = '—';
+        });
+      }
+    }
+    loadStats();
+  </script>
+</body>
+</html>

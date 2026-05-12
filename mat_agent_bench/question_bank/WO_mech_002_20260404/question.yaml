@@ -1,0 +1,75 @@
+id: WO_mech_002_20260404
+capability: workflow_orchestration
+domain: agnostic
+intent: 'Estimate detonation parameters for RDX: independently construct molecule,
+  compute properties, apply Kamlet-Jacobs equations.'
+human_prompt_seed: '估算 RDX (C3H6N6O6) 的爆速和爆压： 自行构造 RDX 分子结构（可用 SMILES 或手动构建）， 查找或计算密度
+  (1.806 g/cm3) 和生成焓 (+70 kJ/mol)， 使用 Kamlet-Jacobs 经验公式计算爆速 D (m/s) 和爆压 P (GPa)。
+  输出完整的计算过程和单位换算。
+
+  '
+tags:
+- struct_build
+data_files: []
+reference_answers:
+- key: detonation_velocity_m_s
+  value: 8750.0
+  tolerance: 400.0
+- key: detonation_pressure_GPa
+  value: 34.0
+  tolerance: 4.0
+- key: required_fields
+  value:
+  - equation
+  - unit_consistency
+  - velocity
+  - pressure
+- key: turn_budget
+  value:
+    max: 18
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 8000
+scoring_checklist:
+- id: detonation_velocity_m_s
+  criterion: Detonation velocity is in tolerance.
+  axis: correctness
+  verify: numerical_range
+- id: detonation_pressure_GPa
+  criterion: Detonation pressure is in tolerance.
+  axis: correctness
+  verify: numerical_range
+- id: required_fields
+  criterion: Report includes Kamlet-Jacobs equation, unit consistency check, velocity
+    and pressure values.
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: Detonation parameters are computed by explicitly applying Kamlet-Jacobs
+    equations with the given density and heat of formation; formula inputs are stated.
+    Judge solely from the final answer; do not fail because the tool-call log omits
+    MCP, web_search, or any specific tool.
+  axis: grounding
+  verify: llm_binary_judge
+- id: efficiency_judge
+  criterion: Kamlet-Jacobs calculation is performed in a single computation step without
+    unnecessary tool exploration.
+  axis: efficiency
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
+    a generous benchmark ceiling (tunable per deployment).
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+    (tunable per task after calibration).
+  axis: efficiency
+  verify: token_budget
