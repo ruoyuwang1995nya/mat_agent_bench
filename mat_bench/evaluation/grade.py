@@ -65,11 +65,13 @@ def grade_question(
     model_name: str | None = None,
     token_usage: TokenUsageRecord | None = None,
     duration_ms: int = 0,
+    parallel_checklist_workers: int = 1,
 ) -> QuestionReport:
     """Grade a single question and return a QuestionReport."""
     evaluator = BinaryEvaluator(
         llm_cfg=llm_cfg,
         axis_weights=axis_weights,
+        parallel_checklist_workers=parallel_checklist_workers,
     )
     record = evaluator.evaluate(
         question=question.item,

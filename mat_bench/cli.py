@@ -175,6 +175,13 @@ def _add_serve_parser(subparsers: argparse._SubParsersAction) -> None:
         help='Number of parallel grading threads (default: 4).',
     )
     p.add_argument(
+        '--parallel-checklist-workers',
+        type=int,
+        default=1,
+        metavar='N',
+        help='Parallel LLM judge calls per question checklist (default: 1).',
+    )
+    p.add_argument(
         '--store-dir',
         type=str,
         default=None,
@@ -261,6 +268,7 @@ def _cmd_serve(args: argparse.Namespace) -> None:
         llm_cfg=llm_cfg,
         grading_workers=args.grading_workers,
         store_dir=store_dir,
+        parallel_checklist_workers=args.parallel_checklist_workers,
     )
     log_file = str(output_dir / "server.log")
     log_config = {
@@ -312,6 +320,11 @@ def _cmd_serve(args: argparse.Namespace) -> None:
             "uvicorn.access": {
                 "handlers": ["access", "file"],
                 "level": "DEBUG",
+                "propagate": False,
+            },
+            "mat_bench": {
+                "handlers": ["default", "file"],
+                "level": "INFO",
                 "propagate": False,
             },
         },
@@ -455,6 +468,13 @@ def _add_serve_all_parser(subparsers: argparse._SubParsersAction) -> None:
         help='Number of parallel grading threads (default: 4).',
     )
     p.add_argument(
+        '--parallel-checklist-workers',
+        type=int,
+        default=1,
+        metavar='N',
+        help='Parallel LLM judge calls per question checklist (default: 1).',
+    )
+    p.add_argument(
         '--log-level',
         type=str,
         default='info',
@@ -510,13 +530,49 @@ def _cmd_serve_all(args: argparse.Namespace) -> None:
         llm_cfg=llm_cfg,
         grading_workers=args.grading_workers,
         output_dir=output_dir,
+        parallel_checklist_workers=args.parallel_checklist_workers,
     )
 
     print(f'Starting mat-bench (combined) at http://{args.host}:{args.port}', file=sys.stderr)
     print(f'  UI:      http://{args.host}:{args.port}/', file=sys.stderr)
     print(f'  API:     http://{args.host}:{args.port}/bench', file=sys.stderr)
     print(f'  API docs: http://{args.host}:{args.port}/bench/docs', file=sys.stderr)
-    uvicorn.run(app, host=args.host, port=args.port, log_level=args.log_level)
+    log_config = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "default": {
+                "()": "uvicorn.logging.DefaultFormatter",
+                "fmt": "%(asctime)s %(levelprefix)s %(message)s",
+                "datefmt": "%Y-%m-%d %H:%M:%S",
+                "use_colors": None,
+            },
+            "access": {
+                "()": "uvicorn.logging.AccessFormatter",
+                "fmt": '%(asctime)s %(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s',
+                "datefmt": "%Y-%m-%d %H:%M:%S",
+            },
+        },
+        "handlers": {
+            "default": {
+                "formatter": "default",
+                "class": "logging.StreamHandler",
+                "stream": "ext://sys.stderr",
+            },
+            "access": {
+                "formatter": "access",
+                "class": "logging.StreamHandler",
+                "stream": "ext://sys.stdout",
+            },
+        },
+        "loggers": {
+            "uvicorn": {"handlers": ["default"], "level": args.log_level.upper(), "propagate": False},
+            "uvicorn.error": {"handlers": ["default"], "level": args.log_level.upper(), "propagate": False},
+            "uvicorn.access": {"handlers": ["access"], "level": "DEBUG", "propagate": False},
+            "mat_bench": {"handlers": ["default"], "level": "INFO", "propagate": False},
+        },
+    }
+    uvicorn.run(app, host=args.host, port=args.port, log_level=args.log_level, log_config=log_config)
 
 
 def _add_list_parser(subparsers: argparse._SubParsersAction) -> None:

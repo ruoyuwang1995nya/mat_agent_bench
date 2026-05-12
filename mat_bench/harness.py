@@ -246,6 +246,7 @@ def run_single_question(
     skip_grading: bool = False,
     env_overrides: dict[str, str] | None = None,
     print_lock: threading.Lock | None = None,
+    parallel_checklist_workers: int = 1,
 ) -> EvalRunRecord | None:
     """Run one question through an agent script and optionally grade it."""
     qid = question.id
@@ -353,6 +354,7 @@ def run_single_question(
             model_name=model_name,
             token_usage=token_usage,
             duration_ms=duration_ms,
+            parallel_checklist_workers=parallel_checklist_workers,
         )
         _log(f"score={report.score:.3f} ({report.detail})")
         return report.record
@@ -534,6 +536,13 @@ def build_cli_parser() -> argparse.ArgumentParser:
         default=1,
         help="Concurrent tasks (default: 1).",
     )
+    parser.add_argument(
+        "--parallel-checklist-workers",
+        type=int,
+        default=1,
+        metavar="N",
+        help="Parallel LLM judge calls per question checklist (default: 1).",
+    )
     return parser
 
 
@@ -639,6 +648,7 @@ def run_benchmark(args: argparse.Namespace) -> int:
             skip_grading=args.skip_grading,
             env_overrides=env_overrides,
             print_lock=print_lock,
+            parallel_checklist_workers=args.parallel_checklist_workers,
         )
 
     if args.jobs <= 1:

@@ -31,13 +31,14 @@ Tool call format in meta.tool_calls::
 
 from __future__ import annotations
 
-import asyncio
 import functools
 import json
+import logging
 import random
 import secrets
 import string
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
@@ -62,6 +63,8 @@ from ..schemas import EvalRunRecord, LLMConfig, TokenUsageRecord
 # Server-internal models
 # ---------------------------------------------------------------------------
 
+_logger = logging.getLogger(__name__)
+
 
 class TokenRecord(BaseModel):
     token: str
@@ -82,6 +85,7 @@ _registry: Registry | None = None
 _llm_cfg: LLMConfig | None = None
 _output_dir: Path | None = None
 _grading_executor: ThreadPoolExecutor | None = None
+_parallel_checklist_workers: int = 1
 
 _tokens: dict[str, TokenRecord] = {}
 _tokens_lock = threading.Lock()
@@ -92,6 +96,16 @@ _sessions_lock = threading.Lock()
 # key = f"{token}:{session_id}:{question_id}" → (token, session_id, record)
 _results: dict[str, tuple[str, str, EvalRunRecord]] = {}
 _results_lock = threading.Lock()
+
+# keys currently being graded (submitted but not yet complete)
+_grading_pending: set[str] = set()
+
+# key = f"{token}:{session_id}:{question_id}" → number of times submitted
+_submission_counts: dict[str, int] = {}
+_submission_counts_lock = threading.Lock()
+
+# maximum allowed submissions per question per session (0 = unlimited)
+_max_submissions_per_question: int = 1
 
 # key = (session_id, question_id) → task start time (bench-measured)
 _task_starts: dict[tuple[str, str], datetime] = {}
@@ -112,15 +126,22 @@ def init_server(
     llm_cfg: LLMConfig | None = None,
     grading_workers: int = 4,
     store_dir: Path | None = None,
+    parallel_checklist_workers: int = 1,
+    max_submissions_per_question: int = 1,
 ) -> None:
     """Initialise server state. Must be called before uvicorn.run()."""
     global _registry, _llm_cfg, _output_dir, _results, _grading_executor
-    global _token_store, _session_store, _task_starts
+    global _token_store, _session_store, _task_starts, _parallel_checklist_workers
+    global _grading_pending, _submission_counts, _max_submissions_per_question
     _registry = registry
     _llm_cfg = llm_cfg
     _output_dir = output_dir
     _results = {}
     _task_starts = {}
+    _grading_pending = set()
+    _submission_counts = {}
+    _max_submissions_per_question = max(0, int(max_submissions_per_question))
+    _parallel_checklist_workers = max(1, int(parallel_checklist_workers))
     output_dir.mkdir(parents=True, exist_ok=True)
 
     from .store import TokenStore, SessionStore
@@ -140,6 +161,8 @@ def init_server(
     with _results_lock:
         for key, (tok, sid, rec_dict) in _session_store.load_results().items():
             _results[key] = (tok, sid, EvalRunRecord(**rec_dict))
+            # Each persisted result counts as 1 prior submission
+            _submission_counts[key] = _submission_counts.get(key, 0) + 1
 
     with _task_starts_lock:
         _task_starts.update(_session_store.load_task_starts())
@@ -180,6 +203,8 @@ def _do_grade(
 ) -> EvalRunRecord:
     """Synchronous grading call. Dispatched to thread pool via run_in_executor."""
     question_id = question.id
+    _logger.info("grading start  %s  (checklist_workers=%d)", question_id, _parallel_checklist_workers)
+    t0 = time.monotonic()
     try:
         report = grade_question(
             question=question,
@@ -192,11 +217,14 @@ def _do_grade(
             model_name=model_name,
             token_usage=token_usage_record,
             duration_ms=duration_ms,
+            parallel_checklist_workers=_parallel_checklist_workers,
         )
+        elapsed = time.monotonic() - t0
+        _logger.info("grading done   %s  score=%.3f  %.1fs", question_id, report.score, elapsed)
         return report.record
     except Exception as exc:
-        import sys
-        print(f"  [{question_id}] grading error: {exc}", file=sys.stderr)
+        elapsed = time.monotonic() - t0
+        _logger.error("grading error  %s  %.1fs  %s", question_id, elapsed, exc)
         return EvalRunRecord(
             question_id=question_id,
             capability=question.capability,
@@ -389,6 +417,19 @@ try:
         if session.token != token:
             raise HTTPException(403, detail="Session does not belong to this token")
 
+        # Enforce per-question submission limit within a session (read-only check)
+        composite_key = f"{token}:{session_id}:{question_id}"
+        if _max_submissions_per_question > 0:
+            with _submission_counts_lock:
+                if _submission_counts.get(composite_key, 0) >= _max_submissions_per_question:
+                    raise HTTPException(
+                        409,
+                        detail=(
+                            f"Submission limit ({_max_submissions_per_question}) reached "
+                            f"for question '{question_id}' in session '{session_id}'."
+                        ),
+                    )
+
         # Parse multipart form
         try:
             form_data = await request.form()
@@ -491,10 +532,24 @@ try:
         )
         token_usage_record = build_token_usage_record(usage)
 
-        # Grade in thread pool (parallel-safe)
-        loop = asyncio.get_running_loop()
-        record = await loop.run_in_executor(
-            _grading_executor,
+        def _on_grade_done(fut: Any) -> None:
+            try:
+                record = fut.result()
+            except Exception as exc:
+                _logger.error("grading callback error  %s  %s", question_id, exc)
+                return
+            record_json = json.dumps(record.model_dump(mode="json"), ensure_ascii=False, default=str)
+            with _results_lock:
+                _results[composite_key] = (token, session_id, record)
+                _grading_pending.discard(composite_key)
+            _session_store.save_result(composite_key, token, session_id, record_json)
+
+        with _results_lock:
+            _grading_pending.add(composite_key)
+        with _submission_counts_lock:
+            _submission_counts[composite_key] = _submission_counts.get(composite_key, 0) + 1
+
+        fut = _grading_executor.submit(
             functools.partial(
                 _do_grade,
                 question,
@@ -504,22 +559,14 @@ try:
                 run_status,
                 model_name,
                 bench_duration_ms,
-            ),
+            )
         )
-
-        composite_key = f"{token}:{session_id}:{question_id}"
-        with _results_lock:
-            _results[composite_key] = (token, session_id, record)
-        record_json = json.dumps(record.model_dump(mode="json"), ensure_ascii=False, default=str)
-        _session_store.save_result(composite_key, token, session_id, record_json)
+        fut.add_done_callback(_on_grade_done)
 
         return {
-            "question_id": record.question_id,
+            "question_id": question_id,
             "session_id": session_id,
-            "run_status": record.run_status,
-            "passed_count": record.passed_count,
-            "total_count": record.total_count,
-            "overall_weighted_score": record.overall_weighted_score,
+            "status": "grading",
         }
 
     # ------------------------------------------------------------------
@@ -543,15 +590,30 @@ try:
                 key = f"{token}:{session_id}:{question_id}"
                 entry = _results.get(key)
                 matches = [entry[2]] if entry is not None else []
+                pending = not matches and key in _grading_pending
             else:
                 matches = [
                     rec
                     for tok, sid, rec in _results.values()
                     if tok == token and rec.question_id == question_id
                 ]
+                pending = not matches and any(
+                    k.endswith(f":{question_id}") and k.startswith(f"{token}:")
+                    for k in _grading_pending
+                )
+        if pending:
+            from fastapi.responses import JSONResponse
+            return JSONResponse(status_code=202, content={"status": "grading", "question_id": question_id})
         if not matches:
             raise HTTPException(404, detail=f"No result found for '{question_id}'")
-        return [r.model_dump(mode="json") for r in matches]
+        return [
+            {
+                "question_id": r.question_id,
+                "run_status": r.run_status,
+                "passed": r.total_count > 0 and r.passed_count >= r.total_count,
+            }
+            for r in matches
+        ]
 
     @app.get("/results")
     async def get_results(
