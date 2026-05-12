@@ -6,7 +6,13 @@ import fnmatch
 from dataclasses import dataclass
 from pathlib import Path
 
-import numpy as np
+_NP_AVAILABLE = False
+try:
+    import numpy as np
+
+    _NP_AVAILABLE = True
+except ImportError:
+    np = None  # type: ignore[assignment]
 
 _IMPORT_MSG = 'pymatgen not installed; install with: pip install mat-bench[validators]'
 
@@ -47,8 +53,8 @@ def _parse_cif(cif_string: str):
         parser = CifParser.from_str(cif_string)
         structures = parser.parse_structures(primitive=False, check_occu=False)
         return structures[0] if structures else None
-    except Exception:
-        return None
+    except Exception as exc:
+        raise ValueError(f'CIF parsing failed: {exc}') from exc
 
 
 def _check_atom_counts(struct1, struct2) -> bool:
@@ -67,6 +73,8 @@ def _match_structures(struct1, struct2, primitive_cell: bool = False, stol: floa
 
 
 def _exact_match_metrics(struct1, struct2, stol: float = 0.5):
+    if not _NP_AVAILABLE:
+        raise ImportError('numpy not installed; install with: pip install mat-bench[validators]')
     if len(struct1) != len(struct2):
         return None, None
 
@@ -102,11 +110,14 @@ def evaluate_atomworld_compatible(
 ) -> EvaluateResult:
     target_struct = _parse_cif(target_cif)
     if target_struct is None:
-        raise ValueError('Could not parse the target CIF string.')
+        raise ValueError('Could not parse the target CIF string: no structures found.')
 
-    gen_struct = _parse_cif(generated_cif)
+    try:
+        gen_struct = _parse_cif(generated_cif)
+    except Exception as exc:
+        return EvaluateResult(correct=False, wrong_type=f'CIFParsingError: {exc}')
     if gen_struct is None:
-        return EvaluateResult(correct=False, wrong_type='CIFParsingError')
+        return EvaluateResult(correct=False, wrong_type='CIFParsingError: no structures found')
 
     if not _check_atom_counts(target_struct, gen_struct):
         return EvaluateResult(correct=False, wrong_type='AtomCountMismatch')

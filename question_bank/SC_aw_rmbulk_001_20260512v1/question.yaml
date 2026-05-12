@@ -14,7 +14,6 @@ human_prompt_seed: |
   - Return a brief final answer stating that `clean_slab.cif` was written and what was removed.
 tags:
 - struct_transform
-- struct_bulk
 - code_pymatgen
 - atomworld
 data_files:

@@ -1,6 +1,6 @@
 id: SC_aw_rmbulk_006_20260512v1
 capability: structure_construction
-domain: materials_science
+domain: agnostic
 intent: >-
   Remove an adsorbed molecule from a bulk crystal and return the clean host structure
   (mp-id: mp-1195860, molecule formula: H10C12Br1N3O2F2).
@@ -15,7 +15,6 @@ human_prompt_seed: |
   - Return a brief final answer stating that `clean_slab.cif` was written and what was removed.
 tags:
 - struct_transform
-- struct_bulk
 - code_pymatgen
 - atomworld
 data_files:
