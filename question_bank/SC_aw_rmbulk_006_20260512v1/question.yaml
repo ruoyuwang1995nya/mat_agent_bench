@@ -1,0 +1,66 @@
+id: SC_aw_rmbulk_006_20260512v1
+capability: structure_construction
+domain: materials_science
+intent: >-
+  Remove an adsorbed molecule from a bulk crystal and return the clean host structure
+  (mp-id: mp-1195860, molecule formula: H10C12Br1N3O2F2).
+human_prompt_seed: |
+  You are given a structure with an adsorbed molecule in `input_adsorbed_slab.cif`.
+  Remove the molecule(s) inside the structure.
+  Write the resulting clean structure to `clean_slab.cif`.
+
+  Constraints:
+  - Keep the host lattice unchanged.
+  - Remove the adsorbate atoms only.
+  - Return a brief final answer stating that `clean_slab.cif` was written and what was removed.
+tags:
+- struct_transform
+- struct_bulk
+- code_pymatgen
+- atomworld
+data_files:
+- key: input_slab
+  path: input_adsorbed_slab.cif
+  description: Structure containing the host and adsorbed molecule.
+reference_answers:
+- key: clean_slab_artifact
+  value: clean_slab.cif
+- key: atomworld_match
+  value:
+    filename: clean_slab.cif
+    target_path: target_clean_slab.cif
+    action_name: remove_molecule_action
+- key: turn_budget
+  value:
+    max: 12
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 9000
+scoring_checklist:
+- id: clean_slab_artifact
+  criterion: Agent writes `clean_slab.cif` to the workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: atomworld_match
+  criterion: Output CIF matches the hidden clean-structure target under AtomWorld active-task evaluation.
+  axis: correctness
+  verify: atomworld_active_task
+- id: no_retries
+  criterion: No repeated identical tool calls with the same parameter set.
+  axis: efficiency
+  verify: no_retries
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed a generous benchmark ceiling.
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage is recorded and stays within a generous benchmark ceiling.
+  axis: efficiency
+  verify: token_budget

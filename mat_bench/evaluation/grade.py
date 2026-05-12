@@ -72,7 +72,7 @@ def grade_question(
         axis_weights=axis_weights,
     )
     record = evaluator.evaluate(
-        question=question.item,
+        question=question,
         answer=answer,
         tool_calls=tool_calls,
         evidence=evidence,
