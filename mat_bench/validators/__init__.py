@@ -1,5 +1,6 @@
 """Deterministic validators for MATTER evaluation."""
 
+from .atomworld import check_atomworld_active_task
 from .checkcif import CheckCIFResult, check_checkcif_no_a_alerts, run_checkcif
 from .molcrys import (
     check_disorder_dan2_integer_formula,
@@ -28,6 +29,7 @@ from .text import (
 )
 
 __all__ = [
+    'check_atomworld_active_task',
     'CheckCIFResult',
     'check_checkcif_no_a_alerts',
     'run_checkcif',

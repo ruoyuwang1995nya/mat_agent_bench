@@ -74,7 +74,7 @@ def grade_question(
         parallel_checklist_workers=parallel_checklist_workers,
     )
     record = evaluator.evaluate(
-        question=question.item,
+        question=question,
         answer=answer,
         tool_calls=tool_calls,
         evidence=evidence,

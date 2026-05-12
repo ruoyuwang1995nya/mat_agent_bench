@@ -12,11 +12,12 @@ import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .checks import (
     build_llm_context,
     build_safety_eval_record,
+    check_atomworld_active_task_from_evidence,
     check_batch_consistent_calls,
     check_batch_single_variable_sweep,
     check_batch_tool_args_constant,
@@ -62,6 +63,9 @@ from ..schemas import (
     TokenUsageRecord,
 )
 
+if TYPE_CHECKING:
+    from ..registry import Question
+
 _eval_logger = logging.getLogger(__name__)
 
 
@@ -99,7 +103,7 @@ class BinaryEvaluator:
     def evaluate(
         self,
         *,
-        question: QuestionItem,
+        question: QuestionItem | Question,
         answer: str,
         tool_calls: list[dict[str, Any]] | None = None,
         evidence: EvidenceBundle | None = None,
@@ -111,16 +115,18 @@ class BinaryEvaluator:
         token_usage: TokenUsageRecord | None = None,
         duration_ms: int = 0,
     ) -> EvalRunRecord:
+        question_item = question.item if hasattr(question, 'item') else question
+        question_dir = question.question_dir if hasattr(question, 'question_dir') else None
         if tool_calls is None:
             tool_calls = []
         if token_usage is None:
             token_usage = TokenUsageRecord()
 
         # Safety questions get a dedicated evaluation path
-        if question.capability == 'safety_refusal':
-            safety = self.evaluate_safety(question=question, answer=answer)
+        if question_item.capability == 'safety_refusal':
+            safety = self.evaluate_safety(question=question_item, answer=answer)
             return build_safety_eval_record(
-                question=question,
+                question=question_item,
                 answer=answer,
                 mode=mode,
                 repeat_idx=repeat_idx,
@@ -135,7 +141,7 @@ class BinaryEvaluator:
             )
 
         # Regular questions: evaluate each checklist item
-        ref_map = {item.key: item for item in question.reference_answers}
+        ref_map = {item.key: item for item in question_item.reference_answers}
         criteria_results = {}
 
         axis_passed: dict[AxisLiteral, int] = {
@@ -159,7 +165,7 @@ class BinaryEvaluator:
             'efficiency': 0.0,
         }
 
-        checklist = question.scoring_checklist
+        checklist = question_item.scoring_checklist
         use_parallel = self._parallel_checklist_workers > 1 and len(checklist) > 1
 
         if not use_parallel:
@@ -173,7 +179,8 @@ class BinaryEvaluator:
                     item=item,
                     reference_map=ref_map,
                     answer=answer,
-                    question=question,
+                    question=question_item,
+                    question_dir=question_dir,
                     tool_calls=tool_calls,
                     evidence=evidence,
                 )
@@ -192,7 +199,8 @@ class BinaryEvaluator:
                     item=item,
                     reference_map=ref_map,
                     answer=answer,
-                    question=question,
+                    question=question_item,
+                    question_dir=question_dir,
                     tool_calls=tool_calls,
                     evidence=evidence,
                 )
@@ -253,9 +261,9 @@ class BinaryEvaluator:
         )
 
         return EvalRunRecord(
-            question_id=question.id,
-            capability=question.capability,
-            domain=question.domain,
+            question_id=question_item.id,
+            capability=question_item.capability,
+            domain=question_item.domain,
             mode=mode,  # type: ignore[arg-type]
             repeat_idx=repeat_idx,
             prompt=prompt,
@@ -357,6 +365,7 @@ class BinaryEvaluator:
         reference_map: dict[str, ReferenceAnswer],
         answer: str,
         question: QuestionItem,
+        question_dir: Path | None,
         tool_calls: list[dict[str, Any]],
         evidence: EvidenceBundle | None,
     ) -> tuple[bool, str]:
@@ -437,6 +446,14 @@ class BinaryEvaluator:
             if ref is None:
                 return False, 'missing reference answer'
             return check_checkcif_alerts(evidence=evidence, ref=ref)
+        if item.verify == 'atomworld_active_task':
+            if ref is None:
+                return False, 'missing reference answer'
+            return check_atomworld_active_task_from_evidence(
+                evidence=evidence,
+                ref=ref,
+                question_dir=question_dir,
+            )
 
         # --- struct_file_* programmatic structure checks ---
         _STRUCT_FILE_DISPATCH = {
