@@ -1,0 +1,46 @@
+{
+  "description": "Given the INCAR, POSCAR summary, and OUTCAR excerpt below, diagnose why structural relaxation diverges.",
+  "diagnosis_hint": "Two compounding issues: (1) POTIM=1.0 is far too large - the default 0.5 or even 0.1-0.3 would be safer; (2) starting from the wrong phase (cubic instead of orthorhombic) means initial forces are huge. Fix: reduce POTIM to 0.1-0.2, or better yet, start from the orthorhombic Pnma structure. For unknown ground-state structures, use a conservative POTIM with IBRION=1 (RMM-DIIS) which handles large steps better than conjugate gradient.",
+  "incar": {
+    "EDIFF": 1e-06,
+    "EDIFFG": -0.02,
+    "ENCUT": 450,
+    "IBRION": 2,
+    "ISIF": 3,
+    "ISMEAR": 0,
+    "ISPIN": 1,
+    "NSW": 300,
+    "POTIM": 1.0,
+    "PREC": "Accurate",
+    "SIGMA": 0.05,
+    "SYSTEM": "Perovskite_CsPbI3_cubic",
+    "_comment": "BUG: POTIM=1.0 is too large for this system. Combined with an initial structure that has the cubic phase (high-T) instead of the actual ground-state orthorhombic phase, the forces are large and POTIM=1.0 causes atoms to overshoot drastically. Each ionic step the structure bounces back and forth, never settling."
+  },
+  "key_observation": "Energy increases from step 1 to step 4, forces explode from 2.3 to 48 eV/A, volume swings wildly. By step 5, VASP encounters a fatal bracketing error. The ionic step is too aggressive.",
+  "outcar_excerpt_ionic_steps": [
+    "--- step   1:  E= -19.23456   max_force= 2.341   volume= 248.9",
+    "--- step   2:  E= -17.89123   max_force= 5.672   volume= 275.3",
+    "--- step   3:  E= -12.34567   max_force= 12.891  volume= 312.1",
+    "--- step   4:  E=  +8.45231   max_force= 48.234  volume= 189.2",
+    "--- step   5:  ZBRENT: fatal internal error",
+    "           please rerun with smaller POTIM, or copy CONTCAR to POSCAR and continue"
+  ],
+  "poscar_summary": {
+    "counts": [
+      1,
+      1,
+      3
+    ],
+    "lattice_a": 6.289,
+    "note": "Cubic CsPbI3 is the high-temperature phase; ground state is orthorhombic Pnma. Starting from cubic with ISIF=3 requires large atomic displacements and cell shape changes.",
+    "species": [
+      "Cs",
+      "Pb",
+      "I"
+    ],
+    "system": "CsPbI3 cubic Pm-3m (high-T phase, NOT ground state)",
+    "total_atoms": 5
+  },
+  "root_cause": "potim_too_large_and_bad_initial_structure",
+  "task": "relax_divergence_diagnosis"
+}

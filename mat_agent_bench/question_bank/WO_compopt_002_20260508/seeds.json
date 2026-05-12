@@ -1,0 +1,9 @@
+{
+  "seeds": [
+    {"Cr": 25, "Co": 25, "Ni": 25, "Fe": 25},
+    {"Cr": 20, "Co": 30, "Ni": 30, "Fe": 20},
+    {"Cr": 30, "Co": 20, "Ni": 20, "Fe": 30}
+  ],
+  "target": "yield_strength",
+  "constraint": {"ductility_min": 0.15}
+}

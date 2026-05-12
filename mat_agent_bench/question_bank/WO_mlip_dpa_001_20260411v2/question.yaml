@@ -1,0 +1,73 @@
+id: WO_mlip_dpa_001_20260411v2
+capability: workflow_orchestration
+domain: agnostic
+intent: Optimize diamond Si with DPA ML potential (cell + atoms), report lattice constant
+  and energy per atom.
+human_prompt_seed: '使用 DPA 机器学习势对金刚石结构 Si 进行结构优化。
+
+  从数据库获取或构建 Si 金刚石原胞（空间群 Fd-3m, a≈5.43 Å），
+
+  做含晶格弛豫的全优化（原子坐标 + 晶格），力收敛判据 0.01 eV/Å。
+
+  报告优化后的晶格常数 a (Å) 和总能量 (eV/atom)。
+
+  '
+tags:
+- code_mlip
+data_files: []
+reference_answers:
+- key: lattice_a_A
+  value: 5.43
+  tolerance: 0.15
+- key: required_fields
+  value:
+  - lattice_constant
+  - energy_per_atom
+  - convergence_status
+- key: turn_budget
+  value:
+    max: 18
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 8000
+scoring_checklist:
+- id: lattice_a_A
+  criterion: Optimized Si lattice constant is within tolerance of experimental/DPA
+    value (~5.43 Å).
+  axis: correctness
+  verify: numerical_range
+- id: required_fields
+  criterion: Report includes optimized lattice constant, energy per atom, and convergence
+    status (converged or max steps reached).
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: The reported lattice constant and energy values are tied to computation
+    outputs stated in the answer, not textbook recall or invented numbers. Judge solely
+    from the final answer.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: No repeated identical optimization submissions with the same parameters.
+  axis: efficiency
+  verify: no_retries
+- id: efficiency_judge
+  criterion: Workflow (fetch/build structure → submit optimization → parse result)
+    completes without unnecessary exploratory calls.
+  axis: efficiency
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration does not exceed benchmark ceiling.
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling.
+  axis: efficiency
+  verify: token_budget

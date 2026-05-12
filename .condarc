@@ -1,0 +1,8 @@
+channels:
+- defaults
+show_channel_urls: True
+allow_other_channels: True
+proxy_servers:
+http: http://ga.dp.tech:8118
+https: http://ga.dp.tech:8118
+ssl_verify: False

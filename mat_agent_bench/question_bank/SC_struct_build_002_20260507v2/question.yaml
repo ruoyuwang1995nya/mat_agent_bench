@@ -1,0 +1,103 @@
+id: SC_struct_build_002_20260507v2
+capability: structure_construction
+domain: agnostic
+intent: Build hexagonal boron nitride (hBN) unit cell from space group and Wyckoff
+  positions, verifying correct cell angles and stoichiometry.
+human_prompt_seed: 构建六方氮化硼 (hBN) 的单胞结构。参数：空间群 P6₃/mmc (#194)， a = 2.504 Å, c = 6.661
+  Å。导出为 `hbn.cif`。在最终回答中明确报告：(1) 晶格参数 a, c；(2) gamma 角；(3) 单胞原子数；(4) 化学计量比 B:N。
+tags:
+- struct_build
+data_files: []
+reference_answers:
+- key: file_exists
+  value: hbn.cif
+- key: formula
+  value:
+    filename: hbn.cif
+    formula: B2N2
+- key: cell_a
+  value:
+    filename: hbn.cif
+    param: a
+    expected: 2.504
+    tolerance: 0.01
+- key: cell_c
+  value:
+    filename: hbn.cif
+    param: c
+    expected: 6.661
+    tolerance: 0.01
+- key: cell_gamma
+  value:
+    filename: hbn.cif
+    param: gamma
+    expected: 120.0
+    tolerance: 0.5
+- key: atom_count
+  value:
+    filename: hbn.cif
+    expected: 4
+    tolerance: 0
+- key: space_group_number
+  value:
+    filename: hbn.cif
+    expected_number: 194
+    symprec: 0.1
+- key: space_group_tokens
+  value:
+  - '194'
+  - P6
+  - mmc
+- key: turn_budget
+  value:
+    max: 10
+- key: token_budget_total
+  value:
+    max: 20000
+scoring_checklist:
+- id: file_exists
+  criterion: Agent writes `hbn.cif` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: formula
+  criterion: Structure formula is B2N2 (1:1 stoichiometry).
+  axis: correctness
+  verify: struct_file_formula
+- id: cell_a
+  criterion: Lattice constant a is approximately 2.504 Å.
+  axis: correctness
+  verify: struct_file_cell_param
+- id: cell_c
+  criterion: Lattice constant c is approximately 6.661 Å.
+  axis: correctness
+  verify: struct_file_cell_param
+- id: cell_gamma
+  criterion: Cell angle gamma is 120 degrees (hexagonal).
+  axis: correctness
+  verify: struct_file_cell_param
+- id: atom_count
+  criterion: Unit cell contains exactly 4 atoms.
+  axis: correctness
+  verify: struct_file_atom_count
+- id: space_group_number
+  criterion: The file `hbn.cif` is identified as space group
+  axis: correctness
+  verify: struct_file_space_group
+- id: space_group_tokens
+  criterion: Final answer explicitly reports space group number 194 and the P6_3/mmc
+    setting.
+  axis: correctness
+  verify: contains_all
+- id: grounding_source
+  criterion: Final answer reports lattice parameters, gamma angle, atom count, and
+    B:N ratio from the built structure.
+  axis: grounding
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn budget.
+  axis: efficiency
+  verify: turn_budget
+- id: token_budget_total
+  criterion: Total token usage stays within budget.
+  axis: efficiency
+  verify: token_budget

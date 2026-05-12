@@ -1,0 +1,130 @@
+id: SC_struct_009_20260508
+capability: structure_construction
+domain: agnostic
+intent: Build a stoichiometric and symmetric CeO2(111) surface with three Ce-O-Ce
+  trilayers and oxygen termination; slab normal stacking should expose nine distinct
+  atomic planes along z (three trilayers times three planes each).
+human_prompt_seed: 'Build a CeO2(111) surface with three Ce-O-Ce tri-layers. Export
+  as `ceo2_111_trilayer.cif`. Here "layer count" means **nine atomic planes** along
+  the slab normal (z): each Ce-O-Ce tri-layer contributes three planes (O–Ce–O style
+  stacking), not three coarse trilayer blocks. In the final answer, explicitly report:
+  (1) whether `ceo2_111_trilayer.cif` exists; (2) the total **atomic** layer count
+  along z, which should be 9; (3) whether the slab is symmetric; here symmetric means
+  the top and bottom halves are mirror-equivalent around the slab center with matching
+  O-terminated outermost planes; (4) whether the outermost surface layer is O-terminated;
+  (5) the Ce:O stoichiometric ratio, which should match CeO2.
+
+  '
+tags:
+- struct_surface
+priority: P0
+data_files: []
+reference_answers:
+- key: file_exists
+  value: ceo2_111_trilayer.cif
+- key: slab_layers
+  value:
+    filename: ceo2_111_trilayer.cif
+    expected: 9
+    tolerance: 0
+    axis: z
+    layer_tol_A: 0.25
+- key: ce_o_ratio
+  value:
+    filename: ceo2_111_trilayer.cif
+    element_a: Ce
+    element_b: O
+    expected_ratio: 0.5
+    tolerance: 0.05
+- key: o_termination
+  value:
+    filename: ceo2_111_trilayer.cif
+    element: O
+    axis: z
+    side: both
+    layer_tol_A: 0.5
+- key: required_fields
+  value:
+  - file_exists
+  - layer_count
+  - symmetry_check
+  - outermost_O_termination
+  - ce_o_ratio
+- key: turn_budget
+  value:
+    max: 25
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 24000
+scoring_checklist:
+- id: file_exists
+  criterion: The output file `ceo2_111_trilayer.cif` exists.
+  axis: correctness
+  verify: artifact_exists
+- id: slab_layers
+  criterion: The number of distinct atomic z-planes in ceo2_111_trilayer.cif is 9
+    (atoms on the same plane merged within 0.25 Å along z), matching three Ce-O-Ce
+    trilayers.
+  axis: correctness
+  verify: struct_file_layer_count
+- id: ce_o_ratio
+  criterion: The Ce:O ratio read from ceo2_111_trilayer.cif is consistent with CeO2
+    stoichiometry.
+  axis: correctness
+  verify: struct_file_stoichiometry_ratio
+- id: o_termination
+  criterion: Both the top and bottom outermost atomic layers of ceo2_111_trilayer.cif
+    are O-terminated (verified by reading the file and checking the outermost z-layer
+    element is O).
+  axis: correctness
+  verify: struct_file_surface_termination
+- id: required_fields
+  criterion: The answer explicitly reports the 9-layer construction, a slab-center
+    mirror-equivalence symmetry check, oxygen-terminated outermost layers on both
+    sides, stoichiometric CeO2 ratio, and (111) surface orientation where relevant.
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: The answer explains slab polarity/symmetry, layer stacking for CeO2(111),
+    O termination, and Ce:O stoichiometry using `ceo2_111_trilayer.cif`, not textbook-only
+    claims disconnected from that file. Judge solely from the final answer and named
+    deliverables; do not fail because the tool-call log omits MCP, web_search, or
+    any specific tool.
+  axis: grounding
+  verify: llm_binary_judge
+- id: tasker_classification
+  criterion: The agent identifies or discusses the Tasker classification of CeO2(111)
+    (Type 2 surface with charged but non-dipolar repeat unit O-Ce-O), or equivalently
+    explains that the (111) stacking of alternating charged planes does not produce
+    a net dipole moment per repeat unit when the O-Ce-O trilayer is chosen as the
+    repeat.
+  axis: grounding
+  verify: llm_binary_judge
+- id: symmetric_slab_polarity_strategy
+  criterion: The agent explains or applies a symmetric slab construction strategy
+    (mirror-symmetric terminations on both sides) to ensure no net dipole across the
+    slab, or mentions that dipole corrections are unnecessary because the chosen O-terminated
+    trilayer repeat is inherently non-polar.
+  axis: grounding
+  verify: llm_binary_judge
+- id: no_retries
+  criterion: No repeated identical slab construction with the same parameters.
+  axis: efficiency
+  verify: no_retries
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
+    a generous benchmark ceiling (tunable per deployment).
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
+    (tunable per task after calibration).
+  axis: efficiency
+  verify: token_budget

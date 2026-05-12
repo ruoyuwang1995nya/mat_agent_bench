@@ -1,0 +1,62 @@
+id: SC_struct_build_003_20260507v2
+capability: structure_construction
+domain: agnostic
+intent: Build a phenol molecule from SMILES using RDKit and verify atom count and
+  chemical formula.
+human_prompt_seed: 从 SMILES `c1ccc(cc1)O` 构建苯酚 (phenol) 分子的三维结构。 导出为 `phenol.xyz`。在最终回答中报告：(1)
+  化学式；(2) 原子总数；(3) 是否所有原子都有合理的三维坐标（最短原子间距离不小于 0.7 Å，无重叠）。
+tags:
+- struct_build
+data_files: []
+reference_answers:
+- key: file_exists
+  value: phenol.xyz
+- key: atom_count
+  value:
+    filename: phenol.xyz
+    expected: 13
+    tolerance: 0
+- key: min_distance
+  value:
+    filename: phenol.xyz
+    min_distance_A: 0.7
+- key: required_fields
+  value:
+  - '13'
+  - phenol
+- key: turn_budget
+  value:
+    max: 10
+- key: token_budget_total
+  value:
+    max: 20000
+scoring_checklist:
+- id: file_exists
+  criterion: Agent writes `phenol.xyz` to workspace.
+  axis: correctness
+  verify: artifact_exists
+- id: atom_count
+  criterion: Molecule contains exactly 13 atoms (6C + 6H + 1O).
+  axis: correctness
+  verify: struct_file_atom_count
+- id: min_distance
+  criterion: The minimum interatomic distance in `phenol.xyz` is at least 0.7 Å, ruling
+    out overlapping coordinates.
+  axis: correctness
+  verify: struct_file_min_interatomic_distance
+- id: required_fields
+  criterion: Final answer explicitly states atom count 13 and mentions phenol.
+  axis: correctness
+  verify: contains_all
+- id: grounding_source
+  criterion: Final answer confirms all atoms have valid 3D coordinates and no overlaps.
+  axis: grounding
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn budget.
+  axis: efficiency
+  verify: turn_budget
+- id: token_budget_total
+  criterion: Total token usage stays within budget.
+  axis: efficiency
+  verify: token_budget

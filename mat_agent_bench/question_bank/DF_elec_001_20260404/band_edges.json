@@ -1,0 +1,33 @@
+{
+  "cbm_eV": 1.18,
+  "cbm_kpoint": "X",
+  "direct_gap_at_G_eV": 2.74,
+  "indirect_gap_eV": 1.18,
+  "kpoint_fractional": {
+    "G": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "L": [
+      0.5,
+      0.5,
+      0.5
+    ],
+    "X": [
+      0.5,
+      0.0,
+      0.5
+    ]
+  },
+  "kpoint_labels": [
+    "G",
+    "X",
+    "L",
+    "G"
+  ],
+  "placeholder_note": "Synthetic band-edge payload; values are internally consistent.",
+  "question_id": "DF_elec_001",
+  "vbm_eV": 0.0,
+  "vbm_kpoint": "G"
+}

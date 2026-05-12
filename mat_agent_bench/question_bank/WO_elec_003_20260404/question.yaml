@@ -1,0 +1,76 @@
+id: WO_elec_003_20260404
+capability: workflow_orchestration
+domain: battery
+intent: 'Compute doping formation energy of NFPP: retrieve structure, build doped
+  supercell, use mock energies, calculate formation energy.'
+human_prompt_seed: "计算NFPP的Al掺杂形成能：\n1. 获取NFPP（Na₄Fe₃(PO₄)₂P₂O₇）结构（空间群Pna2₁），构建2×1×1超胞作为pristine结构；\n\
+  2. 在P位（PO₄磷酸根位点）用Al替换一个P原子，构建掺杂超胞；\n3. 使用以下mock能量值（模拟DPA弛豫结果）：\n   - E_pristine\
+  \ = -689.605 eV\n   - E_doped = -687.057 eV\n   - μ_P（红磷参考态）= -5.41 eV/atom\n  \
+  \ - μ_Al（金属Al参考态）= -3.75 eV/atom\n4. 按公式 E_f = E(doped) - E(pristine) + μ_P - μ_Al\
+  \ 计算形成能；\n5. 计算体积变化率（掺杂后体积约1313.17 Å³，原始约1316.68 Å³）；\n6. 输出掺杂形成能(eV)、体积变化率(%)。\n"
+tags:
+- struct_transform
+priority: P0
+data_files: []
+reference_answers:
+- key: formation_energy_eV
+  value: 0.88
+  tolerance: 0.5
+- key: volume_change_percent
+  value: -0.27
+  tolerance: 0.5
+- key: required_fields
+  value:
+  - E_pristine
+  - E_doped
+  - chemical_potentials
+  - formation_energy
+  - volume_change
+- key: turn_budget
+  value:
+    max: 18
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 8000
+scoring_checklist:
+- id: formation_energy_eV
+  criterion: Doping formation energy is computed correctly from mock energies (~0.88
+    eV).
+  axis: correctness
+  verify: numerical_range
+- id: volume_change_percent
+  criterion: Volume change is computed correctly (~-0.27%).
+  axis: correctness
+  verify: numerical_range
+- id: required_fields
+  criterion: Report includes pristine/doped energies, chemical potentials, formation
+    energy, and volume change.
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: NFPP structure uses correct Pna2₁ lattice parameters; mock energies used
+    as specified; chemical potentials explicitly defined. Judge solely from the final
+    answer; do not fail because the tool-call log omits MCP, web_search, or any specific
+    tool.
+  axis: grounding
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: efficiency_judge
+  criterion: Workflow (fetch → build supercell → dope → compute E_f with mock values)
+    completes without redundant steps.
+  axis: efficiency
+  verify: llm_binary_judge
+- id: duration_budget
+  criterion: Wall-clock run duration does not exceed benchmark ceiling.
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling.
+  axis: efficiency
+  verify: token_budget

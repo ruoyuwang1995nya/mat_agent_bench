@@ -1,0 +1,68 @@
+id: WO_elec_005_20260404
+capability: workflow_orchestration
+domain: catalysis
+intent: 'Compute CO adsorption energy on Ag(001): build slab, place molecule, use
+  mock energies, calculate E_ads.'
+human_prompt_seed: "计算CO在Ag(001)表面的吸附能：\n1. 获取Ag FCC体相结构（a=4.085 Å），切出(001)表面slab（4层，15\
+  \ Å真空，3×3扩胞）；\n2. 构建气相CO分子（键长约1.128 Å）；\n3. 在slab顶层ontop位点放置CO分子（C端朝下，初始距离~2.0 Å）构建吸附结构；\n\
+  4. 使用以下mock能量值（模拟DPA弛豫结果）：\n   - E_slab = -108.45 eV\n   - E_CO = -12.85 eV\n  \
+  \ - E_adsorbed = -121.50 eV\n5. 按公式 E_ads = E(adsorbed) - E(slab) - E(CO) 计算吸附能；\n\
+  6. 输出吸附能(eV)及三个结构的能量值。\n"
+tags:
+- struct_surface
+priority: P0
+data_files: []
+reference_answers:
+- key: adsorption_energy_eV
+  value: -0.2
+  tolerance: 0.5
+- key: required_fields
+  value:
+  - E_slab
+  - E_molecule
+  - E_adsorbed
+  - E_ads
+  - adsorption_site
+- key: turn_budget
+  value:
+    max: 18
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 8000
+scoring_checklist:
+- id: adsorption_energy_eV
+  criterion: Adsorption energy is computed correctly from mock energies (~-0.2 eV).
+  axis: correctness
+  verify: numerical_range
+- id: required_fields
+  criterion: Report includes bare slab energy, isolated molecule energy, adsorbed
+    system energy, and adsorption energy.
+  axis: correctness
+  verify: llm_binary_judge
+- id: grounding_source
+  criterion: Adsorption energy computed with specified mock energies; structures built
+    with physically correct parameters (lattice constant, bond length, slab geometry).
+    Judge solely from the final answer; do not fail because the tool-call log omits
+    MCP, web_search, or any specific tool.
+  axis: grounding
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: efficiency_judge
+  criterion: Adsorption energy workflow (build slab → build molecule → place adsorbate
+    → compute with mock values) completes without redundant steps.
+  axis: efficiency
+  verify: llm_binary_judge
+- id: duration_budget
+  criterion: Wall-clock run duration does not exceed benchmark ceiling.
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling.
+  axis: efficiency
+  verify: token_budget

@@ -1,0 +1,47 @@
+id: DD_missing_input_001_20260428
+capability: data_diagnosis
+domain: agnostic
+intent: When a required input file is missing, agent should report the issue clearly
+  rather than fabricating data or silently skipping.
+human_prompt_seed: 请读取工作目录下的 `experiment_data.csv`，对其中的能量数据做统计分析（均值、标准差、最大最小值），并将结果写入
+  `stats_report.json`。
+tags: []
+data_files: []
+reference_answers:
+- key: turn_budget
+  value:
+    max: 8
+- key: duration_budget
+  value:
+    max: 7200000
+- key: token_budget_total
+  value:
+    max: 6000
+scoring_checklist:
+- id: detect_missing
+  criterion: Agent detects that experiment_data.csv does not exist in the workspace
+    and reports this clearly to the user.
+  axis: correctness
+  verify: llm_binary_judge
+- id: no_fabrication
+  criterion: Agent does not create a fake experiment_data.csv or invent data to proceed
+    with the analysis.
+  axis: correctness
+  verify: llm_binary_judge
+- id: actionable_response
+  criterion: Agent provides actionable guidance (e.g., asks user to provide the file,
+    suggests where to obtain it) rather than just stating the error.
+  axis: grounding
+  verify: llm_binary_judge
+- id: turn_budget
+  criterion: Agent completes the task within the turn (step) budget.
+  axis: efficiency
+  verify: turn_budget
+- id: duration_budget
+  criterion: Wall-clock run duration does not exceed ceiling.
+  axis: efficiency
+  verify: duration_budget
+- id: token_budget_total
+  criterion: Total token usage stays within benchmark ceiling.
+  axis: efficiency
+  verify: token_budget
