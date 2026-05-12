@@ -18,7 +18,7 @@
 set -euo pipefail
 
 QUESTION_ID="${1:?Usage: $0 <question_id> [server_url]}"
-SERVER_URL="${2:-${SERVER_URL:-http://127.0.0.1:8000/bench}}"
+SERVER_URL="${2:-${SERVER_URL:-http://127.0.0.1:8080/bench}}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 TEMPLATE="$REPO_ROOT/agents/run_question.md"
