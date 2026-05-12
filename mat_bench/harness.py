@@ -683,16 +683,15 @@ def run_benchmark(args: argparse.Namespace) -> int:
     print(f"Completed: {n_ok}, Failed: {n_fail}", file=sys.stderr)
 
     if not args.skip_grading:
-        total_passed = sum(r.passed_count for r in records)
-        total_criteria = sum(r.total_count for r in records)
-        avg_score = (
-            sum(r.overall_weighted_score for r in records) / len(records)
-            if records
-            else 0
+        questions_passed = sum(
+            1 for r in records
+            if r.total_count > 0 and r.passed_count == r.total_count
         )
+        total_criteria = sum(r.total_count for r in records)
+        total_passed_criteria = sum(r.passed_count for r in records)
         print(
-            f"Criteria: {total_passed}/{total_criteria} passed, "
-            f"avg weighted score: {avg_score:.3f}",
+            f"Questions passed: {questions_passed}/{len(records)}, "
+            f"Criteria: {total_passed_criteria}/{total_criteria} passed",
             file=sys.stderr,
         )
 
@@ -705,11 +704,8 @@ def run_benchmark(args: argparse.Namespace) -> int:
                 output_dir=output_dir,
                 prefix="",
             )
+            print(f"Questions passed: {run_report.total_passed}/{run_report.total_questions}", file=sys.stderr)
             print(f"Pass rate: {run_report.pass_rate:.1%}", file=sys.stderr)
-            print(
-                f"Weighted pass rate: {run_report.weighted_pass_rate:.3f}",
-                file=sys.stderr,
-            )
             for label, path in run_report.report_paths.items():
                 print(f"  {label}: {path}", file=sys.stderr)
         except Exception as exc:

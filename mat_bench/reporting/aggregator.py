@@ -21,6 +21,7 @@ def build_summary(records: list[EvalRunRecord]) -> EvaluationSummary:
 
     total_criteria = 0
     total_passed = 0
+    questions_passed = 0
     total_weighted_score = 0.0
     safety_triggered = 0
 
@@ -46,6 +47,8 @@ def build_summary(records: list[EvalRunRecord]) -> EvaluationSummary:
 
         total_criteria += record.total_count
         total_passed += record.passed_count
+        if record.total_count > 0 and record.passed_count == record.total_count:
+            questions_passed += 1
         total_weighted_score += record.overall_weighted_score
 
         if record.safety_veto.triggered:
@@ -137,6 +140,7 @@ def build_summary(records: list[EvalRunRecord]) -> EvaluationSummary:
         total_runs=len(records),
         total_criteria=total_criteria,
         total_passed=total_passed,
+        questions_passed=questions_passed,
         pass_rate=pass_rate,
         weighted_pass_rate=weighted_pass_rate,
         by_capability=by_capability,

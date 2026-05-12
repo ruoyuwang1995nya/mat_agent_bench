@@ -376,6 +376,7 @@ def create_app(
                     "eval_count": len(recs),
                     "pass_rate": round(ms.pass_rate, 4) if ms else None,
                     "weighted_score": round(ms.weighted_pass_rate, 4) if ms else None,
+                    "questions_passed": ms.questions_passed if ms else None,
                     "models": sorted({r.model_name for r in recs if r.model_name}),
                     "created_at": sd["created_at"],
                 }
@@ -430,6 +431,7 @@ def create_app(
                     "total_evaluations": ms.total_runs,
                     "pass_rate": round(ms.pass_rate, 4),
                     "weighted_score": round(ms.weighted_pass_rate, 4),
+                    "questions_passed": ms.questions_passed,
                     "by_capability": {
                         k: round(v.pass_rate(), 4) for k, v in ms.by_capability.items()
                     },
@@ -439,7 +441,7 @@ def create_app(
                 }
             )
 
-        leaderboard.sort(key=lambda x: x["weighted_score"], reverse=True)
+        leaderboard.sort(key=lambda x: x["questions_passed"], reverse=True)
         return {"leaderboard": leaderboard, "total_evaluations": len(rows)}
 
     return app

@@ -458,6 +458,7 @@ class EvaluationSummary(BaseModel):
     total_runs: int
     total_criteria: int = 0
     total_passed: int = 0
+    questions_passed: int = 0
     pass_rate: float = 0.0
     weighted_pass_rate: float = 0.0
 

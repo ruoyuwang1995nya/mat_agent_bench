@@ -591,7 +591,7 @@ def _cmd_grade(args: argparse.Namespace) -> None:
     )
 
     print(f'Graded {report.total_questions} runs')
-    print(f'  Passed: {report.total_passed}/{report.total_questions}')
+    print(f'  Final score: {report.total_passed} questions passed (out of {report.total_questions})')
     print(f'  Pass rate: {report.pass_rate:.1%}')
     print(f'  Weighted pass rate: {report.weighted_pass_rate:.3f}')
     print()

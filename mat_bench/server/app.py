@@ -573,6 +573,7 @@ try:
         summary = build_summary(records)
         return {
             "total": len(records),
+            "questions_passed": summary.questions_passed,
             "pass_rate": summary.pass_rate,
             "weighted_pass_rate": summary.weighted_pass_rate,
             "results": [
