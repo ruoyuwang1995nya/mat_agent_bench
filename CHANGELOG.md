@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v0.4.1 (2026-05-13)
+
+### Bug Fixes
+
+- Forbid direct registration
+  ([`f02d172`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/f02d172ef3240b781f830a4d56a08bbf4e41acef))
+
+- Update leaderboard UI
+  ([`83b6339`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/83b633992e6b419378985970d3e70199cb7b5221))
+
+
 ## v0.4.0 (2026-05-12)
 
 ### Bug Fixes
