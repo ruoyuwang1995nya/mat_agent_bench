@@ -4,6 +4,7 @@
 
 let allEntries = [];
 let chart = null;
+let _detailData = [];  // cached for CSV export
 
 function toast(msg, type = 'info') {
   const c = document.getElementById('toasts');
@@ -59,7 +60,7 @@ function renderLeaderboard() {
 
   if (!entries.length) {
     document.getElementById('lb-body').innerHTML =
-      `<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:4rem">No evaluation data found.<br>
+      `<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:4rem">No evaluation data found.<br>
       <small>Run <code style="color:var(--cyan)">mat-bench serve</code> or <code style="color:var(--cyan)">mat-bench run</code> to generate results.</small>
       </td></tr>`;
     return;
@@ -99,9 +100,109 @@ function renderLeaderboard() {
         </td>
         <td style="text-align:center;font-family:var(--font-data);font-size:.85rem">${e.total_evaluations}</td>
         <td style="font-size:.78rem">${topCaps || '<span style="color:var(--text-dim)">—</span>'}</td>
+        <td style="text-align:center">
+          <button class="btn" style="font-size:.75rem;padding:.25rem .6rem"
+            data-agent="${e.agent.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"
+            onclick="showDetails(this.dataset.agent)">Details</button>
+        </td>
       </tr>
     `;
   }).join('');
+}
+
+async function showDetails(agentName) {
+  document.getElementById('modal-title').textContent = `${agentName} — per-question results`;
+  document.getElementById('modal-body').innerHTML = '<div style="text-align:center;padding:2rem"><div class="spinner" style="margin:auto"></div></div>';
+  document.getElementById('detail-modal').style.display = 'flex';
+
+  try {
+    const res = await fetch(`/api/leaderboard/${encodeURIComponent(agentName)}/questions`);
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    _detailData = data.questions || [];
+    renderDetailTable(_detailData);
+  } catch (err) {
+    document.getElementById('modal-body').innerHTML =
+      `<p style="color:var(--red);padding:1rem">${err.message}</p>`;
+    toast('Failed to load details', 'error');
+  }
+}
+
+function renderDetailTable(questions) {
+  if (!questions.length) {
+    document.getElementById('modal-body').innerHTML = '<p style="padding:1rem;color:var(--text-dim)">No question results found.</p>';
+    return;
+  }
+  const rows = questions.map(q => {
+    const isPass = q.passed === q.total && q.total > 0;
+    const statusBadge = isPass
+      ? `<span style="color:var(--green);font-weight:700">&#10003; PASS</span>`
+      : `<span style="color:var(--red);font-weight:700">&#10007; FAIL</span>`;
+    const pct = q.total > 0 ? (q.pass_rate * 100).toFixed(0) + '%' : '—';
+    const safety = q.safety_vetoed ? '<span style="color:var(--yellow);font-size:.7rem">&#9888; vetoed</span>' : '';
+    return `<tr>
+      <td style="font-family:var(--font-data);font-size:.8rem">${esc(q.question_id)}</td>
+      <td style="font-size:.78rem">${esc(q.capability.replace('_',' '))}</td>
+      <td style="font-size:.78rem">${esc(q.domain)}</td>
+      <td style="font-size:.78rem;text-align:center">${esc(q.mode)}</td>
+      <td style="text-align:center;font-family:var(--font-data);font-size:.8rem">${q.runs}</td>
+      <td style="text-align:center;font-family:var(--font-data);font-size:.8rem">${q.passed}/${q.total}</td>
+      <td style="text-align:center;font-family:var(--font-data);font-size:.8rem">${pct}</td>
+      <td style="font-size:.78rem;text-align:center">${esc(q.correctness)}</td>
+      <td style="font-size:.78rem;text-align:center">${esc(q.grounding)}</td>
+      <td style="font-size:.78rem;text-align:center">${esc(q.efficiency)}</td>
+      <td style="text-align:center">${statusBadge} ${safety}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('modal-body').innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+      <thead>
+        <tr style="border-bottom:1px solid rgba(0,240,255,.2)">
+          <th style="text-align:left;padding:.4rem .5rem">Question</th>
+          <th style="text-align:left;padding:.4rem .5rem">Capability</th>
+          <th style="text-align:left;padding:.4rem .5rem">Domain</th>
+          <th style="text-align:center;padding:.4rem .5rem">Mode</th>
+          <th style="text-align:center;padding:.4rem .5rem">Runs</th>
+          <th style="text-align:center;padding:.4rem .5rem">Passed</th>
+          <th style="text-align:center;padding:.4rem .5rem">Rate</th>
+          <th style="text-align:center;padding:.4rem .5rem">Correctness</th>
+          <th style="text-align:center;padding:.4rem .5rem">Grounding</th>
+          <th style="text-align:center;padding:.4rem .5rem">Efficiency</th>
+          <th style="text-align:center;padding:.4rem .5rem">Status</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function closeModal() {
+  document.getElementById('detail-modal').style.display = 'none';
+  _detailData = [];
+}
+
+function closeModalOnBg(event) {
+  if (event.target === document.getElementById('detail-modal')) closeModal();
+}
+
+function downloadCSV() {
+  if (!_detailData.length) return;
+  const headers = ['question_id','capability','domain','mode','runs','passed','total','pass_rate','correctness','grounding','efficiency','safety_vetoed'];
+  const lines = [headers.join(',')];
+  for (const q of _detailData) {
+    lines.push(headers.map(h => {
+      const v = String(q[h] ?? '');
+      return v.includes(',') || v.includes('"') ? `"${v.replace(/"/g,'""')}"` : v;
+    }).join(','));
+  }
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const agentName = document.getElementById('modal-title').textContent.split(' —')[0].trim();
+  a.download = `${agentName}_questions.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function buildChart(entries, capFilter) {
@@ -170,3 +271,4 @@ loadLeaderboard();
 
 // Poll for new results every 30 seconds
 setInterval(loadLeaderboard, 30_000);
+

@@ -72,16 +72,32 @@
             <th style="width:140px">Questions Passed</th>
             <th style="width:90px;text-align:center">Evaluations</th>
             <th>Top Capabilities</th>
+            <th style="width:80px;text-align:center">Details</th>
           </tr>
         </thead>
         <tbody id="lb-body">
-          <tr><td colspan="5" style="text-align:center;padding:3rem"><div class="spinner" style="margin:auto"></div></td></tr>
+          <tr><td colspan="6" style="text-align:center;padding:3rem"><div class="spinner" style="margin:auto"></div></td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
   <div class="toast-container" id="toasts"></div>
+
+  <!-- Per-agent question detail modal -->
+  <div id="detail-modal" class="modal-overlay" style="display:none" onclick="closeModalOnBg(event)">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span id="modal-title" style="font-family:var(--font-data);font-size:.95rem"></span>
+        <div style="display:flex;gap:.5rem">
+          <button class="btn" id="modal-download" onclick="downloadCSV()">&#8659; CSV</button>
+          <button class="btn" onclick="closeModal()">&#x2715;</button>
+        </div>
+      </div>
+      <div id="modal-body" style="overflow:auto;max-height:60vh"></div>
+    </div>
+  </div>
+
   <script src="/static/js/leaderboard.js"></script>
 </body>
 </html>

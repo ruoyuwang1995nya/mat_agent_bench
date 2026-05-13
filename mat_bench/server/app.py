@@ -114,6 +114,9 @@ _task_starts_lock = threading.Lock()
 _token_store: "TokenStore | None" = None
 _session_store: "SessionStore | None" = None
 
+# When False, POST /token returns 403 (set by UI in combined mode to force human registration)
+_allow_direct_registration: bool = True
+
 
 # ---------------------------------------------------------------------------
 # Server initialisation
@@ -128,11 +131,14 @@ def init_server(
     store_dir: Path | None = None,
     parallel_checklist_workers: int = 1,
     max_submissions_per_question: int = 1,
+    allow_direct_registration: bool = True,
 ) -> None:
     """Initialise server state. Must be called before uvicorn.run()."""
     global _registry, _llm_cfg, _output_dir, _results, _grading_executor
     global _token_store, _session_store, _task_starts, _parallel_checklist_workers
     global _grading_pending, _submission_counts, _max_submissions_per_question
+    global _allow_direct_registration
+    _allow_direct_registration = allow_direct_registration
     _registry = registry
     _llm_cfg = llm_cfg
     _output_dir = output_dir
@@ -277,6 +283,11 @@ try:
     @app.post("/token")
     async def create_token() -> dict:
         """Register a new persistent API token. No authentication required."""
+        if not _allow_direct_registration:
+            raise HTTPException(
+                403,
+                detail="Direct token registration is disabled. Register via the web UI.",
+            )
         token_str = secrets.token_hex(32)
         record = TokenRecord(token=token_str, created_at=datetime.now(timezone.utc))
         with _tokens_lock:

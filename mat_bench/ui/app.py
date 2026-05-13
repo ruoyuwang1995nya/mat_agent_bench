@@ -158,6 +158,7 @@ def create_app(
             grading_workers=grading_workers,
             store_dir=store,
             parallel_checklist_workers=parallel_checklist_workers,
+            allow_direct_registration=False,
         )
         _backend_url = ""
     else:
@@ -445,6 +446,34 @@ def create_app(
 
         leaderboard.sort(key=lambda x: x["questions_passed"], reverse=True)
         return {"leaderboard": leaderboard, "total_evaluations": len(rows)}
+
+    @app.get("/api/leaderboard/{agent_name}/questions")
+    async def get_agent_questions(agent_name: str):
+        rows = _read_results(sessions_db)
+        token_to_agent = ui_db.get_token_agents()
+        agent_recs = [rec for token, _, rec in rows if token_to_agent.get(token) == agent_name]
+        if not agent_recs:
+            raise HTTPException(404, f"No results for agent '{agent_name}'")
+        ms = build_summary(agent_recs)
+        questions = []
+        for key, qpr in ms.by_question.items():
+            op, ot = qpr.overall
+            questions.append({
+                "question_id": qpr.question_id,
+                "mode": key.split(":", 1)[1] if ":" in key else "",
+                "capability": qpr.capability,
+                "domain": qpr.domain,
+                "runs": qpr.runs,
+                "passed": op,
+                "total": ot,
+                "pass_rate": round(op / ot, 4) if ot else 0.0,
+                "correctness": f"{qpr.correctness[0]}/{qpr.correctness[1]}",
+                "grounding": f"{qpr.grounding[0]}/{qpr.grounding[1]}",
+                "efficiency": f"{qpr.efficiency[0]}/{qpr.efficiency[1]}",
+                "safety_vetoed": qpr.safety_veto_count > 0,
+            })
+        questions.sort(key=lambda q: q["pass_rate"])  # failed first
+        return {"agent": agent_name, "questions": questions}
 
     return app
 
