@@ -1,9 +1,0 @@
-; Topology for SPC water box
-#include "oplsaa.ff/forcefield.itp"
-#include "oplsaa.ff/spce.itp"
-
-[ system ]
-SPC water box
-
-[ molecules ]
-SOL     216
