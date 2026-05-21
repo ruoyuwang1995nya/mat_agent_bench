@@ -249,16 +249,18 @@ class BinaryEvaluator:
         grounding_weighted = calc_weighted_score('grounding')
         efficiency_weighted = calc_weighted_score('efficiency')
 
+        active_axes = {
+            'correctness': axis_total['correctness'] > 0,
+            'grounding': axis_total['grounding'] > 0,
+            'efficiency': axis_total['efficiency'] > 0,
+        }
         overall_weighted = self._calc_overall_weighted_score(
             correctness_weighted=correctness_weighted,
             grounding_weighted=grounding_weighted,
             efficiency_weighted=efficiency_weighted,
-            active_axes={
-                'correctness': axis_total['correctness'] > 0,
-                'grounding': axis_total['grounding'] > 0,
-                'efficiency': axis_total['efficiency'] > 0,
-            },
+            active_axes=active_axes,
         )
+        grounding_veto = active_axes['grounding'] and grounding_weighted < 1.0
 
         return EvalRunRecord(
             question_id=question_item.id,
@@ -282,6 +284,7 @@ class BinaryEvaluator:
             grounding_weighted_score=grounding_weighted,
             efficiency_weighted_score=efficiency_weighted,
             overall_weighted_score=overall_weighted,
+            grounding_veto=grounding_veto,
             model_name=model_name,
             token_usage=token_usage,
             tool_calls=tool_calls,
@@ -301,23 +304,19 @@ class BinaryEvaluator:
         efficiency_weighted: float,
         active_axes: dict[AxisLiteral, bool],
     ) -> float:
-        scores = {
-            'correctness': correctness_weighted,
-            'grounding': grounding_weighted,
-            'efficiency': efficiency_weighted,
-        }
+        # S_correct: content score [0, 1]; 0 if no correctness criteria
+        s_correct = correctness_weighted if active_axes.get('correctness', False) else 0.0
 
-        weighted_sum = 0.0
-        weight_sum = 0.0
+        # S_ground: binary veto — 1.0 if all grounding pass or no grounding criteria, else 0.0
+        if not active_axes.get('grounding', False):
+            s_ground = 1.0
+        else:
+            s_ground = 1.0 if grounding_weighted >= 1.0 else 0.0
 
-        for axis_name in ['correctness', 'grounding', 'efficiency']:
-            axis_literal = axis_name  # type: ignore
-            if active_axes.get(axis_literal, False):
-                axis_weight = self._axis_weights.get(axis_literal, 1.0)
-                weighted_sum += axis_weight * scores[axis_name]
-                weight_sum += axis_weight
+        # S_efficiency: multiplier coefficient [0, 1]; 1.0 if no efficiency criteria
+        s_efficiency = min(1.0, efficiency_weighted) if active_axes.get('efficiency', False) else 1.0
 
-        return weighted_sum / weight_sum if weight_sum > 0 else 0.0
+        return s_correct * s_ground * s_efficiency
 
     # ------------------------------------------------------------------
     # Safety evaluation

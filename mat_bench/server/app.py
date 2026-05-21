@@ -653,7 +653,9 @@ try:
                 records = [rec for tok, sid, rec in _results.values() if tok == token]
         if not records:
             return {"total": 0, "results": []}
-        summary = build_summary(records)
+        registry = _require_registry()
+        total_q = len(registry.list_questions())
+        summary = build_summary(records, total_q)
         return {
             "total": len(records),
             "questions_passed": summary.questions_passed,

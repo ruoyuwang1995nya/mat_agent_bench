@@ -167,6 +167,17 @@ def create_app(
         _mint_token = None
         _backend_url = backend_url.rstrip("/")
 
+    # Cache total question count and per-capability counts for normalized scoring
+    try:
+        _all_qs = Registry(qb_dir).list_questions()
+        _total_questions = len(_all_qs)
+        _cap_question_counts: dict[str, int] = {}
+        for _q in _all_qs:
+            _cap_question_counts[_q.capability] = _cap_question_counts.get(_q.capability, 0) + 1
+    except Exception:
+        _total_questions = 0
+        _cap_question_counts = {}
+
     app = FastAPI(title="mat-bench UI", docs_url=None, redoc_url=None)
     app.mount("/static", StaticFiles(directory=_STATIC_DIR, html=True), name="static")
     if _combined:
@@ -370,7 +381,7 @@ def create_app(
         result = []
         for sd in session_meta.values():
             recs = sd["records"]
-            ms = build_summary(recs) if recs else None
+            ms = build_summary(recs, _total_questions) if recs else None
             result.append(
                 {
                     "session_id": sd["session_id"],
@@ -419,7 +430,10 @@ def create_app(
 
         leaderboard = []
         for agent_name, recs in by_agent.items():
-            ms = build_summary(recs)
+            ms = build_summary(recs, _total_questions)
+            cap_scores: dict[str, float] = {}
+            for rec in recs:
+                cap_scores[rec.capability] = cap_scores.get(rec.capability, 0.0) + rec.overall_weighted_score
             leaderboard.append(
                 {
                     "agent": agent_name,
@@ -429,7 +443,8 @@ def create_app(
                     "weighted_score": round(ms.weighted_pass_rate, 4),
                     "questions_passed": ms.questions_passed,
                     "by_capability": {
-                        k: round(v.pass_rate(), 4) for k, v in ms.by_capability.items()
+                        cap: round(total / max(_cap_question_counts.get(cap, 1), 1), 4)
+                        for cap, total in cap_scores.items()
                     },
                     "by_domain": {
                         k: round(v.pass_rate(), 4) for k, v in ms.by_domain.items()
@@ -437,7 +452,7 @@ def create_app(
                 }
             )
 
-        leaderboard.sort(key=lambda x: x["questions_passed"], reverse=True)
+        leaderboard.sort(key=lambda x: x["weighted_score"], reverse=True)
         return {"leaderboard": leaderboard, "total_evaluations": len(rows)}
 
     @app.get("/api/leaderboard/{agent_name}/questions")
@@ -448,7 +463,7 @@ def create_app(
         agent_recs = by_agent.get(agent_name)
         if not agent_recs:
             raise HTTPException(404, f"No results for agent '{agent_name}'")
-        ms = build_summary(agent_recs)
+        ms = build_summary(agent_recs, _total_questions)
 
         by_q_key: dict[str, list[EvalRunRecord]] = defaultdict(list)
         for rec in agent_recs:
@@ -494,7 +509,7 @@ def create_app(
         if not session_recs:
             raise HTTPException(404, f"No results for session '{session_id}'")
 
-        ms = build_summary(session_recs)
+        ms = build_summary(session_recs, _total_questions)
 
         by_q_key: dict[str, list[EvalRunRecord]] = defaultdict(list)
         for rec in session_recs:

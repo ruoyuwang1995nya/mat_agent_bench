@@ -8,8 +8,16 @@ from typing import Any
 from ..schemas import AxisPassRates, EvalRunRecord, EvaluationSummary, QuestionPassRate
 
 
-def build_summary(records: list[EvalRunRecord]) -> EvaluationSummary:
-    """Aggregate a list of EvalRunRecords into an EvaluationSummary."""
+def build_summary(records: list[EvalRunRecord], total_questions: int = 0) -> EvaluationSummary:
+    """Aggregate a list of EvalRunRecords into an EvaluationSummary.
+
+    Args:
+        records: Evaluated run records.
+        total_questions: Total questions in the benchmark bank. When > 0, the
+            weighted_pass_rate is computed as sum(scores) / total_questions so
+            that unanswered questions count as zero. When 0 (default), falls
+            back to dividing by len(records) (average over answered only).
+    """
     if not records:
         return EvaluationSummary(
             total_runs=0,
@@ -88,7 +96,8 @@ def build_summary(records: list[EvalRunRecord]) -> EvaluationSummary:
             }
 
     pass_rate = total_passed / total_criteria if total_criteria > 0 else 0.0
-    weighted_pass_rate = total_weighted_score / len(records) if records else 0.0
+    n_denom = total_questions if total_questions > 0 else len(records)
+    weighted_pass_rate = total_weighted_score / n_denom if n_denom > 0 else 0.0
 
     by_capability = {
         k: _to_axis_pass_rates(v)

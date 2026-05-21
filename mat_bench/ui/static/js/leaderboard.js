@@ -4,6 +4,7 @@
 
 let allEntries = [];
 let chart = null;
+let radarChart = null;
 let _detailData = [];  // cached for CSV export
 
 function toast(msg, type = 'info') {
@@ -53,7 +54,7 @@ function renderLeaderboard() {
 
   // Update chart title
   const titleEl = document.getElementById('chart-title');
-  if (titleEl) titleEl.textContent = capFilter ? `Score (${capFilter}) by Agent` : 'Questions Passed by Agent';
+  if (titleEl) titleEl.textContent = capFilter ? `Score (${capFilter}) by Agent` : 'Overall Score by Agent';
 
   // Build chart
   buildChart(entries, capFilter);
@@ -67,12 +68,14 @@ function renderLeaderboard() {
   }
 
   const medals = ['🥇', '🥈', '🥉'];
-  const maxPassed = Math.max(1, ...entries.map(e => e.questions_passed || 0));
 
   document.getElementById('lb-body').innerHTML = entries.map((e, i) => {
-    const score = capFilter ? (e.by_capability[capFilter] ?? 0) : e.questions_passed;
-    const displayScore = capFilter ? (score * 100).toFixed(1) + '%' : String(score);
-    const barWidth = capFilter ? score * 100 : (score / maxPassed) * 100;
+    const score = capFilter ? (e.by_capability[capFilter] ?? 0) : (e.weighted_score ?? 0);
+    const barWidth = score * 100;
+    const displayScore = (score * 100).toFixed(1) + '%';
+    const passedSub = !capFilter
+      ? `<div style="font-size:.7rem;color:var(--text-dim);margin-top:.15rem">${e.questions_passed ?? 0} passed</div>`
+      : '';
     const rank = i + 1;
     const rankDisplay = rank <= 3
       ? `<span title="Rank ${rank}">${medals[rank-1]}</span>`
@@ -97,6 +100,7 @@ function renderLeaderboard() {
             <div class="score-bar"><div class="score-bar-fill" style="width:${barWidth}%"></div></div>
             <div class="score-val">${displayScore}</div>
           </div>
+          ${passedSub}
         </td>
         <td style="text-align:center;font-family:var(--font-data);font-size:.85rem">${e.total_evaluations}</td>
         <td style="font-size:.78rem">${topCaps || '<span style="color:var(--text-dim)">—</span>'}</td>
@@ -104,6 +108,9 @@ function renderLeaderboard() {
           <button class="btn" style="font-size:.75rem;padding:.25rem .6rem"
             data-agent="${e.agent.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"
             onclick="showDetails(this.dataset.agent)">Details</button>
+          <button class="btn" style="font-size:.75rem;padding:.25rem .6rem;margin-left:.3rem"
+            data-agent="${e.agent.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"
+            onclick="showRadar(this.dataset.agent)">Radar</button>
         </td>
       </tr>
     `;
@@ -185,6 +192,69 @@ function closeModalOnBg(event) {
   if (event.target === document.getElementById('detail-modal')) closeModal();
 }
 
+function showRadar(agentName) {
+  const entry = allEntries.find(e => e.agent === agentName);
+  if (!entry) { toast(`No data found for agent: ${agentName}`, 'error'); return; }
+
+  const modalEl = document.getElementById('radar-modal');
+  if (!modalEl) { toast('Radar modal not found in DOM', 'error'); return; }
+
+  document.getElementById('radar-modal-title').textContent = `${agentName} — capability scores`;
+  modalEl.style.display = 'flex';
+
+  const caps = Object.keys(entry.by_capability || {});
+  const vals = caps.map(c => +((entry.by_capability[c] ?? 0) * 100).toFixed(1));
+  const labels = caps.map(c => c.replace(/_/g, ' '));
+
+  const ctx = document.getElementById('radar-chart').getContext('2d');
+  if (radarChart) radarChart.destroy();
+
+  radarChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels,
+      datasets: [{
+        label: agentName,
+        data: vals,
+        backgroundColor: 'rgba(0,240,255,0.12)',
+        borderColor: 'rgba(0,240,255,0.85)',
+        pointBackgroundColor: 'rgba(0,240,255,0.9)',
+        pointRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        r: {
+          min: 0, max: 100,
+          ticks: {
+            stepSize: 25,
+            color: 'rgba(255,255,255,0.4)',
+            backdropColor: 'transparent',
+            callback: v => v + '%',
+          },
+          grid: { color: 'rgba(0,240,255,0.1)' },
+          angleLines: { color: 'rgba(0,240,255,0.1)' },
+          pointLabels: { color: 'rgba(255,255,255,0.75)', font: { size: 11 } },
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.r.toFixed(1)}%` } },
+      },
+    },
+  });
+}
+
+function closeRadarModal() {
+  document.getElementById('radar-modal').style.display = 'none';
+  if (radarChart) { radarChart.destroy(); radarChart = null; }
+}
+
+function closeRadarOnBg(event) {
+  if (event.target === document.getElementById('radar-modal')) closeRadarModal();
+}
+
 function downloadCSV() {
   if (!_detailData.length) return;
   const headers = ['question_id','capability','domain','mode','runs','passed','total','pass_rate','correctness','grounding','efficiency','safety_vetoed','criteria_detail'];
@@ -213,9 +283,8 @@ function downloadCSV() {
 
 function buildChart(entries, capFilter) {
   const labels = entries.map(e => e.agent.length > 24 ? e.agent.slice(0, 22) + '…' : e.agent);
-  const isPercent = !!capFilter;
-  const rawScores = entries.map(e => capFilter ? (e.by_capability[capFilter] ?? 0) : (e.questions_passed ?? 0));
-  const chartData = isPercent ? rawScores.map(s => +(s * 100).toFixed(2)) : rawScores;
+  const rawScores = entries.map(e => capFilter ? (e.by_capability[capFilter] ?? 0) : (e.weighted_score ?? 0));
+  const chartData = rawScores.map(s => +(s * 100).toFixed(2));
 
   const ctx = document.getElementById('score-chart').getContext('2d');
   if (chart) chart.destroy();
@@ -225,7 +294,7 @@ function buildChart(entries, capFilter) {
     data: {
       labels,
       datasets: [{
-        label: capFilter ? `Score (${capFilter})` : 'Questions Passed',
+        label: capFilter ? `Score (${capFilter})` : 'Overall Score',
         data: chartData,
         backgroundColor: chartData.map((_, i) => {
           const hue = 180 + (i / Math.max(chartData.length - 1, 1)) * 80;
@@ -245,10 +314,10 @@ function buildChart(entries, capFilter) {
       scales: {
         y: {
           beginAtZero: true,
-          ...(isPercent ? { max: 100 } : {}),
+          max: 100,
           ticks: {
             color: 'rgba(255,255,255,0.45)',
-            callback: v => isPercent ? v + '%' : v,
+            callback: v => v + '%',
           },
           grid: { color: 'rgba(0,240,255,0.07)' },
           border: { color: 'rgba(0,240,255,0.15)' },
@@ -263,7 +332,7 @@ function buildChart(entries, capFilter) {
         legend: { labels: { color: 'rgba(255,255,255,0.6)', font: { size: 12 } } },
         tooltip: {
           callbacks: {
-            label: ctx => isPercent ? ` ${ctx.parsed.y.toFixed(1)}%` : ` ${ctx.parsed.y}`,
+            label: ctx => ` ${ctx.parsed.y.toFixed(1)}%`,
           },
         },
       },

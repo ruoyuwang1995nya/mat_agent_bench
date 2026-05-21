@@ -3,8 +3,10 @@
 Scoring model:
 - Verifiers produce binary (pass/fail) verdicts per checklist item.
 - Each checklist item has optional weight (default 1.0).
-- Axis score = sum(pass_i * weight_i) / sum(weight_i) for items in that axis.
-- Overall score = sum(axis_weight_a * axis_score_a) / sum(active_axis_weight_a).
+- S_correct  = weighted average of correctness criteria  [0, 1]
+- S_ground   = binary veto: 1.0 if all grounding criteria pass (or none), else 0.0
+- S_efficiency = weighted average of efficiency criteria [0, 1]; 1.0 if no criteria
+- overall_score = S_correct × S_ground × S_efficiency
 """
 
 from datetime import datetime, timezone
@@ -405,6 +407,7 @@ class EvalRunRecord(BaseModel):
     grounding_weighted_score: float = 0.0
     efficiency_weighted_score: float = 0.0
     overall_weighted_score: float = 0.0
+    grounding_veto: bool = False  # True = grounding veto triggered (any grounding criterion failed)
 
     model_name: str | None = None
     duration_ms: int = Field(default=0)
