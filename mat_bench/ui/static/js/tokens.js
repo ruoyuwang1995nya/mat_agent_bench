@@ -136,7 +136,7 @@ async function loadSessions() {
 function renderSessions(sessions) {
   if (!sessions.length) {
     document.getElementById('session-body').innerHTML =
-      `<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:3rem">
+      `<tr><td colspan="8" style="text-align:center;color:var(--text-dim);padding:3rem">
         No sessions yet. Run an evaluation to see results here.
       </td></tr>`;
     return;
@@ -149,21 +149,27 @@ function renderSessions(sessions) {
       ? s.models.map(m => `<span class="badge badge-cap" style="font-size:.7rem">${esc(m)}</span>`).join(' ')
       : '<span style="color:var(--text-dim)">—</span>';
     const shortId = s.session_id.length > 16 ? s.session_id.slice(0, 14) + '…' : s.session_id;
+    const sidEsc = esc(s.session_id);
+    const agentEsc = esc(s.agent_name);
     return `
       <tr>
         <td>
           <div style="display:flex;align-items:center;gap:.4rem">
-            <code style="font-family:var(--font-data);font-size:.78rem;color:var(--text-dim)" title="${esc(s.session_id)}">${esc(shortId)}</code>
+            <code style="font-family:var(--font-data);font-size:.78rem;color:var(--text-dim)" title="${sidEsc}">${esc(shortId)}</code>
             <button class="btn btn-sm" style="flex-shrink:0;padding:.15rem .45rem;font-size:.7rem"
-              onclick="copySid('${esc(s.session_id)}', this)">Copy</button>
+              onclick="copySid('${sidEsc}', this)">Copy</button>
           </div>
         </td>
-        <td style="font-weight:600;color:var(--cyan)">${esc(s.agent_name)}</td>
+        <td style="font-weight:600;color:var(--cyan)">${agentEsc}</td>
         <td style="text-align:center;font-family:var(--font-data);font-size:.85rem">${s.question_count}</td>
         <td style="text-align:center;font-family:var(--font-data);font-size:.85rem">${s.eval_count}</td>
         <td style="font-family:var(--font-data);font-size:.85rem;color:var(--cyan)">${score}</td>
         <td style="font-size:.8rem">${models}</td>
         <td style="font-size:.82rem;color:var(--text-dim)">${date}</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" style="padding:.15rem .45rem;font-size:.7rem"
+            onclick="downloadSessionCSV('${sidEsc}', '${agentEsc}')">&#8659; CSV</button>
+        </td>
       </tr>
     `;
   }).join('');
@@ -175,4 +181,38 @@ function copySid(sid, btn) {
     btn.textContent = 'Copied!';
     setTimeout(() => { btn.textContent = orig; }, 2000);
   });
+}
+
+async function downloadSessionCSV(sessionId, agentName) {
+  try {
+    const res = await fetch(`/api/sessions/${encodeURIComponent(sessionId)}/questions`);
+    if (res.status === 401) { window.location.replace('/static/login.html'); return; }
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    const questions = data.questions || [];
+    if (!questions.length) { toast('No results for this session.', 'info'); return; }
+    const headers = ['question_id','capability','domain','mode','runs','passed','total','pass_rate','correctness','grounding','efficiency','safety_vetoed','criteria_detail'];
+    const lines = [headers.join(',')];
+    for (const q of questions) {
+      const detail = (q.criteria_detail || []).map(c => {
+        const verdict = c.passed === c.total ? 'PASS' : (c.passed === 0 ? 'FAIL' : `${c.passed}/${c.total}`);
+        const reason = (c.reasons || []).join('; ');
+        return reason ? `${c.criterion_id}(${c.axis}):${verdict}:${reason}` : `${c.criterion_id}(${c.axis}):${verdict}`;
+      }).join(' | ');
+      const row = { ...q, criteria_detail: detail };
+      lines.push(headers.map(h => {
+        const v = String(row[h] ?? '');
+        return v.includes(',') || v.includes('"') ? `"${v.replace(/"/g,'""')}"` : v;
+      }).join(','));
+    }
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${agentName}_${sessionId}_questions.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    toast(`CSV download failed: ${err.message}`, 'error');
+  }
 }

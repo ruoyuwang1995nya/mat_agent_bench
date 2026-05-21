@@ -10,6 +10,7 @@ import sqlite3
 import urllib.error
 import urllib.request
 import uuid
+from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -414,15 +415,7 @@ def create_app(
             return {"leaderboard": [], "total_evaluations": 0}
 
         token_to_agent = ui_db.get_token_agents()
-
-        by_agent: dict[str, list[EvalRunRecord]] = {}
-        agent_models: dict[str, set[str]] = {}
-        for token, _, rec in rows:
-            agent_name = token_to_agent.get(token, "unknown")
-            by_agent.setdefault(agent_name, []).append(rec)
-            agent_models.setdefault(agent_name, set())
-            if rec.model_name:
-                agent_models[agent_name].add(rec.model_name)
+        by_agent = _best_session_recs_by_agent(rows, token_to_agent)
 
         leaderboard = []
         for agent_name, recs in by_agent.items():
@@ -430,7 +423,7 @@ def create_app(
             leaderboard.append(
                 {
                     "agent": agent_name,
-                    "models": sorted(agent_models.get(agent_name, set())),
+                    "models": sorted({r.model_name for r in recs if r.model_name}),
                     "total_evaluations": ms.total_runs,
                     "pass_rate": round(ms.pass_rate, 4),
                     "weighted_score": round(ms.weighted_pass_rate, 4),
@@ -451,10 +444,16 @@ def create_app(
     async def get_agent_questions(agent_name: str):
         rows = _read_results(sessions_db)
         token_to_agent = ui_db.get_token_agents()
-        agent_recs = [rec for token, _, rec in rows if token_to_agent.get(token) == agent_name]
+        by_agent = _best_session_recs_by_agent(rows, token_to_agent)
+        agent_recs = by_agent.get(agent_name)
         if not agent_recs:
             raise HTTPException(404, f"No results for agent '{agent_name}'")
         ms = build_summary(agent_recs)
+
+        by_q_key: dict[str, list[EvalRunRecord]] = defaultdict(list)
+        for rec in agent_recs:
+            by_q_key[f"{rec.question_id}:{rec.mode}"].append(rec)
+
         questions = []
         for key, qpr in ms.by_question.items():
             op, ot = qpr.overall
@@ -471,16 +470,112 @@ def create_app(
                 "grounding": f"{qpr.grounding[0]}/{qpr.grounding[1]}",
                 "efficiency": f"{qpr.efficiency[0]}/{qpr.efficiency[1]}",
                 "safety_vetoed": qpr.safety_veto_count > 0,
+                "criteria": _agg_criteria(by_q_key.get(key, [])),
+                "criteria_detail": _agg_criteria_detail(by_q_key.get(key, [])),
             })
         questions.sort(key=lambda q: q["pass_rate"])  # failed first
         return {"agent": agent_name, "questions": questions}
 
+    @app.get("/api/sessions/{session_id}/questions")
+    async def get_session_questions(session_id: str, username: str = Depends(_require_user)):
+        user_tokens = ui_db.get_user_tokens(username)
+        token_to_agent = {t["token"]: t["agent_name"] for t in user_tokens}
+        token_set = set(token_to_agent)
+
+        rows = _read_results(sessions_db)
+        session_recs: list[EvalRunRecord] = []
+        session_agent: str | None = None
+        for token, sid, rec in rows:
+            if sid == session_id and token in token_set:
+                session_recs.append(rec)
+                if session_agent is None:
+                    session_agent = token_to_agent[token]
+
+        if not session_recs:
+            raise HTTPException(404, f"No results for session '{session_id}'")
+
+        ms = build_summary(session_recs)
+
+        by_q_key: dict[str, list[EvalRunRecord]] = defaultdict(list)
+        for rec in session_recs:
+            by_q_key[f"{rec.question_id}:{rec.mode}"].append(rec)
+
+        questions = []
+        for key, qpr in ms.by_question.items():
+            op, ot = qpr.overall
+            questions.append({
+                "question_id": qpr.question_id,
+                "mode": key.split(":", 1)[1] if ":" in key else "",
+                "capability": qpr.capability,
+                "domain": qpr.domain,
+                "runs": qpr.runs,
+                "passed": op,
+                "total": ot,
+                "pass_rate": round(op / ot, 4) if ot else 0.0,
+                "correctness": f"{qpr.correctness[0]}/{qpr.correctness[1]}",
+                "grounding": f"{qpr.grounding[0]}/{qpr.grounding[1]}",
+                "efficiency": f"{qpr.efficiency[0]}/{qpr.efficiency[1]}",
+                "safety_vetoed": qpr.safety_veto_count > 0,
+                "criteria": _agg_criteria(by_q_key.get(key, [])),
+                "criteria_detail": _agg_criteria_detail(by_q_key.get(key, [])),
+            })
+        questions.sort(key=lambda q: q["pass_rate"])  # failed first
+        return {"session_id": session_id, "agent": session_agent, "questions": questions}
+
     return app
 
+def _agg_criteria(recs: list[EvalRunRecord]) -> dict[str, str]:
+    """Aggregate per-criterion pass counts across a list of records."""
+    agg: dict[str, list[int]] = {}
+    for rec in recs:
+        for cid, cr in rec.criteria_results.items():
+            if cid not in agg:
+                agg[cid] = [0, 0]
+            agg[cid][1] += 1
+            if cr.passed:
+                agg[cid][0] += 1
+    return {cid: f"{p}/{t}" for cid, (p, t) in agg.items()}
 
-# ---------------------------------------------------------------------------
-# DB helpers
-# ---------------------------------------------------------------------------
+
+def _agg_criteria_detail(recs: list[EvalRunRecord]) -> list[dict]:
+    """Aggregate per-criterion detail (axis, pass counts, reasons) across records."""
+    agg: dict[str, dict] = {}
+    for rec in recs:
+        for cid, cr in rec.criteria_results.items():
+            if cid not in agg:
+                agg[cid] = {
+                    "criterion_id": cid,
+                    "axis": cr.axis,
+                    "passed": 0,
+                    "total": 0,
+                    "reasons": [],
+                }
+            agg[cid]["total"] += 1
+            if cr.passed:
+                agg[cid]["passed"] += 1
+            if cr.reason:
+                agg[cid]["reasons"].append(cr.reason)
+    return list(agg.values())
+
+
+def _best_session_recs_by_agent(
+    rows: list[tuple[str, str, EvalRunRecord]],
+    token_to_agent: dict[str, str],
+) -> dict[str, list[EvalRunRecord]]:
+    """Return only the best-scoring session's records for each agent."""
+    by_session: dict[tuple[str, str], list[EvalRunRecord]] = {}
+    for token, session_id, rec in rows:
+        agent = token_to_agent.get(token, "unknown")
+        by_session.setdefault((agent, session_id), []).append(rec)
+
+    best: dict[str, tuple[int, list[EvalRunRecord]]] = {}
+    for (agent, _sid), recs in by_session.items():
+        score = build_summary(recs).questions_passed
+        if agent not in best or score > best[agent][0]:
+            best[agent] = (score, recs)
+
+    return {agent: recs for agent, (_, recs) in best.items()}
+
 
 def _read_results(sessions_db: Path) -> list[tuple[str, str, EvalRunRecord]]:
     """Read all (token, session_id, EvalRunRecord) rows from sessions.db."""

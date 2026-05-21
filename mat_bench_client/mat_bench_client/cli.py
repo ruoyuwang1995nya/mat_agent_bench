@@ -120,8 +120,12 @@ def _json_get(url: str, token: str, params: dict | None = None) -> tuple[int, di
         return status, {'_raw': raw.decode(errors='replace')}
 
 
-def _json_post(url: str, token: str) -> tuple[int, dict]:
-    status, raw = _http('POST', url, headers={'X-API-Token': token, 'Accept': 'application/json'})
+def _json_post(url: str, token: str, data: dict | None = None) -> tuple[int, dict]:
+    body = json.dumps(data).encode() if data else None
+    headers: dict[str, str] = {'X-API-Token': token, 'Accept': 'application/json'}
+    if body:
+        headers['Content-Type'] = 'application/json'
+    status, raw = _http('POST', url, headers=headers, body=body)
     try:
         return status, json.loads(raw)
     except json.JSONDecodeError:
@@ -153,8 +157,8 @@ def _multipart_encode(
 # API wrappers  (all paths relative to /bench)
 # ---------------------------------------------------------------------------
 
-def api_create_session(api_base: str, token: str) -> str:
-    status, data = _json_post(f'{api_base}/sessions', token)
+def api_create_session(api_base: str, token: str, model_name: str) -> str:
+    status, data = _json_post(f'{api_base}/sessions', token, data={'model_name': model_name})
     if status != 200:
         print(f'error: session creation failed ({status}): {data}', file=sys.stderr)
         sys.exit(1)
@@ -219,7 +223,6 @@ def api_submit(
     session_id: str,
     question_id: str,
     answer: str,
-    model_name: str = 'unknown',
     num_turns: int = 1,
     prompt_tokens: int = 0,
     completion_tokens: int = 0,
@@ -227,7 +230,6 @@ def api_submit(
 ) -> dict:
     meta = json.dumps({
         'answer': answer,
-        'model_name': model_name,
         'num_turns': num_turns,
         'is_error': False,
         'usage': {
@@ -318,11 +320,19 @@ def _build_parser() -> argparse.ArgumentParser:
         '--token', type=str, required=True, metavar='TOKEN',
         help='Your API token (64-char hex string provided by the server admin).',
     )
+    p.add_argument(
+        '--model', type=str, required=True, metavar='NAME',
+        help='Model/agent identifier locked for all submissions in this session.',
+    )
     p.set_defaults(func=_cmd_setup)
 
     # session
     p = subs.add_parser('session', help='Create a new session using the saved token')
     _server_arg(p)
+    p.add_argument(
+        '--model', type=str, required=True, metavar='NAME',
+        help='Model/agent identifier locked for all submissions in this session.',
+    )
     p.set_defaults(func=_cmd_session)
 
     # questions
@@ -352,8 +362,6 @@ def _build_parser() -> argparse.ArgumentParser:
     p = subs.add_parser('submit', help='Submit an answer for a question')
     p.add_argument('question_id', type=str)
     p.add_argument('--answer', type=str, required=True, help='Final answer text')
-    p.add_argument('--model', type=str, default='unknown', metavar='NAME',
-                   help='Agent/model identifier (default: unknown)')
     p.add_argument('--turns', type=int, default=1, metavar='N',
                    help='Number of agent turns (default: 1)')
     p.add_argument('--prompt-tokens', type=int, default=0, metavar='N')
@@ -384,16 +392,23 @@ def _cmd_setup(args: argparse.Namespace) -> None:
     server = _resolve_server(args.server)
     base = _api(server)
     print(f'Connecting to {base} ...', file=sys.stderr)
-    session_id = api_create_session(base, args.token)
+    session_id = api_create_session(base, args.token, args.model)
     cfg = _load_config()
-    cfg.update({'server_url': server, 'token': args.token, 'session_id': session_id})
+    cfg.update({'server_url': server, 'token': args.token, 'session_id': session_id, 'model_name': args.model})
     _save_config(cfg)
     print(f'Token:      {args.token}')
     print(f'Session:    {session_id}')
+    print(f'Model:      {args.model}')
     print(f'Config:     {_config_path()}')
 
 
 def _cmd_session(args: argparse.Namespace) -> None:
+    if os.environ.get('MAT_BENCH_SESSION_ID'):
+        print(
+            'Do not create a new session during a benchmark run.',
+            file=sys.stderr,
+        )
+        sys.exit(1)
     server = _resolve_server(args.server)
     base = _api(server)
     cfg = _load_config()
@@ -401,10 +416,11 @@ def _cmd_session(args: argparse.Namespace) -> None:
     if not token:
         print('error: no token found. Run setup first.', file=sys.stderr)
         sys.exit(1)
-    session_id = api_create_session(base, token)
-    cfg.update({'server_url': server, 'token': token, 'session_id': session_id})
+    session_id = api_create_session(base, token, args.model)
+    cfg.update({'server_url': server, 'token': token, 'session_id': session_id, 'model_name': args.model})
     _save_config(cfg)
     print(f'New session: {session_id}')
+    print(f'Model:       {args.model}')
     print(f'Config:      {_config_path()}')
 
 
@@ -464,7 +480,6 @@ def _cmd_submit(args: argparse.Namespace) -> None:
         _api(server), token, session_id,
         question_id=args.question_id,
         answer=args.answer,
-        model_name=args.model,
         num_turns=args.turns,
         prompt_tokens=args.prompt_tokens,
         completion_tokens=args.completion_tokens,
