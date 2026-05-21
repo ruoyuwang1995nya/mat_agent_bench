@@ -514,12 +514,29 @@ def _cmd_result(args: argparse.Namespace) -> None:
         sys.exit(1)
     results = data if isinstance(data, list) else [data]
     for r in results:
-        p_count = r.get('passed_count', 0)
-        t_count = r.get('total_count', 0)
-        print(f"Question: {r.get('question_id', args.question_id)}")
-        print(f"Status:   {r.get('run_status', 'unknown')}")
-        print(f"Score:    {p_count}/{t_count} checkpoints passed")
-        print(f"Weighted: {r.get('overall_weighted_score', 0.0):.3f}")
+        c_p = r.get('correctness_passed', 0)
+        c_t = r.get('correctness_total', 0)
+        g_p = r.get('grounding_passed', 0)
+        g_t = r.get('grounding_total', 0)
+        e_p = r.get('efficiency_passed', 0)
+        e_t = r.get('efficiency_total', 0)
+        veto = r.get('grounding_veto', False)
+        c_score = r.get('correctness_weighted_score', 0.0)
+        g_score = r.get('grounding_weighted_score', 0.0)
+        e_score = r.get('efficiency_weighted_score', 0.0)
+        # Recompute final score using the canonical formula: S_correct × S_ground × S_efficiency
+        s_correct = c_score if c_t > 0 else 0.0
+        s_ground = 1.0 if g_t == 0 else (0.0 if veto else 1.0)
+        s_efficiency = min(1.0, e_score) if e_t > 0 else 1.0
+        final_score = s_correct * s_ground * s_efficiency
+        print(f"Question:     {r.get('question_id', args.question_id)}")
+        print(f"Status:       {r.get('run_status', 'unknown')}")
+        print(f"Correctness:  {c_p}/{c_t}  score={c_score:.3f}")
+        g_note = '  [VETO — overall zeroed]' if veto else ''
+        print(f"Grounding:    {g_p}/{g_t}  score={g_score:.3f}{g_note}")
+        print(f"Efficiency:   {e_p}/{e_t}  score={e_score:.3f}")
+        print(f"Overall:      {r.get('passed_count', 0)}/{r.get('total_count', 0)}  "
+              f"weighted={final_score:.3f}")
 
 
 def _cmd_results(args: argparse.Namespace) -> None:

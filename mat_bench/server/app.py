@@ -632,6 +632,16 @@ try:
                 "passed_count": r.passed_count,
                 "total_count": r.total_count,
                 "overall_weighted_score": r.overall_weighted_score,
+                "correctness_passed": r.correctness_passed,
+                "correctness_total": r.correctness_total,
+                "correctness_weighted_score": r.correctness_weighted_score,
+                "grounding_passed": r.grounding_passed,
+                "grounding_total": r.grounding_total,
+                "grounding_weighted_score": r.grounding_weighted_score,
+                "grounding_veto": r.grounding_veto,
+                "efficiency_passed": r.efficiency_passed,
+                "efficiency_total": r.efficiency_total,
+                "efficiency_weighted_score": r.efficiency_weighted_score,
             }
             for r in matches
         ]
@@ -670,6 +680,16 @@ try:
                     "passed_count": r.passed_count,
                     "total_count": r.total_count,
                     "overall_weighted_score": r.overall_weighted_score,
+                    "correctness_passed": r.correctness_passed,
+                    "correctness_total": r.correctness_total,
+                    "correctness_weighted_score": r.correctness_weighted_score,
+                    "grounding_passed": r.grounding_passed,
+                    "grounding_total": r.grounding_total,
+                    "grounding_weighted_score": r.grounding_weighted_score,
+                    "grounding_veto": r.grounding_veto,
+                    "efficiency_passed": r.efficiency_passed,
+                    "efficiency_total": r.efficiency_total,
+                    "efficiency_weighted_score": r.efficiency_weighted_score,
                 }
                 for r in records
             ],
