@@ -1,6 +1,22 @@
 # CHANGELOG
 
 
+## v0.5.0 (2026-05-21)
+
+### Bug Fixes
+
+- Improve session management
+  ([`dcb4390`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/dcb4390b253dc62140dca9413477b432fa01cae9))
+
+- Remove duplicated mat_bench_agent
+  ([`fd9880d`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/fd9880db64ee9ca881835028a05efbf867ae3868))
+
+### Features
+
+- Add mat_bench_client package with CLI
+  ([`5459b33`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/5459b3369494f3a814f28677f7953f1c0a6b7bbc))
+
+
 ## v0.4.1 (2026-05-13)
 
 ### Bug Fixes
