@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mat-bench-client"
+version = "0.1.0"
+description = "Lightweight CLI client for interacting with a hosted mat-bench server"
+requires-python = ">=3.11"
+dependencies = ["pyyaml>=6.0"]
+
+[project.scripts]
+mat-bench-client = "mat_bench_client.cli:main"
+
+[tool.setuptools]
+packages = { find = { include = ["mat_bench_client", "mat_bench_client.*"] } }

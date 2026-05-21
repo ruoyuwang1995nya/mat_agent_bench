@@ -74,6 +74,7 @@ class TokenRecord(BaseModel):
 class SessionRecord(BaseModel):
     session_id: str  # e.g. "S0001"
     token: str
+    model_name: str = "unknown"
     created_at: datetime
 
 
@@ -252,7 +253,7 @@ def _do_grade(
 # ---------------------------------------------------------------------------
 
 try:
-    from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
+    from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query, Request
     from fastapi.responses import FileResponse
 
     app = FastAPI(
@@ -296,8 +297,11 @@ try:
         return {"token": token_str, "created_at": record.created_at.isoformat()}
 
     @app.post("/sessions")
-    async def create_session(token: str = Depends(_require_token)) -> dict:
-        """Create a new session for the authenticated token."""
+    async def create_session(
+        token: str = Depends(_require_token),
+        model_name: str = Body(..., embed=True, description="Model/agent identifier for this session"),
+    ) -> dict:
+        """Create a new session for the authenticated token. model_name is locked for the session."""
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
         session_id = f"S{ts}_{suffix}"
@@ -305,11 +309,12 @@ try:
             record = SessionRecord(
                 session_id=session_id,
                 token=token,
+                model_name=model_name,
                 created_at=datetime.now(timezone.utc),
             )
             _sessions[session_id] = record
-        _session_store.save_session(session_id, token, record.created_at)
-        return {"session_id": session_id, "created_at": record.created_at.isoformat()}
+        _session_store.save_session(session_id, token, model_name, record.created_at)
+        return {"session_id": session_id, "model_name": model_name, "created_at": record.created_at.isoformat()}
 
     # ------------------------------------------------------------------
     # Question endpoints (no auth required)
@@ -501,7 +506,7 @@ try:
 
         # Extract metadata fields
         answer = str(meta.get("answer", ""))
-        model_name = str(meta.get("model_name", "unknown"))
+        model_name = session.model_name  # locked at session creation; meta's model_name is ignored
         num_turns = int(meta.get("num_turns") or 0)
         is_error = bool(meta.get("is_error", False))
         usage: dict[str, Any] = meta.get("usage") or {}
@@ -620,8 +625,13 @@ try:
         return [
             {
                 "question_id": r.question_id,
+                "capability": r.capability,
+                "domain": r.domain,
                 "run_status": r.run_status,
                 "passed": r.total_count > 0 and r.passed_count >= r.total_count,
+                "passed_count": r.passed_count,
+                "total_count": r.total_count,
+                "overall_weighted_score": r.overall_weighted_score,
             }
             for r in matches
         ]

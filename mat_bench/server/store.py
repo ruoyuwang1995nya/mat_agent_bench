@@ -57,6 +57,7 @@ class SessionStore:
     CREATE TABLE IF NOT EXISTS sessions (
         session_id TEXT PRIMARY KEY,
         token      TEXT NOT NULL,
+        model_name TEXT NOT NULL DEFAULT 'unknown',
         created_at TEXT NOT NULL
     );
 
@@ -89,16 +90,25 @@ class SessionStore:
         self._conn.execute(
             "INSERT OR IGNORE INTO session_counter(id, counter) VALUES (1, 0)"
         )
+        # Migrate existing DBs that predate the model_name column
+        existing = {
+            row[1]
+            for row in self._conn.execute("PRAGMA table_info(sessions)").fetchall()
+        }
+        if "model_name" not in existing:
+            self._conn.execute(
+                "ALTER TABLE sessions ADD COLUMN model_name TEXT NOT NULL DEFAULT 'unknown'"
+            )
         self._conn.commit()
 
     def load_sessions(self) -> dict[str, dict]:
         """Return sessions as {session_id: {...}}."""
         with self._lock:
             rows = self._conn.execute(
-                "SELECT session_id, token, created_at FROM sessions"
+                "SELECT session_id, token, model_name, created_at FROM sessions"
             ).fetchall()
         return {
-            r[0]: {"session_id": r[0], "token": r[1], "created_at": r[2]}
+            r[0]: {"session_id": r[0], "token": r[1], "model_name": r[2], "created_at": r[3]}
             for r in rows
         }
 
@@ -106,13 +116,14 @@ class SessionStore:
         self,
         session_id: str,
         token: str,
+        model_name: str,
         created_at: datetime,
     ) -> None:
         with self._lock:
             self._conn.execute(
-                "INSERT OR REPLACE INTO sessions(session_id, token, created_at)"
-                " VALUES (?, ?, ?)",
-                (session_id, token, created_at.isoformat()),
+                "INSERT OR REPLACE INTO sessions(session_id, token, model_name, created_at)"
+                " VALUES (?, ?, ?, ?)",
+                (session_id, token, model_name, created_at.isoformat()),
             )
             self._conn.commit()
 

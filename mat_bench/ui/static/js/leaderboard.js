@@ -187,11 +187,17 @@ function closeModalOnBg(event) {
 
 function downloadCSV() {
   if (!_detailData.length) return;
-  const headers = ['question_id','capability','domain','mode','runs','passed','total','pass_rate','correctness','grounding','efficiency','safety_vetoed'];
+  const headers = ['question_id','capability','domain','mode','runs','passed','total','pass_rate','correctness','grounding','efficiency','safety_vetoed','criteria_detail'];
   const lines = [headers.join(',')];
   for (const q of _detailData) {
+    const detail = (q.criteria_detail || []).map(c => {
+      const verdict = c.passed === c.total ? 'PASS' : (c.passed === 0 ? 'FAIL' : `${c.passed}/${c.total}`);
+      const reason = (c.reasons || []).join('; ');
+      return reason ? `${c.criterion_id}(${c.axis}):${verdict}:${reason}` : `${c.criterion_id}(${c.axis}):${verdict}`;
+    }).join(' | ');
+    const row = { ...q, criteria_detail: detail };
     lines.push(headers.map(h => {
-      const v = String(q[h] ?? '');
+      const v = String(row[h] ?? '');
       return v.includes(',') || v.includes('"') ? `"${v.replace(/"/g,'""')}"` : v;
     }).join(','));
   }
