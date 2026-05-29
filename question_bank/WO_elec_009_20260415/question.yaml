@@ -1,5 +1,8 @@
 id: WO_elec_009_20260415
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: semiconductor
 intent: Compute Si phonon dispersion with ABACUS (including relaxation step) and summarize
   key spectrum outcomes.

@@ -1,5 +1,8 @@
 id: WO_mech_009_20260415
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
 intent: Combine database lookup and APEX elastic calculation to evaluate room-temperature
   elastic properties of a Ni-Co-Cr alloy.

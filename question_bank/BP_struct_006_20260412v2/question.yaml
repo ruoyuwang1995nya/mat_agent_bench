@@ -1,5 +1,8 @@
 id: BP_struct_006_20260412v2
-capability: batch_processing
+task_type: simulation
+capabilities:
+- data_handling
+- scientific_reasoning
 domain: battery
 intent: Batch retrieve 20 lithium-containing structures and compute the average volume
   per atom from per-structure metadata.

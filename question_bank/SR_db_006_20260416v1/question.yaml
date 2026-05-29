@@ -1,5 +1,8 @@
 id: SR_db_006_20260416v1
-capability: structure_retrieval
+task_type: search_and_interpretation
+capabilities:
+- tool_utilization
+- scientific_reasoning
 domain: agnostic
 intent: Retrieve up to two Ti-Al-O compounds with space group 63 and export CIF-oriented
   retrieval metadata.

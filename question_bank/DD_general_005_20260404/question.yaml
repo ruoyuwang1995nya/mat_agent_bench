@@ -1,5 +1,8 @@
 id: DD_general_005_20260404
-capability: data_diagnosis
+task_type: material_characterization
+capabilities:
+- data_handling
+- scientific_reasoning
 domain: agnostic
 intent: Given descriptions of mixed failed-job scenarios, classify failure modes and
   provide parameterized retry strategy.

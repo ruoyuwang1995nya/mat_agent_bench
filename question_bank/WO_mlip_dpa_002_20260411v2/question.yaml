@@ -1,5 +1,8 @@
 id: WO_mlip_dpa_002_20260411v2
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
 intent: Compute elastic constants for Cu FCC with DPA; report C11, C12, and bulk modulus.
 human_prompt_seed: '计算 FCC Cu 的弹性常数。

@@ -1,5 +1,8 @@
 id: WO_elec_005_20260404
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: catalysis
 intent: 'Compute CO adsorption energy on Ag(001): build slab, place molecule, use
   mock energies, calculate E_ads.'

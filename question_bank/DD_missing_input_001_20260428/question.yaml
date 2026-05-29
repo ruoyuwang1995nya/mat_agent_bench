@@ -1,5 +1,8 @@
 id: DD_missing_input_001_20260428
-capability: data_diagnosis
+task_type: material_characterization
+capabilities:
+- data_handling
+- scientific_reasoning
 domain: agnostic
 intent: When a required input file is missing, agent should report the issue clearly
   rather than fabricating data or silently skipping.

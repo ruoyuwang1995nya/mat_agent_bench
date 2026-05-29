@@ -1,5 +1,8 @@
 id: WO_mech_006_20260415
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: alloy
 intent: Build the convex hull for a CuCrZr alloy and summarize stability interpretation
   artifacts.

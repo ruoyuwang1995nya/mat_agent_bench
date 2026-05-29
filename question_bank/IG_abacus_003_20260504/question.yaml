@@ -1,5 +1,8 @@
 id: IG_abacus_003_20260504
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: Generate ABACUS PW SCF INPUT and KPT files for Al slab electrostatic-potential
   calculation setup.

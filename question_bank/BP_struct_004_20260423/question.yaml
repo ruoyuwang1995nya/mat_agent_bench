@@ -1,5 +1,8 @@
 id: BP_struct_004_20260423
-capability: batch_processing
+task_type: simulation
+capabilities:
+- data_handling
+- scientific_reasoning
 domain: semiconductor
 intent: Perform batch post-processing of pre-computed band structures for 3 materials
   (Si, Ge, GaAs) with unified analysis parameters. Extract band gaps and band edge

@@ -1,5 +1,8 @@
 id: WO_error_mid_flow_001_20260428
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
 intent: When a multi-step workflow encounters an error mid-flow, agent should report
   clearly rather than silently skip the failed step.

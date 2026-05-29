@@ -1,5 +1,8 @@
 id: DFT_pxrd_001_20260408
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: agnostic
 intent: Perform Pawley refinement on variable-temperature PXRD patterns to extract
   lattice parameters at each temperature, identify two structural phases (low-temperature

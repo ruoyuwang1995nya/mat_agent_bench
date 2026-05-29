@@ -1,5 +1,8 @@
 id: WO_elec_004_20260404
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: battery
 intent: Compute average Na intercalation voltage of NFPP using mock energies.
 human_prompt_seed: "计算NFPP的平均嵌钠电压：\n1. 获取NFPP（Na₄Fe₃(PO₄)₂P₂O₇）结构（空间群Pna2₁，Z=4），使用单胞（104原子）；\n\

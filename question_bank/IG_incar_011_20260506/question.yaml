@@ -1,5 +1,8 @@
 id: IG_incar_011_20260506
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: 'Generate VASP INCAR for density of states calculation of ternary intermetallic
   CdOs3Pt. Magnetic metal; needs PDOS.

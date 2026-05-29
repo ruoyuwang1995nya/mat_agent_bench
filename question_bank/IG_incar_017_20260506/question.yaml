@@ -1,5 +1,8 @@
 id: IG_incar_017_20260506
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: 'Generate VASP INCAR for high-precision structure optimization of Al as BSE
   precursor. PREC=Accurate, ISIF=3.

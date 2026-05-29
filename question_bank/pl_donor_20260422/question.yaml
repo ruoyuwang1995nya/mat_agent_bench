@@ -1,5 +1,8 @@
 id: pl_donor_20260422
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: polymer
 intent: Pre-screen PM6, PTB7-Th, D18, and P3HT donor polymers for a Y6-like acceptor
   window using curated oligomer, conformational, and ranking data.

@@ -1,5 +1,8 @@
 id: IG_incar_001_20260508
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: 'Generate VASP INCAR for a band structure calculation of Lu4N4. Non-self-consistent
   run reading existing charge density (ICHARG=11), with projected band output (LORBIT=11).

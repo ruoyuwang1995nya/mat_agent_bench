@@ -1,5 +1,8 @@
 id: pl_hopping
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: battery
 intent: Analyze Li+ hopping in PEO-LiTFSI by comparing PMF barriers and diffusion
   evidence for two salt-ratio conditions.

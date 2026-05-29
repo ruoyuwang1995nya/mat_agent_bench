@@ -1,5 +1,8 @@
 id: SA_unit_conversion_001_20260430
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: agnostic
 intent: Correctly convert energy values between Rydberg and eV units.
 human_prompt_seed: '以下是一组 Quantum ESPRESSO 计算得到的能量数据（单位 Ry）：

@@ -1,5 +1,8 @@
 id: IG_incar_014_20260508
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: 'Generate VASP INCAR for static calculation of hydrogen-passivated SiO2 slab
   H16O24Si12. Insulator, fixed cell (ISIF=2).

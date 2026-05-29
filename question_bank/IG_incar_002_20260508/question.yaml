@@ -1,5 +1,8 @@
 id: IG_incar_002_20260508
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: 'Generate VASP INCAR for a static SCF calculation of organic-inorganic hybrid
   perovskite C26H28Cl4N4Pb2. Semiconductor, high-precision convergence.

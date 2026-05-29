@@ -1,5 +1,8 @@
 id: IG_cp2k_001_20260428
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: Generate a CP2K DFT single-point energy input file for a simple bulk system.
 human_prompt_seed: '请为 MgO 岩盐结构（a=4.212 Å）生成 CP2K DFT 单点能计算输入文件，要求：

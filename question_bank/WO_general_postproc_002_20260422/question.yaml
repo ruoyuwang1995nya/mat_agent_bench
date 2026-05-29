@@ -1,5 +1,8 @@
 id: WO_general_postproc_002_20260422
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
 intent: Produce structured post-processing pipeline artifacts with per-stage validation
   gates and rerun policy.

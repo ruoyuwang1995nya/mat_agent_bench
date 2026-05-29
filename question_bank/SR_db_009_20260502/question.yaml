@@ -1,5 +1,8 @@
 id: SR_db_009_20260502
-capability: structure_retrieval
+task_type: search_and_interpretation
+capabilities:
+- tool_utilization
+- scientific_reasoning
 domain: agnostic
 intent: Retrieve five candidate Heusler-alloy structures and summarize downloadable
   structure resources.

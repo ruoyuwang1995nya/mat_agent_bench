@@ -1,5 +1,7 @@
 id: SC_struct_build_003_20260507v2
-capability: structure_construction
+task_type: simulation
+capabilities:
+- structure_manipulation
 domain: agnostic
 intent: Build a phenol molecule from SMILES using RDKit and verify atom count and
   chemical formula.

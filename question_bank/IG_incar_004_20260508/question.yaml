@@ -1,5 +1,8 @@
 id: IG_incar_004_20260508
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: 'Generate VASP INCAR for HSE06 hybrid functional calculation of MOF C30H22N4O10Zn2.
   Accurate electronic structure and band gap.

@@ -35,6 +35,8 @@ def build_summary(records: list[EvalRunRecord], total_questions: int = 0) -> Eva
 
     cap_acc: dict[str, list[int]] = defaultdict(lambda: [0, 0, 0, 0, 0, 0])
     cap_weighted: dict[str, list[float]] = defaultdict(lambda: [0.0, 0.0, 0.0])
+    task_acc: dict[str, list[int]] = defaultdict(lambda: [0, 0, 0, 0, 0, 0])
+    task_weighted: dict[str, list[float]] = defaultdict(lambda: [0.0, 0.0, 0.0])
     dom_acc: dict[str, list[int]] = defaultdict(lambda: [0, 0, 0, 0, 0, 0])
     dom_weighted: dict[str, list[float]] = defaultdict(lambda: [0.0, 0.0, 0.0])
     mode_acc: dict[str, list[int]] = defaultdict(lambda: [0, 0, 0, 0, 0, 0])
@@ -62,10 +64,17 @@ def build_summary(records: list[EvalRunRecord], total_questions: int = 0) -> Eva
         if record.safety_veto.triggered:
             safety_triggered += 1
 
-        _add6(cap_acc[record.capability], cp, ct, gp, gt, ep, et)
-        cap_weighted[record.capability][0] += record.correctness_weighted_score
-        cap_weighted[record.capability][1] += record.grounding_weighted_score
-        cap_weighted[record.capability][2] += record.efficiency_weighted_score
+        for cap in record.capabilities:
+            _add6(cap_acc[cap], cp, ct, gp, gt, ep, et)
+            cap_weighted[cap][0] += record.correctness_weighted_score
+            cap_weighted[cap][1] += record.grounding_weighted_score
+            cap_weighted[cap][2] += record.efficiency_weighted_score
+
+        if record.task_type:
+            _add6(task_acc[record.task_type], cp, ct, gp, gt, ep, et)
+            task_weighted[record.task_type][0] += record.correctness_weighted_score
+            task_weighted[record.task_type][1] += record.grounding_weighted_score
+            task_weighted[record.task_type][2] += record.efficiency_weighted_score
 
         _add6(dom_acc[record.domain], cp, ct, gp, gt, ep, et)
         dom_weighted[record.domain][0] += record.correctness_weighted_score
@@ -91,7 +100,8 @@ def build_summary(records: list[EvalRunRecord], total_questions: int = 0) -> Eva
 
         if qk not in q_meta:
             q_meta[qk] = {
-                'capability': record.capability,
+                'capabilities': list(record.capabilities),
+                'task_type': record.task_type,
                 'domain': record.domain,
             }
 
@@ -102,6 +112,10 @@ def build_summary(records: list[EvalRunRecord], total_questions: int = 0) -> Eva
     by_capability = {
         k: _to_axis_pass_rates(v)
         for k, v in cap_acc.items()
+    }
+    by_task_type = {
+        k: _to_axis_pass_rates(v)
+        for k, v in task_acc.items()
     }
     by_domain = {
         k: _to_axis_pass_rates(v)
@@ -128,7 +142,8 @@ def build_summary(records: list[EvalRunRecord], total_questions: int = 0) -> Eva
         key = f'{question_id}:{mode}'
         by_question[key] = QuestionPassRate(
             question_id=question_id,
-            capability=meta.get('capability', ''),
+            capabilities=meta.get('capabilities', []),
+            task_type=meta.get('task_type', ''),
             domain=meta.get('domain', ''),
             runs=q_record_count,
             overall=(overall_p, overall_t),
@@ -153,6 +168,7 @@ def build_summary(records: list[EvalRunRecord], total_questions: int = 0) -> Eva
         pass_rate=pass_rate,
         weighted_pass_rate=weighted_pass_rate,
         by_capability=by_capability,
+        by_task_type=by_task_type,
         by_domain=by_domain,
         by_question=by_question,
         by_mode=by_mode,

@@ -1,5 +1,8 @@
 id: WO_general_ferro_009_20260411v1
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: semiconductor
 intent: Explain principle, applications, and limitations of the double-wave method
   in Sawyer-Tower ferroelectric measurements.

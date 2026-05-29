@@ -1,5 +1,7 @@
 id: SC_struct_build_002_20260507v2
-capability: structure_construction
+task_type: simulation
+capabilities:
+- structure_manipulation
 domain: agnostic
 intent: Build hexagonal boron nitride (hBN) unit cell from space group and Wyckoff
   positions, verifying correct cell angles and stoichiometry.

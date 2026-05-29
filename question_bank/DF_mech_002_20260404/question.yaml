@@ -1,5 +1,8 @@
 id: DF_mech_002_20260404
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: agnostic
 intent: From MSST Hugoniot simulation data, fit the P-V Hugoniot curve and determine
   C-J detonation velocity and pressure for RDX.

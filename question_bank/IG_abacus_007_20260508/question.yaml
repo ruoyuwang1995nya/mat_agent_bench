@@ -1,5 +1,8 @@
 id: IG_abacus_007_20260508
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: Prepare ABACUS Si LCAO-SCF inputs and Bohrium submission configuration.
 human_prompt_seed: 请为 Si 的 ABACUS LCAO-SCF 试算准备当前目录下的 `INPUT`、`STRU`、`KPT`，并把 Bohrium

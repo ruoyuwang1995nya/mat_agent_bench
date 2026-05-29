@@ -1,5 +1,8 @@
 id: WO_mech_001_20260502
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
 intent: Independently locate Al FCC structure, execute 5-point volume scan, fit EOS,
   report a0 and B0.

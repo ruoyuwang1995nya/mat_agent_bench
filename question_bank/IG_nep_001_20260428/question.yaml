@@ -1,5 +1,8 @@
 id: IG_nep_001_20260428
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: Draft a practical nep.in from provided training structures.
 human_prompt_seed: '目录里有一份 NEP 训练数据 `train.xyz`。

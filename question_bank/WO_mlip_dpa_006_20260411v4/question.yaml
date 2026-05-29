@@ -1,5 +1,7 @@
 id: WO_mlip_dpa_006_20260411v4
-capability: structure_construction
+task_type: simulation
+capabilities:
+- structure_manipulation
 domain: agnostic
 intent: Build and export three 1 mol/L Zn-salt aqueous model boxes near 2000 atoms
   with valid integer compositions and concrete structure artifacts.

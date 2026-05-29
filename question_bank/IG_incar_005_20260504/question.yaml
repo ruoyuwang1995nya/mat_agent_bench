@@ -1,5 +1,8 @@
 id: IG_incar_005_20260504
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: 'Generate VASP INCAR for DFT+U calculation of RbPmMo2O8 with Hubbard U on
   Mo d-orbitals. Spin-polarized.

@@ -1,5 +1,7 @@
 id: SC_aw_rmbulk_006_20260512v1
-capability: structure_construction
+task_type: simulation
+capabilities:
+- structure_manipulation
 domain: agnostic
 intent: >-
   Remove an adsorbed molecule from a bulk crystal and return the clean host structure

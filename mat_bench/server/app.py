@@ -5,6 +5,7 @@ run the benchmark without a local harness.
 
 Endpoints::
 
+    GET  /guide                            Agent HTTP API reference (plain text, no auth)
     POST /token                           Register a new persistent API token
     POST /sessions                        Create a new session (requires X-API-Token header)
     GET  /questions                       List questions (filter: capability, domain, limit)
@@ -254,7 +255,7 @@ def _do_grade(
 
 try:
     from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query, Request
-    from fastapi.responses import FileResponse
+    from fastapi.responses import FileResponse, PlainTextResponse
 
     app = FastAPI(
         title="mat-bench server",
@@ -295,6 +296,12 @@ try:
             _tokens[token_str] = record
         _token_store.save_token(token_str, record.created_at)
         return {"token": token_str, "created_at": record.created_at.isoformat()}
+
+    @app.get("/guide")
+    async def agent_guide() -> PlainTextResponse:
+        """Return the agent HTTP API guide as plain text/markdown."""
+        path = Path(__file__).parent.parent.parent / "agents" / "agent_api_guide.md"
+        return PlainTextResponse(path.read_text(encoding="utf-8"))
 
     @app.post("/sessions")
     async def create_session(

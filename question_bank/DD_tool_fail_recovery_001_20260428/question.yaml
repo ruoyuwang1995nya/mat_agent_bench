@@ -1,5 +1,8 @@
 id: DD_tool_fail_recovery_001_20260428
-capability: data_diagnosis
+task_type: material_characterization
+capabilities:
+- data_handling
+- scientific_reasoning
 domain: agnostic
 intent: When a tool call returns an error, agent should diagnose the cause and try
   an alternative approach rather than blindly retrying the same call.

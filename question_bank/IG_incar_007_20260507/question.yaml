@@ -1,5 +1,8 @@
 id: IG_incar_007_20260507
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: 'Generate VASP INCAR for Born-Oppenheimer molecular dynamics of Heusler alloy
   MnNaPm2. Mn is magnetic; timestep 0.5 fs.

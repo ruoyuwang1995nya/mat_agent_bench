@@ -1,5 +1,8 @@
 id: DF_mech_pressure_003_20260410v3
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: agnostic
 intent: Produce structured mechanical-pressure estimation with sensitivity analysis
   and go/no-go recommendation.

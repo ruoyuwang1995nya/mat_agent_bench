@@ -1,5 +1,8 @@
 id: IG_incar_018_20260508
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: 'Generate VASP INCAR for magnetic SCF calculation of double perovskite Ca4TaOs.
   5d transition metals (Ta, Os); spin-polarized with MAGMOM.

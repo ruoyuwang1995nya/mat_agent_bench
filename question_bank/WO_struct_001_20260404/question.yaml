@@ -1,5 +1,8 @@
 id: WO_struct_001_20260404
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: catalysis
 intent: Calculate surface energy of MgO(100) by constructing slab models and comparing
   with bulk.

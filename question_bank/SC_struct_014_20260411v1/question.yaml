@@ -1,5 +1,7 @@
 id: SC_struct_014_20260411v1
-capability: structure_construction
+task_type: simulation
+capabilities:
+- structure_manipulation
 domain: agnostic
 intent: Build a perovskite crystal from explicit space group and Wyckoff position
   inputs and verify formula/lattice consistency.

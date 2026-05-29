@@ -1,5 +1,8 @@
 id: CR_BP_HT_adsorption_tree_20260406v2
-capability: batch_processing
+task_type: simulation
+capabilities:
+- data_handling
+- scientific_reasoning
 domain: catalysis
 intent: Generate HT_adsorption/ directory tree with pure_metals, compounds, clusters
   sections per doc 4.1 (high-level structure and naming).

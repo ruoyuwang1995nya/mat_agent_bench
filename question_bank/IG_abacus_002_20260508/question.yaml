@@ -1,5 +1,8 @@
 id: IG_abacus_002_20260508
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: Add ABACUS LCAO BSSE correction at a bulk Fe vacancy site using a single Fe_empty
   ghost atom and SCF INPUT.

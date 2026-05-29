@@ -1,5 +1,8 @@
 id: WO_general_mechmix_004_20260415
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: alloy
 intent: Compare database-retrieved alloy references with APEX elastic predictions
   for a Ni-Co-Cr composition at room temperature.

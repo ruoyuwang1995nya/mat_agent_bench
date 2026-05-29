@@ -1,5 +1,8 @@
 id: WO_compopt_001_20260508
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: alloy
 intent: Use DART GA to search for an optimal high-entropy alloy composition with target
   hardness properties under element-fraction constraints.

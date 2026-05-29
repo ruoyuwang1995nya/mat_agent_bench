@@ -146,9 +146,11 @@ function copyPrompt() {
 
 async function loadQuestions() {
   const cap = document.getElementById('filter-cap').value;
+  const type = document.getElementById('filter-type').value;
   const dom = document.getElementById('filter-dom').value;
   const params = new URLSearchParams();
   if (cap) params.set('capability', cap);
+  if (type) params.set('task_type', type);
   if (dom) params.set('domain', dom);
   try {
     const res = await fetch(`/api/questions?${params}`);
@@ -157,7 +159,7 @@ async function loadQuestions() {
     renderTable();
   } catch (err) {
     document.getElementById('q-body').innerHTML =
-      `<tr><td colspan="6" style="text-align:center;color:var(--red);padding:2rem">${err.message}</td></tr>`;
+      `<tr><td colspan="7" style="text-align:center;color:var(--red);padding:2rem">${err.message}</td></tr>`;
   }
 }
 
@@ -174,14 +176,15 @@ function renderTable() {
 
   if (!rows.length) {
     document.getElementById('q-body').innerHTML =
-      `<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:3rem">No questions found.</td></tr>`;
+      `<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:3rem">No questions found.</td></tr>`;
     return;
   }
 
   document.getElementById('q-body').innerHTML = rows.map(q => `
     <tr data-id="${esc(q.id)}">
       <td><code style="font-size:.8rem;color:var(--cyan)">${esc(q.id)}</code></td>
-      <td><span class="badge badge-cap">${esc(q.capability)}</span></td>
+      <td>${(Array.isArray(q.capability) ? q.capability : [q.capability]).map(c => `<span class="badge badge-cap">${esc(c)}</span>`).join(' ')}</td>
+      <td><span class="badge" style="background:var(--bg3);color:var(--text-dim);font-size:.72rem">${esc(q.task_type)}</span></td>
       <td><span class="badge badge-dom">${esc(q.domain)}</span></td>
       <td style="font-size:.78rem;color:var(--text-dim);max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
         ${q.tags.slice(0, 5).map(t => esc(t)).join(', ')}${q.tag_count > 5 ? ' …' : ''}
@@ -251,6 +254,7 @@ async function handleUpload(file) {
 
 document.getElementById('search').addEventListener('input', renderTable);
 document.getElementById('filter-cap').addEventListener('change', loadQuestions);
+document.getElementById('filter-type').addEventListener('change', loadQuestions);
 document.getElementById('filter-dom').addEventListener('change', loadQuestions);
 
 loadTemplates();

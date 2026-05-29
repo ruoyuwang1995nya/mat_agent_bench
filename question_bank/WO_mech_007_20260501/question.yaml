@@ -1,5 +1,8 @@
 id: WO_mech_007_20260501
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
 intent: Calculate GaAs elastic constants and bulk modulus with ABACUS and summarize
   the tensor outputs.

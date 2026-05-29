@@ -1,5 +1,7 @@
 id: SC_struct_008_20260507
-capability: structure_construction
+task_type: simulation
+capabilities:
+- structure_manipulation
 domain: agnostic
 intent: Construct a computation-ready gamma-alumina bulk model and validate stoichiometry,
   geometry, coordination environments, and post-relaxation force.

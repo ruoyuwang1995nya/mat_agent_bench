@@ -1,5 +1,8 @@
 id: IG_abacus_006_20260508
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: Prepare ABACUS PW inputs for Mo surface-vacancy energy using bulk, pristine
   slab, and surface-vacancy slab structures.

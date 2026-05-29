@@ -1,5 +1,8 @@
 id: DF_scxrd_002_20260408
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: agnostic
 intent: Determine the crystal structure of a disordered molecular crystal (1-HTP,
   385 K) from raw single-crystal X-ray diffraction data. The high-temperature phase

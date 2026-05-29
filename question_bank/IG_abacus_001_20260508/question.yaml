@@ -1,5 +1,8 @@
 id: IG_abacus_001_20260508
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: 'Add ABACUS LCAO BSSE correction for Fe(110) slab: define Fe_empty species,
   place empty-atom layers in vacuum, and write SCF INPUT with sparse k along vacuum.'

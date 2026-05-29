@@ -1,5 +1,8 @@
 id: WO_end_to_end_001_20260428
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
 intent: Complete an end-to-end workflow from structure retrieval to surface construction
   to input generation.

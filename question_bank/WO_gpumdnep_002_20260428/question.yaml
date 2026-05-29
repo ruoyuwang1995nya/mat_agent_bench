@@ -1,5 +1,8 @@
 id: WO_gpumdnep_002_20260428
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
 intent: Predict Si phonon spectrum using Si_Fan_2019 Tersoff mini potential and assess
   optical-branch frequency.

@@ -1,5 +1,8 @@
 id: BP_struct_003_20260428
-capability: batch_processing
+task_type: simulation
+capabilities:
+- data_handling
+- scientific_reasoning
 domain: alloy
 intent: Generate 5 VASP INCAR input files for Al ENCUT convergence test (280, 300,
   320, 340, 360 eV). All other parameters (k-mesh, ISMEAR, SIGMA, NSW) must remain

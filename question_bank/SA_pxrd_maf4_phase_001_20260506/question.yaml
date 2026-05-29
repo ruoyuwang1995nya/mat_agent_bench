@@ -1,5 +1,8 @@
 id: SA_pxrd_maf4_phase_001_20260506
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: agnostic
 intent: Compare paired PXRD traces to determine whether enzyme encapsulation preserves
   the MAF-4 crystalline phase.

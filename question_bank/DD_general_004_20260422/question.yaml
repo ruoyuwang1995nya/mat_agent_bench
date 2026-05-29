@@ -1,5 +1,8 @@
 id: DD_general_004_20260422
-capability: data_diagnosis
+task_type: material_characterization
+capabilities:
+- data_handling
+- scientific_reasoning
 domain: semiconductor
 intent: Diagnose relaxation divergence caused by POTIM too large combined with wrong
   initial phase.

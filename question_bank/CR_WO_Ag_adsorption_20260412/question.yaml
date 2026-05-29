@@ -1,5 +1,8 @@
 id: CR_WO_Ag_adsorption_20260412
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: catalysis
 intent: Compute adsorption energies of six adsorbates on Ag(001) and Ag(011) at on-top
   sites using MLIP/calculator with consistent energy reference per doc 3.2.1.

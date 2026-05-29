@@ -1,5 +1,8 @@
 id: DF_scxrd_001_20260408
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: agnostic
 intent: Determine the crystal structure of an ordered molecular crystal (1-RTP, 293
   K) from raw single-crystal X-ray diffraction data. Starting from the reduced reflection

@@ -34,15 +34,21 @@
       <input id="search" type="text" class="search-input" placeholder="Search by ID, intent, or tags…">
       <select id="filter-cap" class="filter-select">
         <option value="">All capabilities</option>
-        <option value="batch_processing">batch_processing</option>
-        <option value="data_diagnosis">data_diagnosis</option>
-        <option value="execution_contract">execution_contract</option>
-        <option value="input_generation">input_generation</option>
-        <option value="safety_refusal">safety_refusal</option>
-        <option value="scientific_analysis">scientific_analysis</option>
-        <option value="structure_construction">structure_construction</option>
-        <option value="structure_retrieval">structure_retrieval</option>
+        <option value="scientific_reasoning">scientific_reasoning</option>
+        <option value="tool_utilization">tool_utilization</option>
         <option value="workflow_orchestration">workflow_orchestration</option>
+        <option value="data_handling">data_handling</option>
+        <option value="structure_manipulation">structure_manipulation</option>
+        <option value="scientific_grounding">scientific_grounding</option>
+      </select>
+      <select id="filter-type" class="filter-select">
+        <option value="">All task types</option>
+        <option value="search_and_interpretation">search_and_interpretation</option>
+        <option value="simulation">simulation</option>
+        <option value="materials_design_and_discovery">materials_design_and_discovery</option>
+        <option value="material_characterization">material_characterization</option>
+        <option value="synthesis_and_experiment_design">synthesis_and_experiment_design</option>
+        <option value="end_to_end_research">end_to_end_research</option>
       </select>
       <select id="filter-dom" class="filter-select">
         <option value="">All domains</option>
@@ -62,6 +68,7 @@
           <tr>
             <th style="width:220px">ID</th>
             <th>Capability</th>
+            <th>Task Type</th>
             <th>Domain</th>
             <th>Tags</th>
             <th style="width:70px;text-align:center">Checks</th>
@@ -69,7 +76,7 @@
           </tr>
         </thead>
         <tbody id="q-body">
-          <tr><td colspan="6" style="text-align:center;padding:3rem"><div class="spinner" style="margin:auto"></div></td></tr>
+          <tr><td colspan="7" style="text-align:center;padding:3rem"><div class="spinner" style="margin:auto"></div></td></tr>
         </tbody>
       </table>
     </div>

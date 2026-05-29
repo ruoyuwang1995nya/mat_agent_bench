@@ -1,5 +1,8 @@
 id: PXRD_pawley_303K_001_20260502_v1
-capability: scientific_analysis
+task_type: material_characterization
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: agnostic
 intent: Perform Pawley refinement on a single PXRD pattern at 303 K to extract all
   lattice parameters (a, b, c, beta, V) and report the weighted profile R-factor (wR).

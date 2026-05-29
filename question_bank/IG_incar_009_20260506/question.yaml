@@ -1,5 +1,8 @@
 id: IG_incar_009_20260506
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: 'Generate VASP INCAR for DFPT dielectric constant calculation of C8H12HfO4.
   Compute dielectric tensor and Born effective charges.

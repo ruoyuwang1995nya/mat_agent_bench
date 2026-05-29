@@ -1,5 +1,8 @@
 id: WO_elec_003_20260404
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: battery
 intent: 'Compute doping formation energy of NFPP: retrieve structure, build doped
   supercell, use mock energies, calculate formation energy.'

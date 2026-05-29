@@ -1,5 +1,7 @@
 id: CR_SC_ZnPd011_20260409
-capability: structure_construction
+task_type: simulation
+capabilities:
+- structure_manipulation
 domain: catalysis
 intent: Cut ZnPd (011) slab from Materials Project bulk (mp-1103252) with 3 layers
   and 2x2x1 supercell per doc 3.1.1.

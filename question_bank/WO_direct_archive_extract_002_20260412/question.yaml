@@ -1,5 +1,8 @@
 id: WO_direct_archive_extract_002_20260412
-capability: execution_contract
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
 priority: P0
 intent: Extract provided .tgz so required file appears at workspace root with expected

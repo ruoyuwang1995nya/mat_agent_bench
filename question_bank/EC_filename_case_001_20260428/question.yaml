@@ -1,5 +1,8 @@
 id: EC_filename_case_001_20260428
-capability: execution_contract
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
 intent: Agent must respect exact case in output filenames (POSCAR not poscar).
 human_prompt_seed: '请构建一个简单的 Si FCC 结构（晶格常数 5.43 Å，空间群 Fd-3m），输出为 VASP 格式。

@@ -264,6 +264,7 @@ def create_app(
     @app.get("/api/questions")
     async def list_questions(
         capability: str | None = Query(None),
+        task_type: str | None = Query(None),
         domain: str | None = Query(None),
         tags: list[str] | None = Query(None),
     ):
@@ -271,11 +272,12 @@ def create_app(
             registry = Registry(qb_dir)
         except FileNotFoundError as exc:
             raise HTTPException(404, str(exc))
-        questions = registry.list_questions(capability=capability, domain=domain, tags=tags)
+        questions = registry.list_questions(capability=capability, task_type=task_type, domain=domain, tags=tags)
         return [
             {
                 "id": q.id,
                 "capability": q.capability,
+                "task_type": q.task_type,
                 "domain": q.domain,
                 "intent": q.intent,
                 "tags": q.tags,

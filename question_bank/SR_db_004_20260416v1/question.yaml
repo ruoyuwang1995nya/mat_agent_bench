@@ -1,5 +1,8 @@
 id: SR_db_004_20260416v1
-capability: structure_retrieval
+task_type: search_and_interpretation
+capabilities:
+- tool_utilization
+- scientific_reasoning
 domain: battery
 intent: Retrieve five Li-Mn-O materials from Alexandria and summarize machine-checkable
   provenance metadata.

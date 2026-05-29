@@ -1,5 +1,8 @@
 id: DF_mech_001_20260404
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: agnostic
 intent: Fit equation of state from provided E-V data and report V0 and B0.
 human_prompt_seed: 使用 `ev_curve.json` 中的 E-V 数据拟合 Birch-Murnaghan 状态方程，输出 V0(A3) 与

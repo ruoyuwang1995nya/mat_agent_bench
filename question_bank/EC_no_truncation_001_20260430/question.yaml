@@ -1,5 +1,8 @@
 id: EC_no_truncation_001_20260430
-capability: execution_contract
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
 intent: Agent must output complete tabular data without truncating with ellipsis.
 human_prompt_seed: '请生成一个包含 20 种常见金属元素的表格，列出每种元素的符号、原子序数、晶体结构类型（FCC/BCC/HCP）和常温晶格常数（Å）。

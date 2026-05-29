@@ -1,5 +1,8 @@
 id: WO_gpumdnep_004_20260428
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
 intent: Compute Si thermal expansion coefficient with GPUMD using Si_Fan_2019 Tersoff
   mini potential.

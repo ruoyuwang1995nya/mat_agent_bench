@@ -1,5 +1,8 @@
 id: WO_mlip_dpa_005_20260411v2
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
 intent: Compute Cu FCC single-vacancy migration barrier with DPA via NEB; report forward
   barrier energy.

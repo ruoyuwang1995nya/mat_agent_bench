@@ -1,5 +1,8 @@
 id: IG_abacus_005_20260508
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: Prepare ABACUS PW bulk-and-slab inputs for Al fcc(100) surface-energy convergence
   using bulk, 5-layer slab, and 7-layer slab structures.

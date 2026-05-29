@@ -1,5 +1,8 @@
 id: WO_general_hea_005_20260411v1
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: alloy
 intent: Evaluate phase-formation tendency of AlCr0.8CoFeNi HEA using descriptor calculations,
   binary-phase cues, and solid-solution prediction.

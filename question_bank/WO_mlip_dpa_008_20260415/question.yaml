@@ -1,5 +1,8 @@
 id: WO_mlip_dpa_008_20260415
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
 intent: Run a short DPA molecular-dynamics simulation for Li2O at 300 K and summarize
   thermostat/time-step settings with trajectory statistics.

@@ -1,5 +1,8 @@
 id: WO_compopt_002_20260508
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: alloy
 intent: Start from user-provided seed compositions and optimize towards a target yield
   strength while maintaining a ductility constraint.

@@ -1,5 +1,7 @@
 id: SC_struct_005_20260508
-capability: structure_construction
+task_type: simulation
+capabilities:
+- structure_manipulation
 domain: agnostic
 intent: Infer SG-derived chemical formulas for 5 disordered crystal structures and
   construct ordered replicas to assess 3D structure perception.

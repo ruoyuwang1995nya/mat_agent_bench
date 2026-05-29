@@ -1,5 +1,8 @@
 id: SA_perovskite_pl_lifetime_001_20260506
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: semiconductor
 intent: Extract photoluminescence peak, band width, and lifetime metrics from uploaded
   Mn-doped perovskite spectra.

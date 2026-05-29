@@ -1,5 +1,8 @@
 id: CR_WO_limiting_potential_20260412
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: catalysis
 intent: From free-energy steps on CO2RR-to-CO, HER, and CO2-to-HCOOH pathways, compute
   limiting potentials U_L = -ΔG_max/e per doc 3.2.2.

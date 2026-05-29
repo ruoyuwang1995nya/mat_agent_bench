@@ -1,5 +1,8 @@
 id: CR_WO_feature_extract_43d_20260412
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: catalysis
 intent: Implement 43-dimensional feature extraction (40 continuous + 3 categorical)
   from adslab POSCAR paths per doc 4.3.1.

@@ -1,5 +1,8 @@
 id: SA_her_mos2_001_20260506
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: catalysis
 intent: Compare bulk and exfoliated MoS2 HER electrochemical performance from uploaded
   LSV and CV traces.

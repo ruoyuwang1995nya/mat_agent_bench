@@ -1,5 +1,8 @@
 id: WO_elec_006_20260411v2
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: catalysis
 intent: Mock surface energy for Fe BCC(110) with BSSE-aware workflow; compare sigma
   to VASP reference using provided energies and area.

@@ -1,5 +1,8 @@
 id: IG_incar_015_20260508
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: 'Generate VASP INCAR for defect calculation of I-on-S substitution in BiSI
   with HSE06+SOC. Heavy element Bi requires SOC.

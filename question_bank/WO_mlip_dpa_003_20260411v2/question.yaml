@@ -1,5 +1,8 @@
 id: WO_mlip_dpa_003_20260411v2
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
 intent: Compute phonon dispersion for Si diamond with DPA; report Gamma-point optical
   frequency and check for imaginary modes.

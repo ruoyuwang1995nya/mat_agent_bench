@@ -1,5 +1,8 @@
 id: WO_struct_003_20260505
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
 intent: Generate and summarize 10 candidate crystal structures constrained by superconducting
   critical temperature and space group.

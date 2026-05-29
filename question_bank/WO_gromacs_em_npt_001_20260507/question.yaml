@@ -1,5 +1,8 @@
 id: WO_gromacs_em_npt_001_20260507
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
 intent: Submit GROMACS energy minimization and NPT equilibration on Bohrium, verify
   convergence and output structure.

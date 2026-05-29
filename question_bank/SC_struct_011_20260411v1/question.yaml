@@ -1,5 +1,7 @@
 id: SC_struct_011_20260411v1
-capability: structure_construction
+task_type: simulation
+capabilities:
+- structure_manipulation
 domain: agnostic
 intent: Build a multi-component Fe-Ni-Co-Cr-V alloy structure from an fcc-Ni 5x5x5
   supercell template and report composition constraints.

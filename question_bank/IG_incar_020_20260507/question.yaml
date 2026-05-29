@@ -1,5 +1,8 @@
 id: IG_incar_020_20260507
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: 'Generate VASP INCAR for magnetic metal SCF calculation of ternary selenide
   Na3AlSe. Spin-polarized (ISPIN=2) with PDOS (LORBIT=11).

@@ -1,5 +1,8 @@
 id: IG_incar_006_20260507
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: 'Generate VASP INCAR for SCAN metaGGA calculation of intermetallic Tm2ZnGa2.
   Tm has f electrons; spin-polarized.

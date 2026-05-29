@@ -1,5 +1,7 @@
 id: SC_struct_002_20260507
-capability: structure_construction
+task_type: simulation
+capabilities:
+- structure_manipulation
 domain: agnostic
 intent: Build a 4-layer (110) surface slab from the uploaded PUBMUU03 molecular crystal
   CIF and verify molecule integrity plus atom-count scaling.

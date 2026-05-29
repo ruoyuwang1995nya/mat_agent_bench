@@ -75,15 +75,21 @@ VerifyLiteral = Literal[
 AxisLiteral = Literal['correctness', 'grounding', 'efficiency']
 
 CapabilityLiteral = Literal[
-    'structure_construction',
-    'structure_retrieval',
-    'scientific_analysis',
+    'scientific_reasoning',
+    'tool_utilization',
     'workflow_orchestration',
-    'execution_contract',
-    'data_diagnosis',
-    'batch_processing',
-    'safety_refusal',
-    'input_generation',
+    'data_handling',
+    'structure_manipulation',
+    'scientific_grounding',
+]
+
+TaskTypeLiteral = Literal[
+    'search_and_interpretation',
+    'simulation',
+    'materials_design_and_discovery',
+    'material_characterization',
+    'synthesis_and_experiment_design',
+    'end_to_end_research',
 ]
 
 DomainLiteral = Literal[
@@ -204,7 +210,8 @@ class QuestionItem(BaseModel):
     """Single MATTER v5 question entry."""
 
     id: str
-    capability: CapabilityLiteral
+    task_type: TaskTypeLiteral
+    capabilities: list[CapabilityLiteral] = Field(min_length=1)
     domain: DomainLiteral
     intent: str
     human_prompt_seed: str
@@ -245,9 +252,10 @@ class QuestionItem(BaseModel):
     @model_validator(mode='after')
     def _validate_scoring_contract(self) -> 'QuestionItem':
         tag_values = {t.value for t in self.tags}
-        if self.capability in tag_values:
+        cap_tag_overlap = set(self.capabilities) & tag_values
+        if cap_tag_overlap:
             raise ValueError(
-                f'tag {self.capability!r} must not repeat question capability'
+                f'tags {cap_tag_overlap!r} must not repeat question capabilities'
             )
         if self.domain in tag_values:
             raise ValueError(f'tag {self.domain!r} must not repeat question domain')
@@ -294,8 +302,9 @@ class QuestionItem(BaseModel):
                     f"scoring_checklist item '{item.id}' (verify={item.verify}) "
                     'requires a matching reference_answers entry with the same key'
                 )
-        if self.capability != 'safety_refusal' and not self.reference_answers:
-            raise ValueError('non-safety questions must include reference_answers')
+        needs_ref_items = [i for i in self.scoring_checklist if i.verify in _needs_ref]
+        if needs_ref_items and not self.reference_answers:
+            raise ValueError('questions with reference-requiring checklist items must include reference_answers')
         return self
 
 
@@ -308,34 +317,12 @@ class QuestionBank(BaseModel):
     """Question bank file model (v5 format)."""
 
     version: str = 'v5'
-    capability: CapabilityLiteral | None = None
-    domain: DomainLiteral | None = None
     questions: list[QuestionItem]
 
     @model_validator(mode='after')
     def _validate_questions(self) -> 'QuestionBank':
         if not self.questions:
             raise ValueError('questions cannot be empty')
-        if self.capability is None:
-            raise ValueError('top-level capability is required for every bank')
-        mismatched_capabilities = sorted(
-            q.id for q in self.questions if q.capability != self.capability
-        )
-        if mismatched_capabilities:
-            raise ValueError(
-                'top-level capability must match every question capability; '
-                f'mismatched question ids: {mismatched_capabilities}'
-            )
-        if self.domain is None:
-            raise ValueError('top-level domain is required for every bank')
-        mismatched_domains = sorted(
-            q.id for q in self.questions if q.domain != self.domain
-        )
-        if mismatched_domains:
-            raise ValueError(
-                'top-level domain must match every question domain; '
-                f'mismatched question ids: {mismatched_domains}'
-            )
         return self
 
 
@@ -385,7 +372,8 @@ class EvalRunRecord(BaseModel):
     """Atomic run record: one question, one mode, one repeat."""
 
     question_id: str
-    capability: str = ''
+    capabilities: list[str] = Field(default_factory=list)
+    task_type: str = ''
     domain: str = ''
     mode: ModeLiteral
     repeat_idx: int
@@ -447,8 +435,9 @@ class QuestionPassRate(BaseModel):
     """Per-question pass rate summary."""
 
     question_id: str
-    capability: str
-    domain: str
+    capabilities: list[str] = Field(default_factory=list)
+    task_type: str = ''
+    domain: str = ''
     runs: int = 0
     overall: tuple[int, int] = (0, 0)
     correctness: tuple[int, int] = (0, 0)
@@ -468,6 +457,7 @@ class EvaluationSummary(BaseModel):
     weighted_pass_rate: float = 0.0
 
     by_capability: dict[str, AxisPassRates] = Field(default_factory=dict)
+    by_task_type: dict[str, AxisPassRates] = Field(default_factory=dict)
     by_domain: dict[str, AxisPassRates] = Field(default_factory=dict)
     by_question: dict[str, QuestionPassRate] = Field(default_factory=dict)
     by_mode: dict[str, AxisPassRates] = Field(default_factory=dict)

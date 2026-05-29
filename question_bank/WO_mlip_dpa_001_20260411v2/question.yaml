@@ -1,5 +1,8 @@
 id: WO_mlip_dpa_001_20260411v2
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
 intent: Optimize diamond Si with DPA ML potential (cell + atoms), report lattice constant
   and energy per atom.

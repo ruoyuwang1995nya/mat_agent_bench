@@ -1,5 +1,8 @@
 id: SA_feasibility_001_20260428
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: agnostic
 intent: Agent should assess feasibility and refuse or warn when a computation request
   is clearly infeasible.

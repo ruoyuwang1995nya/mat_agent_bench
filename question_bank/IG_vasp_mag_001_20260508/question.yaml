@@ -1,5 +1,8 @@
 id: IG_vasp_mag_001_20260508
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: Generate VASP INCAR for a magnetic Fe BCC system with correct spin-polarization
   settings.

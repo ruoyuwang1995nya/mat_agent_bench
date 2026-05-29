@@ -1,5 +1,7 @@
 id: SC_struct_SiH_20260507
-capability: structure_construction
+task_type: simulation
+capabilities:
+- structure_manipulation
 domain: semiconductor
 intent: Passivate dangling bonds on both top and bottom surfaces of a Si(100) slab
   with hydrogen atoms.

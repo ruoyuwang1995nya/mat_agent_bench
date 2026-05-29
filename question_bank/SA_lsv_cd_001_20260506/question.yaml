@@ -1,5 +1,8 @@
 id: SA_lsv_cd_001_20260506
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: agnostic
 intent: Quantify cadmium in a wastewater sample from CHI linear-sweep voltammetry
   calibration traces.

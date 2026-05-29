@@ -1,5 +1,8 @@
 id: WO_mech_008_20260415
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
 intent: Calculate SrTiO3 elastic constants with APEX and report full C11/C12/C44 outputs.
 human_prompt_seed: "计算 SrTiO3 弹性常数（Mock版）：\n1. 先 query/检索并整理 APEX 弹性流程所需输入文件；\n2.\

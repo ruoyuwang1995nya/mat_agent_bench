@@ -1,5 +1,8 @@
 id: IG_lammps_001_20260428
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: Generate a LAMMPS molecular dynamics input file for a simple Lennard-Jones
   system relaxation.

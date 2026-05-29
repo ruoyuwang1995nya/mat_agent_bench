@@ -1,5 +1,7 @@
 id: SR_db_003_20260411v3
-capability: structure_construction
+task_type: search_and_interpretation
+capabilities:
+- structure_manipulation
 domain: agnostic
 intent: Generate and summarize candidate crystal structures under explicit superconducting
   constraints.

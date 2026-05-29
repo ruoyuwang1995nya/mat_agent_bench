@@ -1,5 +1,7 @@
 id: SC_struct_004_20260409
-capability: structure_construction
+task_type: simulation
+capabilities:
+- structure_manipulation
 domain: agnostic
 intent: Exfoliate a MoS2 monolayer from bulk 2H-MoS2 and verify the 2D structure.
 human_prompt_seed: '读取 `twod_spec.json`，从体相 2H-MoS2 中剥离单层 MoS2。 添加 20 A z 方向真空层，验证化学计量比为

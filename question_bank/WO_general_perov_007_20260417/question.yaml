@@ -1,5 +1,8 @@
 id: WO_general_perov_007_20260417
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: semiconductor
 intent: Query high-efficiency perovskite additives and produce recommendation plus
   a proposal draft based on predicted performance.

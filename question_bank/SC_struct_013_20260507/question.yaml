@@ -1,5 +1,7 @@
 id: SC_struct_013_20260507
-capability: structure_construction
+task_type: simulation
+capabilities:
+- structure_manipulation
 domain: agnostic
 intent: Construct and compare close-packed layer cross sections for fcc and hcp crystals,
   then expand both slabs to 5x5x1 supercells.

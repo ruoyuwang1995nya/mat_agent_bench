@@ -1,5 +1,8 @@
 id: SA_uvvis_glucose_maf4_001_20260506
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: agnostic
 intent: Analyze a UV-Vis plate-reader export for MAF-4 enzyme-cascade glucose sensing.
 human_prompt_seed: '请下载并分析以下通过 OSS URL 提供的酶级联比色葡萄糖检测实验酶标仪导出文件：

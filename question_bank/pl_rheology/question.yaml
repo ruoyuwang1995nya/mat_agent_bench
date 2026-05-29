@@ -1,5 +1,8 @@
 id: pl_rheology
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: polymer
 intent: Identify a processing window for PEO-LiTFSI by balancing zero-shear viscosity,
   shear-thinning onset, and ionic-conductivity proxies across temperature and salt

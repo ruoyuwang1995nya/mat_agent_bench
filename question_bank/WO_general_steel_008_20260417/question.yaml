@@ -1,5 +1,8 @@
 id: WO_general_steel_008_20260417
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: alloy
 intent: Orchestrate Ni-content sweeps for duplex stainless-steel compositions, produce
   machine-checkable tensile predictions, and summarize trend plus uncertainty in a

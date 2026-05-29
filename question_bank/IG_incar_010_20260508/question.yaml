@@ -1,5 +1,8 @@
 id: IG_incar_010_20260508
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: 'Generate VASP INCAR for spin-orbit coupling calculation of heavy-element
   halide Br6H6Pb2S2. Pb SOC is significant.

@@ -1,5 +1,8 @@
 id: SA_lfp_cycling_001_20260506
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: battery
 intent: Analyze LiFePO4 half-cell cycling data from a Neware workbook.
 human_prompt_seed: '请下载并分析以下通过 OSS URL 提供的 Neware 工作簿：

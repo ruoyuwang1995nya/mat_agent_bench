@@ -1,5 +1,8 @@
 id: DD_data_qc_plot_001_20260410v4
-capability: data_diagnosis
+task_type: material_characterization
+capabilities:
+- data_handling
+- scientific_reasoning
 domain: agnostic
 intent: Build a data-grounded plotting and QC workflow from CSV with machine-checkable
   artifacts, numeric QC metrics, and chart-priority decisions.

@@ -1,5 +1,8 @@
 id: IG_incar_012_20260507
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: 'Generate VASP INCAR for NEB transition state search with HSE06 of Prussian
   blue analogue C24Fe8N24Na4. Fe magnetic, NUPDOWN=20.

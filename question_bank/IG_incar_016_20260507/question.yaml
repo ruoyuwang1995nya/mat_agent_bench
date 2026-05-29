@@ -1,5 +1,8 @@
 id: IG_incar_016_20260507
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: 'Generate VASP INCAR for GW precursor SCF of rare-earth selenide DySe. Dy
   has f electrons (MAGMOM~7); save wavefunctions for subsequent GW.

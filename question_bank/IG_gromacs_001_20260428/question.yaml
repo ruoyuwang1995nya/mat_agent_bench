@@ -1,5 +1,8 @@
 id: IG_gromacs_001_20260428
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: Generate GROMACS simulation parameter file for energy minimization.
 human_prompt_seed: '请为一个蛋白质体系生成 GROMACS 能量最小化的参数文件，要求：

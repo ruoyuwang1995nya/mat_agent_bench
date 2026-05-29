@@ -1,5 +1,8 @@
 id: WO_mech_003_20260501
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
 intent: Compute vacancy formation energies for Fe-X doped supercells from mock BSSE-corrected
   energies; compare to QE references and rank trends.

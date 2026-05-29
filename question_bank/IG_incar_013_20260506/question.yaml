@@ -1,5 +1,8 @@
 id: IG_incar_013_20260506
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: 'Generate VASP INCAR for surface relaxation of ternary carbide (Ta,V)2C surface
   (C33O2Ta16V16). Fixed cell (ISIF=2), metallic.

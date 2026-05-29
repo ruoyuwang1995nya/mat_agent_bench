@@ -1,5 +1,8 @@
 id: WO_gpumdnep_001_20260428
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
 intent: Build MoSe2 training dataset, generate ABACUS static input, and prepare NEP
   input.

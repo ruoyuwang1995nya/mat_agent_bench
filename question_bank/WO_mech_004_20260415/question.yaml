@@ -1,5 +1,8 @@
 id: WO_mech_004_20260415
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: alloy
 intent: Optimize an alloy structure with APEX and summarize geometry-change evidence
   with machine-checkable artifacts.

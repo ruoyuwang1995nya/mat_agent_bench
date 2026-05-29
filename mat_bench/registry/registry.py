@@ -43,8 +43,12 @@ class Question:
         return self.item.id
 
     @property
-    def capability(self) -> str:
-        return self.item.capability
+    def capability(self) -> list[str]:
+        return list(self.item.capabilities)
+
+    @property
+    def task_type(self) -> str:
+        return self.item.task_type
 
     @property
     def domain(self) -> str:
@@ -139,13 +143,16 @@ class Registry:
         self,
         *,
         capability: str | None = None,
+        task_type: str | None = None,
         domain: str | None = None,
         tags: list[str] | None = None,
     ) -> list[Question]:
         """List questions with optional filters."""
         results = list(self._questions.values())
         if capability:
-            results = [q for q in results if q.capability == capability]
+            results = [q for q in results if capability in q.capability]
+        if task_type:
+            results = [q for q in results if q.task_type == task_type]
         if domain:
             results = [q for q in results if q.domain == domain]
         if tags:

@@ -1,5 +1,8 @@
 id: IG_vasp_metagga_001_20260508
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
 intent: Generate VASP INCAR for r2SCAN meta-GGA calculation with required LASPH setting.
 human_prompt_seed: '工作区中有 TiO2_rutile.vasp（金红石结构 TiO2，6 个原子）。

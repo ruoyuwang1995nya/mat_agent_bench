@@ -1,5 +1,8 @@
 id: WO_gpumdnep_003_20260428
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
 intent: Compute graphene DOS and heat capacity with GPUMD using Graphene_Lindsay_2010_modified
   potential.

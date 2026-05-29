@@ -1,5 +1,8 @@
 id: DD_proposal_review_001_20260410v3
-capability: data_diagnosis
+task_type: material_characterization
+capabilities:
+- data_handling
+- scientific_reasoning
 domain: agnostic
 intent: Evaluate a proposal excerpt and produce structured scorecard, rationale, and
   risk-mitigation artifacts.
