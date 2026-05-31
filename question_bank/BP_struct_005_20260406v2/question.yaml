@@ -4,24 +4,22 @@ capabilities:
 - data_handling
 - scientific_reasoning
 domain: agnostic
-intent: Repair 5 problematic POSCAR structures by fixing geometry issues only. Focus
-  the evaluation entirely on POSCAR repair correctness and cause-aligned fixes.
-human_prompt_seed: '从 `failure_recovery.json` 读取 5 个结构（TiO2, ZnO, MgO, Al2O3, SiO2）的失败恢复场景。每个条目里都有待修复的
-  `input_poscar` 路径。每个结构的初始计算因几何问题失败（如原子重叠、晶胞畸变、对称性错误等）。
+intent: Repair 5 problematic POSCAR structures by fixing geometry issues only. Focus the evaluation entirely on POSCAR 
+  repair correctness and cause-aligned fixes.
+human_prompt_seed: '从 `failure_recovery.json` 读取 5 个结构（TiO2, ZnO, MgO, Al2O3, SiO2）的失败恢复场景。每个条目里都有待修复的 `input_poscar` 路径。每个结构的初始计算因几何问题失败（如原子重叠、晶胞畸变、对称性错误等）。
 
   请为每个结构生成修正后的 POSCAR，修复策略：
 
   1. 仅修复结构文件（POSCAR）中的几何问题（原子位置、晶胞参数、对称性）
 
-  3. 对每个结构说明修复了什么几何问题，以及修复后为何更合理（按 `failure_recovery.json` 中每个条目的 `repair_acceptance`
-  约束来做）
+  3. 对每个结构说明修复了什么几何问题，以及修复后为何更合理（按 `failure_recovery.json` 中每个条目的 `repair_acceptance` 约束来做）
 
   输出要求：
 
   1. 5 个修正后的 POSCAR 文件
 
-  2. 修复后 POSCAR 文件名固定为： - `calc_001_TiO2_fixed.POSCAR` - `calc_002_ZnO_fixed.POSCAR`
-  - `calc_003_MgO_fixed.POSCAR` - `calc_004_Al2O3_fixed.POSCAR` - `calc_005_SiO2_fixed.POSCAR`
+  2. 修复后 POSCAR 文件名固定为： - `calc_001_TiO2_fixed.POSCAR` - `calc_002_ZnO_fixed.POSCAR` - `calc_003_MgO_fixed.POSCAR` - `calc_004_Al2O3_fixed.POSCAR`
+  - `calc_005_SiO2_fixed.POSCAR`
 
   不需要提交计算，只需生成正确的修正结构。
 
@@ -86,73 +84,55 @@ reference_answers:
     - calc_005_SiO2_fixed.POSCAR
 - key: grounding_repair_causes
   value: Each geometry fix addresses the specific failure cause
-- key: turn_budget
-  value:
-    max: 20
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 35000
 scoring_checklist:
 - id: input_file_sets_count
   criterion: '[Must] Exactly 5 corrected POSCAR files are generated.'
   axis: correctness
   verify: numerical_range
-  weight: 0.8
+  weight: 0.5
+  capability: tool_utilization
 - id: calc_001_tio2_fixed_artifact
   criterion: Agent writes `calc_001_TiO2_fixed.POSCAR` to workspace.
   axis: correctness
   verify: artifact_exists
-  weight: 0.4
+  weight: 0.5
+  capability: tool_utilization
 - id: calc_002_zno_fixed_artifact
   criterion: Agent writes `calc_002_ZnO_fixed.POSCAR` to workspace.
   axis: correctness
   verify: artifact_exists
-  weight: 0.4
+  weight: 0.5
+  capability: tool_utilization
 - id: calc_003_mgo_fixed_artifact
   criterion: Agent writes `calc_003_MgO_fixed.POSCAR` to workspace.
   axis: correctness
   verify: artifact_exists
-  weight: 0.4
+  weight: 0.5
+  capability: tool_utilization
 - id: calc_004_al2o3_fixed_artifact
   criterion: Agent writes `calc_004_Al2O3_fixed.POSCAR` to workspace.
   axis: correctness
   verify: artifact_exists
-  weight: 0.4
+  weight: 0.5
+  capability: tool_utilization
 - id: calc_005_sio2_fixed_artifact
   criterion: Agent writes `calc_005_SiO2_fixed.POSCAR` to workspace.
   axis: correctness
   verify: artifact_exists
-  weight: 0.4
+  weight: 0.5
+  capability: tool_utilization
 - id: poscar_repair_triplet_match
-  criterion: '[Must] For each material, judge repair correctness using only the bad/fixed
-    POSCAR pair and the `repair_acceptance` rules in `failure_recovery.json`. Do not
-    enforce a single coordinate-level canonical answer when multiple valid repairs
+  criterion: '[Must] For each material, judge repair correctness using only the bad/fixed POSCAR pair and the `repair_acceptance`
+    rules in `failure_recovery.json`. Do not enforce a single coordinate-level canonical answer when multiple valid repairs
     satisfy the acceptance constraints.'
   axis: correctness
   verify: llm_binary_judge
-  weight: 1.8
+  weight: 0.5
+  capability: structure_manipulation
 - id: grounding_repair_causes
-  criterion: '[Must] Each POSCAR repair addresses the specific failure cause in configuration
-    (overlap, cell distortion, symmetry issues, etc.).'
+  criterion: '[Must] Each POSCAR repair addresses the specific failure cause in configuration (overlap, cell distortion, symmetry
+    issues, etc.).'
   axis: grounding
   verify: llm_binary_judge
-  weight: 1.5
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-  weight: 0.4
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling.
-  axis: efficiency
-  verify: duration_budget
-  weight: 0.3
-- id: token_budget_total
-  criterion: Total token usage is recorded and stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
-  weight: 0.3
+  weight: 0.5
+  capability: scientific_grounding

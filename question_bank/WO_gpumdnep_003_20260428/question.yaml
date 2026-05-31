@@ -4,9 +4,9 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
-intent: Compute graphene DOS and heat capacity with GPUMD using Graphene_Lindsay_2010_modified
-  potential.
-human_prompt_seed: 获取 https://raw.githubusercontent.com/brucefan1983/GPUMD/master/potentials/tersoff/Graphene_Lindsay_2010_modified.txt，生成可直接运行的
+intent: Compute graphene DOS and heat capacity with GPUMD using Graphene_Lindsay_2010_modified potential.
+human_prompt_seed: 获取 
+  https://raw.githubusercontent.com/brucefan1983/GPUMD/master/potentials/tersoff/Graphene_Lindsay_2010_modified.txt，生成可直接运行的
   `run.in`,采用 GPUMD 计算石墨烯 DOS 与热容。
 tags:
 - eng_gpumd
@@ -35,15 +35,23 @@ scoring_checklist:
   criterion: 生成 `run.in`。
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: graphene_potential_token
   criterion: '`run.in` 使用 `Graphene_Lindsay_2010_modified.txt` 势函数。'
   axis: correctness
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: dos_core_tokens
   criterion: '`run.in` 包含 `ensemble nve` 与 `compute_dos` 两个关键参数。'
   axis: correctness
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: heat_capacity_3kb_per_atom
   criterion: 石墨烯热容结果应在约 `3.0 k_B/atom`（可接受小范围偏差）。
   axis: correctness
   verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5

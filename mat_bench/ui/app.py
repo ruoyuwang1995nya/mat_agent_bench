@@ -287,6 +287,18 @@ def create_app(
             for q in questions
         ]
 
+    @app.get("/api/questions/{question_id}")
+    async def get_question(question_id: str):
+        try:
+            registry = Registry(qb_dir)
+        except FileNotFoundError as exc:
+            raise HTTPException(404, str(exc))
+        try:
+            q = registry.get_question(question_id)
+        except KeyError:
+            raise HTTPException(404, f"Question '{question_id}' not found")
+        return {"id": q.id, "prompt": q.item.human_prompt_seed}
+
     @app.post("/api/questions/upload")
     async def upload_question(file: UploadFile = File(...)):
         content = await file.read()
@@ -435,7 +447,8 @@ def create_app(
             ms = build_summary(recs, _total_questions)
             cap_scores: dict[str, float] = {}
             for rec in recs:
-                cap_scores[rec.capability] = cap_scores.get(rec.capability, 0.0) + rec.overall_weighted_score
+                for cap in rec.capabilities:
+                    cap_scores[cap] = cap_scores.get(cap, 0.0) + rec.overall_weighted_score
             leaderboard.append(
                 {
                     "agent": agent_name,
@@ -477,7 +490,7 @@ def create_app(
             questions.append({
                 "question_id": qpr.question_id,
                 "mode": key.split(":", 1)[1] if ":" in key else "",
-                "capability": qpr.capability,
+                "capability": ', '.join(qpr.capabilities) if qpr.capabilities else '',
                 "domain": qpr.domain,
                 "runs": qpr.runs,
                 "passed": op,
@@ -523,7 +536,7 @@ def create_app(
             questions.append({
                 "question_id": qpr.question_id,
                 "mode": key.split(":", 1)[1] if ":" in key else "",
-                "capability": qpr.capability,
+                "capability": ', '.join(qpr.capabilities) if qpr.capabilities else '',
                 "domain": qpr.domain,
                 "runs": qpr.runs,
                 "passed": op,

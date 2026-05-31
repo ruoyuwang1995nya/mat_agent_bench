@@ -30,7 +30,11 @@ scoring_checklist:
   criterion: 生成 `run.in`。
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: polarizability_dump_tokens
   criterion: 输入包含极化率输出自洽测试关键命令。
   axis: correctness
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5

@@ -4,16 +4,13 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
-intent: Build and validate Nb-doped SrTiO3 supercell workflow, including relaxation
-  and lattice-dynamics/mechanics checks.
-human_prompt_seed: "评估 Nb 掺杂 SrTiO3 工作流（Mock版）：\n1. 先 query/检索立方 SrTiO3（Pm-3m）输入结构，并说明\
-  \ 2x2x2 超胞 + 1 Ti->Nb 掺杂方案；\n2. 梳理后续检查所需输入文件（relax/elastic/phonon/SCF/band-DOS）；\n\
-  3. 不做真实计算，使用以下 mock 检查结果：\n   - elastic_status = pass\n   - phonon_status = pass_no_imaginary\n\
-  \   - scf_status = converged\n   - band_dos_status = generated\n   - relax_energy_drop_eV\
-  \ = 1.84\n4. 基于 mock 值做后处理，判断是否通过电子结构分析前置检查。\n\n请输出：\n1) `srti03_nb125_relaxed.cif`：用于记录工作流引用的结构文件；\n\
-  2) `srti03_nb125_checks.json`：至少包含 `input_files`, `elastic_status`, `phonon_status`,\
-  \ `scf_status`, `band_dos_status`；\n3) `srti03_nb125_workflow_report.md`：说明 query\
-  \ 输入梳理、mock 后处理流程、关键观察与不确定性。\n\n最终回答请明确：该掺杂体系是否通过“可进入电子结构分析”的前置检查。\n"
+intent: Build and validate Nb-doped SrTiO3 supercell workflow, including relaxation and lattice-dynamics/mechanics 
+  checks.
+human_prompt_seed: "评估 Nb 掺杂 SrTiO3 工作流（Mock版）：\n1. 先 query/检索立方 SrTiO3（Pm-3m）输入结构，并说明 2x2x2 超胞 + 1 Ti->Nb 掺杂方案；\n2. 梳理后续检查所需输入文件（relax/elastic/phonon/SCF/band-DOS）；\n\
+  3. 不做真实计算，使用以下 mock 检查结果：\n   - elastic_status = pass\n   - phonon_status = pass_no_imaginary\n   - scf_status = converged\n\
+  \   - band_dos_status = generated\n   - relax_energy_drop_eV = 1.84\n4. 基于 mock 值做后处理，判断是否通过电子结构分析前置检查。\n\n请输出：\n1) `srti03_nb125_relaxed.cif`：用于记录工作流引用的结构文件；\n\
+  2) `srti03_nb125_checks.json`：至少包含 `input_files`, `elastic_status`, `phonon_status`, `scf_status`, `band_dos_status`；\n\
+  3) `srti03_nb125_workflow_report.md`：说明 query 输入梳理、mock 后处理流程、关键观察与不确定性。\n\n最终回答请明确：该掺杂体系是否通过“可进入电子结构分析”的前置检查。\n"
 tags:
 - struct_transform
 data_files: []
@@ -45,59 +42,46 @@ reference_answers:
 - key: relax_energy_drop_mock
   value: 1.84
   tolerance: 0.8
-- key: turn_budget
-  value:
-    max: 14
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 10000
 scoring_checklist:
 - id: relaxed_struct
   criterion: Agent writes optimized doped structure `srti03_nb125_relaxed.cif`.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: checks_json
   criterion: Agent writes `srti03_nb125_checks.json` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: workflow_report
   criterion: Agent writes `srti03_nb125_workflow_report.md` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: checks_tokens
   criterion: Check JSON includes elastic/phonon/SCF/band-DOS status fields.
   axis: correctness
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: report_tokens
   criterion: Report covers doping workflow and caveats for downstream electronic analysis.
   axis: correctness
   verify: llm_binary_judge
+  capability: workflow_orchestration
+  weight: 0.5
 - id: relax_energy_drop_mock
   criterion: Final answer includes a mock relaxation energy drop near 1.84 eV.
   axis: correctness
   verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
 - id: grounding_source
-  criterion: Deliverables are grounded in generated workflow outputs and avoid fabricated
-    stability claims.
+  criterion: Deliverables are grounded in generated workflow outputs and avoid fabricated stability claims.
   axis: grounding
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical workflow submissions with the same parameters.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

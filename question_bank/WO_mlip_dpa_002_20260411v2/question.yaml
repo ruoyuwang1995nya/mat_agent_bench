@@ -30,53 +30,29 @@ reference_answers:
   - C12
   - bulk_modulus
   - elastic_tensor
-- key: turn_budget
-  value:
-    max: 20
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 8000
 scoring_checklist:
 - id: C11_GPa
-  criterion: Cu C11 elastic constant is within tolerance of DPA/experimental value
-    (~170 GPa).
+  criterion: Cu C11 elastic constant is within tolerance of DPA/experimental value (~170 GPa).
   axis: correctness
   verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
 - id: bulk_modulus_GPa
   criterion: Cu bulk modulus is within tolerance (~140 GPa).
   axis: correctness
   verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
 - id: required_fields
-  criterion: Report includes C11, C12 values, bulk modulus, and at least a summary
-    of the 6×6 elastic tensor.
+  criterion: Report includes C11, C12 values, bulk modulus, and at least a summary of the 6×6 elastic tensor.
   axis: correctness
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: grounding_source
-  criterion: Elastic constants are derived from calculation outputs, not literature
-    values. Judge solely from the final answer.
+  criterion: Elastic constants are derived from calculation outputs, not literature values. Judge solely from the final 
+    answer.
   axis: grounding
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical elastic or optimization submissions.
-  axis: efficiency
-  verify: no_retries
-- id: efficiency_judge
-  criterion: Workflow (build → optimize → elastic calc → report) completes in a linear
-    pipeline without redundant steps.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration does not exceed benchmark ceiling.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

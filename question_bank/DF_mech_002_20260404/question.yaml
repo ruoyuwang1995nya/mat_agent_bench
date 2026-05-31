@@ -4,11 +4,10 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: agnostic
-intent: From MSST Hugoniot simulation data, fit the P-V Hugoniot curve and determine
-  C-J detonation velocity and pressure for RDX.
-human_prompt_seed: '读取 `msst_hugoniot.json`，其中包含 RDX 在不同冲击波速度下的 MSST 模拟数据 （压力、比容、温度、是否反应）。筛选完全反应的数据点，拟合
-  P-V Hugoniot 曲线， 通过 Rayleigh 线切线法确定 Chapman-Jouguet (C-J) 点，输出 C-J 爆速 (m/s) 和爆压
-  (GPa)。
+intent: From MSST Hugoniot simulation data, fit the P-V Hugoniot curve and determine C-J detonation velocity and 
+  pressure for RDX.
+human_prompt_seed: '读取 `msst_hugoniot.json`，其中包含 RDX 在不同冲击波速度下的 MSST 模拟数据 （压力、比容、温度、是否反应）。筛选完全反应的数据点，拟合 P-V Hugoniot 曲线， 通过
+  Rayleigh 线切线法确定 Chapman-Jouguet (C-J) 点，输出 C-J 爆速 (m/s) 和爆压 (GPa)。
 
   '
 tags:
@@ -32,51 +31,30 @@ reference_answers:
   - cj_pressure
   - hugoniot_fit
   - rayleigh_line
-- key: turn_budget
-  value:
-    max: 8
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 8000
 scoring_checklist:
 - id: cj_velocity_m_s
   criterion: C-J detonation velocity is within tolerance.
   axis: correctness
   verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
 - id: cj_pressure_GPa
   criterion: C-J detonation pressure is within tolerance.
   axis: correctness
   verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
 - id: required_fields
-  criterion: Includes Hugoniot curve fitting details, Rayleigh line analysis, and
-    C-J velocity/pressure values.
+  criterion: Includes Hugoniot curve fitting details, Rayleigh line analysis, and C-J velocity/pressure values.
   axis: correctness
   verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
 - id: grounding_source
-  criterion: C-J parameters are derived from the provided msst_hugoniot.json data,
-    with filtered reaction-complete points shown. Judge solely from the final answer;
-    do not fail because the tool-call log omits MCP, web_search, or any specific tool.
+  criterion: C-J parameters are derived from the provided msst_hugoniot.json data, with filtered reaction-complete 
+    points shown. Judge solely from the final answer; do not fail because the tool-call log omits MCP, web_search, or 
+    any specific tool.
   axis: grounding
   verify: llm_binary_judge
-- id: efficiency_judge
-  criterion: Hugoniot fitting and C-J determination are performed in a direct computation
-    pipeline without unnecessary retries.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
-    (tunable per task after calibration).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

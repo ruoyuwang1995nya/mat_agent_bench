@@ -46,50 +46,44 @@ reference_answers:
     filename: INCAR_r2scan
     pattern: EDIFFG\s*=\s*-0\.01
     flags: i
-- key: turn_budget
-  value:
-    max: 12
 - key: duration_budget
   value:
     max: 7200000
-- key: token_budget_total
-  value:
-    max: 10000
 scoring_checklist:
 - id: incar_r2scan_artifact
   criterion: INCAR_r2scan file exists in workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: must_metagga
   criterion: METAGGA = R2SCAN is set for r2SCAN functional.
   axis: correctness
   verify: text_file_contains_all
+  capability: tool_utilization
+  weight: 0.5
 - id: must_lasph
   criterion: LASPH = .TRUE. is set (required for meta-GGA calculations).
   axis: correctness
   verify: text_file_contains_all
+  capability: scientific_reasoning
+  weight: 0.5
 - id: must_isif3
   criterion: ISIF = 3 for full cell+ion relaxation.
   axis: correctness
   verify: text_file_regex
+  capability: scientific_reasoning
+  weight: 0.5
 - id: must_ediffg
   criterion: EDIFFG = -0.01 for force convergence criterion.
   axis: correctness
   verify: text_file_regex
+  capability: tool_utilization
+  weight: 0.5
 - id: grounding_lasph
-  criterion: Agent explains that LASPH=.TRUE. is mandatory for meta-GGA functionals
-    (non-spherical contributions to PAW).
+  criterion: Agent explains that LASPH=.TRUE. is mandatory for meta-GGA functionals (non-spherical contributions to 
+    PAW).
   axis: grounding
   verify: llm_binary_judge
-- id: no_retries
-  axis: efficiency
-  verify: no_retries
-  criterion: No repeated identical tool calls.
-- id: turn_budget
-  axis: efficiency
-  verify: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-- id: token_budget_total
-  axis: efficiency
-  verify: token_budget
-  criterion: Total token usage stays within benchmark ceiling.
+  capability: scientific_grounding
+  weight: 0.5

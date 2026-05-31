@@ -3,8 +3,8 @@ task_type: simulation
 capabilities:
 - structure_manipulation
 domain: agnostic
-intent: Build a 4-layer (110) surface slab from the uploaded PUBMUU03 molecular crystal
-  CIF and verify molecule integrity plus atom-count scaling.
+intent: Build a 4-layer (110) surface slab from the uploaded PUBMUU03 molecular crystal CIF and verify molecule 
+  integrity plus atom-count scaling.
 human_prompt_seed: '对以下通过 OSS URL 提供的 CIF 结构进行处理：
 
   - `surface_PUBMUU03.cif` -> `https://bohrium-agent-test.oss-cn-zhangjiakou.aliyuncs.com/evomaster/evaluation/structure_surface/1774583701_surface_PUBMUU03.cif`
@@ -62,68 +62,46 @@ reference_answers:
     unit_cell_atoms: 144
     slab_atoms: 576
     layers: 4
-- key: turn_budget
-  value:
-    max: 20
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 24000
 scoring_checklist:
 - id: unit_cell_atoms
   criterion: The input unit cell atom count read from the downloaded CIF is 144 atoms.
   axis: correctness
   verify: struct_file_atom_count
+  capability: structure_manipulation
+  weight: 0.5
 - id: total_atoms
   criterion: Total atom count read from the output slab CIF is 576 atoms (4 × 144).
   axis: correctness
   verify: struct_file_atom_count
+  capability: structure_manipulation
+  weight: 0.5
 - id: molcrys_slab_molecular_integrity
-  criterion: No molecules are cut by the slab cut (verified via MolCrysKit graph-based
-    molecular integrity check on workspace CIF files).
+  criterion: No molecules are cut by the slab cut (verified via MolCrysKit graph-based molecular integrity check on 
+    workspace CIF files).
   axis: correctness
   verify: molcrys_slab_molecular_integrity
+  capability: structure_manipulation
+  weight: 0.5
 - id: required_fields
-  criterion: Output includes structure file, unit-cell atom count, final atom count,
-    an explicit 4x ratio check, and a molecule-integrity narrative consistent with
-    MolCrysKit / connectivity reasoning.
+  criterion: Output includes structure file, unit-cell atom count, final atom count, an explicit 4x ratio check, and a 
+    molecule-integrity narrative consistent with MolCrysKit / connectivity reasoning.
   axis: correctness
   verify: llm_binary_judge
+  capability: structure_manipulation
+  weight: 0.5
 - id: explicit_report_tokens
-  criterion: Final answer explicitly includes the 144-atom input cell, 576-atom slab,
-    4x atom-count scaling, and `slab_PUBMUU03_110.cif` output basename.
+  criterion: Final answer explicitly includes the 144-atom input cell, 576-atom slab, 4x atom-count scaling, and 
+    `slab_PUBMUU03_110.cif` output basename.
   axis: correctness
   verify: contains_all
+  capability: data_handling
+  weight: 0.5
 - id: grounding_source
-  criterion: The answer states what physical picture is used (molecular connectivity,
-    periodic boundaries, (110) plane vs bulk, and how that supports or contradicts
-    cutting molecules), citing the structures, not generic recall disconnected from
-    those files. Judge solely from the final answer and named deliverables; do not
-    fail because the tool-call log omits MCP, web_search, or any specific tool.
+  criterion: The answer states what physical picture is used (molecular connectivity, periodic boundaries, (110) plane 
+    vs bulk, and how that supports or contradicts cutting molecules), citing the structures, not generic recall 
+    disconnected from those files. Judge solely from the final answer and named deliverables; do not fail because the 
+    tool-call log omits MCP, web_search, or any specific tool.
   axis: grounding
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical slab or cut operations with wrong parameters.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: efficiency_judge
-  criterion: The (110) slab construction and integrity check complete without excessive
-    exploratory calls.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
-    (tunable per task after calibration).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

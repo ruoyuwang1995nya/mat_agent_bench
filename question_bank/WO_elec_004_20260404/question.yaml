@@ -5,12 +5,10 @@ capabilities:
 - tool_utilization
 domain: battery
 intent: Compute average Na intercalation voltage of NFPP using mock energies.
-human_prompt_seed: "计算NFPP的平均嵌钠电压：\n1. 获取NFPP（Na₄Fe₃(PO₄)₂P₂O₇）结构（空间群Pna2₁，Z=4），使用单胞（104原子）；\n\
-  2. 含钠态：Na₁₆Fe₁₂P₁₆O₆₀（单胞满Na，104原子）；\n   脱钠态：Na₄Fe₁₂P₁₆O₆₀（按Na3→Na1→Na4顺序脱出12个Na，92原子）；\n\
-  3. 使用以下mock能量值（模拟DPA弛豫结果）：\n   - E_sodiated = -689.60 eV\n   - E_desodiated = -633.08\
-  \ eV\n   - μ_Na（BCC Na金属）= -1.31 eV/atom\n   - n = 12（脱出的Na离子数：每个formula unit脱3个\
-  \ × Z=4）\n4. 按公式 V = -[E(sodiated) - E(desodiated) - n·μ_Na] / n 计算平均电压；\n5. 输出平均电压(V\
-  \ vs Na/Na⁺)、n值、各能量值。\n"
+human_prompt_seed: "计算NFPP的平均嵌钠电压：\n1. 获取NFPP（Na₄Fe₃(PO₄)₂P₂O₇）结构（空间群Pna2₁，Z=4），使用单胞（104原子）；\n2. 含钠态：Na₁₆Fe₁₂P₁₆O₆₀（单胞满Na，104原子）；\n\
+  \   脱钠态：Na₄Fe₁₂P₁₆O₆₀（按Na3→Na1→Na4顺序脱出12个Na，92原子）；\n3. 使用以下mock能量值（模拟DPA弛豫结果）：\n   - E_sodiated = -689.60 eV\n   - E_desodiated
+  = -633.08 eV\n   - μ_Na（BCC Na金属）= -1.31 eV/atom\n   - n = 12（脱出的Na离子数：每个formula unit脱3个 × Z=4）\n4. 按公式 V = -[E(sodiated)
+  - E(desodiated) - n·μ_Na] / n 计算平均电压；\n5. 输出平均电压(V vs Na/Na⁺)、n值、各能量值。\n"
 tags:
 - code_mlip
 data_files: []
@@ -25,56 +23,36 @@ reference_answers:
   - mu_Na
   - voltage
   - voltage_formula
-- key: turn_budget
-  value:
-    max: 18
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 8000
 scoring_checklist:
 - id: avg_voltage_V
   criterion: Average voltage is computed correctly from mock energies (~3.4 V).
   axis: correctness
   verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
 - id: sodiated_state
-  criterion: Sodiated state is the full unit cell Na₁₆Fe₁₂P₁₆O₆₀ with 104 atoms and
-    all 16 Na sites occupied.
+  criterion: Sodiated state is the full unit cell Na₁₆Fe₁₂P₁₆O₆₀ with 104 atoms and all 16 Na sites occupied.
   axis: correctness
   verify: llm_binary_judge
+  capability: structure_manipulation
+  weight: 0.5
 - id: desodiated_state
-  criterion: Desodiated state Na₄Fe₁₂P₁₆O₆₀ has 92 atoms with exactly 12 Na removed
-    following Na3→Na1→Na4 site order.
+  criterion: Desodiated state Na₄Fe₁₂P₁₆O₆₀ has 92 atoms with exactly 12 Na removed following Na3→Na1→Na4 site order.
   axis: correctness
   verify: llm_binary_judge
+  capability: structure_manipulation
+  weight: 0.5
 - id: required_fields
-  criterion: Report includes sodiated/desodiated energies, Na chemical potential,
-    voltage formula, and computed voltage.
+  criterion: Report includes sodiated/desodiated energies, Na chemical potential, voltage formula, and computed voltage.
   axis: correctness
   verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
 - id: grounding_source
-  criterion: NFPP structure uses correct Pna2₁ lattice parameters; mock energies and
-    μ_Na used exactly as specified; voltage formula applied correctly. Judge solely
-    from the final answer; do not fail because the tool-call log omits MCP, web_search,
-    or any specific tool.
+  criterion: NFPP structure uses correct Pna2₁ lattice parameters; mock energies and μ_Na used exactly as specified; 
+    voltage formula applied correctly. Judge solely from the final answer; do not fail because the tool-call log omits 
+    MCP, web_search, or any specific tool.
   axis: grounding
   verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: efficiency_judge
-  criterion: Voltage workflow (fetch → build 2 states → compute with mock values)
-    completes linearly.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: duration_budget
-  criterion: Wall-clock run duration does not exceed benchmark ceiling.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

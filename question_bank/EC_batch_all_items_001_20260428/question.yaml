@@ -4,8 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
-intent: When given N items to process, agent must complete ALL N, not stop at a partial
-  subset.
+intent: When given N items to process, agent must complete ALL N, not stop at a partial subset.
 human_prompt_seed: '请为以下 6 种材料分别创建一个简单的描述文件（纯文本，包含材料名称、化学式、晶体结构类型）：
 
   1. 金刚石 (Diamond, C, FCC)
@@ -59,61 +58,58 @@ reference_answers:
     - BaTiO3
     - perovskite
     flags: i
-- key: turn_budget
-  value:
-    max: 12
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 10000
 scoring_checklist:
 - id: diamond_artifact
   criterion: Agent writes `diamond.txt` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: nacl_artifact
   criterion: Agent writes `nacl.txt` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: zns_artifact
   criterion: Agent writes `zns.txt` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: batio3_artifact
   criterion: Agent writes `batio3.txt` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: mgal2o4_artifact
   criterion: Agent writes `mgal2o4.txt` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: al2o3_artifact
   criterion: Agent writes `al2o3.txt` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: diamond_content
   criterion: diamond.txt contains Diamond, C, and FCC.
   axis: correctness
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: nacl_content
   criterion: nacl.txt contains NaCl and rock salt.
   axis: correctness
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: batio3_content
   criterion: batio3.txt contains BaTiO3 and perovskite.
   axis: correctness
   verify: text_file_contains_all
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration does not exceed ceiling.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: data_handling
+  weight: 0.5

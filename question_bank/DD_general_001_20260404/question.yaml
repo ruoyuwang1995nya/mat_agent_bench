@@ -4,10 +4,8 @@ capabilities:
 - data_handling
 - scientific_reasoning
 domain: catalysis
-intent: Diagnose SCF non-convergence caused by missing spin polarization on a magnetic
-  oxide.
-human_prompt_seed: '读取 `case_bundle.json`，其中包含一个 Fe2O3 计算的 INCAR 参数、POSCAR 摘要和 OUTCAR
-  能量迭代摘录。 SCF 迭代 60 步仍未收敛，能量振幅约 0.25 eV。请诊断根本原因，并给出修复方案。
+intent: Diagnose SCF non-convergence caused by missing spin polarization on a magnetic oxide.
+human_prompt_seed: '读取 `case_bundle.json`，其中包含一个 Fe2O3 计算的 INCAR 参数、POSCAR 摘要和 OUTCAR 能量迭代摘录。 SCF 迭代 60 步仍未收敛，能量振幅约 0.25 eV。请诊断根本原因，并给出修复方案。
 
   '
 tags:
@@ -27,47 +25,23 @@ reference_answers:
   - evidence
   - fix_ISPIN
   - fix_MAGMOM
-- key: turn_budget
-  value:
-    max: 8
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 8000
 scoring_checklist:
 - id: root_cause
-  criterion: Correctly identifies missing spin polarization (ISPIN=1 on magnetic Fe2O3)
-    as root cause.
+  criterion: Correctly identifies missing spin polarization (ISPIN=1 on magnetic Fe2O3) as root cause.
   axis: correctness
   verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
 - id: required_fields
-  criterion: Provides root cause, evidence from SCF energy oscillation, and concrete
-    INCAR fixes (ISPIN=2 and MAGMOM).
+  criterion: Provides root cause, evidence from SCF energy oscillation, and concrete INCAR fixes (ISPIN=2 and MAGMOM).
   axis: correctness
   verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
 - id: grounding_evidence
-  criterion: Diagnosis is grounded in the provided case_bundle.json data (INCAR parameters,
-    OUTCAR energy profile), not generic DFT advice.
+  criterion: Diagnosis is grounded in the provided case_bundle.json data (INCAR parameters, OUTCAR energy profile), not 
+    generic DFT advice.
   axis: grounding
   verify: llm_binary_judge
-- id: efficiency_judge
-  criterion: Agent reads the provided bundle and diagnoses directly without excessive
-    exploratory tool calls.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
-    (tunable per task after calibration).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

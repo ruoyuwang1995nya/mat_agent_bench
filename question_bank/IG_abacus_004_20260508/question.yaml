@@ -4,8 +4,8 @@ capabilities:
 - tool_utilization
 - workflow_orchestration
 domain: agnostic
-intent: Generate ABACUS PW SCF input for dipole correction on an asymmetric H2O slab,
-  with the saw-like region placed in vacuum and no finite external field.
+intent: Generate ABACUS PW SCF input for dipole correction on an asymmetric H2O slab, with the saw-like region placed in
+  vacuum and no finite external field.
 human_prompt_seed: '工作区中提供了一个带较大真空区的 H2O 结构（STRU）。
 
 
@@ -107,87 +107,68 @@ reference_answers:
 - key: grounding_source
   value:
     filename: base_h2o.stru
-- key: turn_budget
-  value:
-    max: 8
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 8000
 scoring_checklist:
 - id: must_input_dipole_core
   criterion: '[Must] INPUT_dipole contains core mandatory dipole-correction controls.'
   axis: correctness
   verify: text_file_contains_all
-  weight: 1.0
+  weight: 0.5
+  capability: tool_utilization
 - id: must_input_dipole_ntype_matches_species
-  criterion: '[Must] INPUT_dipole sets ntype to 2, matching the two species (H and
-    O) defined in the STRU ATOMIC_SPECIES section.'
+  criterion: '[Must] INPUT_dipole sets ntype to 2, matching the two species (H and O) defined in the STRU ATOMIC_SPECIES section.'
   axis: correctness
   verify: text_file_regex
-  weight: 1.0
+  weight: 0.5
+  capability: data_handling
 - id: must_kpt_dipole_gamma_marker
   criterion: '[Must] KPT_dipole is a Gamma-centered K-point file.'
   axis: correctness
   verify: text_file_contains_all
-  weight: 1.0
+  weight: 0.5
+  capability: data_handling
 - id: must_kpt_dipole_single_point
   criterion: '[Must] KPT_dipole uses a single Gamma point (1x1x1).'
   axis: correctness
   verify: text_file_regex
-  weight: 1.0
+  weight: 0.5
+  capability: tool_utilization
 - id: suggested_input_dipole_numerics
-  criterion: '[Suggested] INPUT_dipole follows benchmark numeric settings with tolerance
-    (ecut/scf_thr/out_pot/dir).'
+  criterion: '[Suggested] INPUT_dipole follows benchmark numeric settings with tolerance (ecut/scf_thr/out_pot/dir).'
   axis: correctness
   verify: text_file_numeric_range
-  weight: 0.6
+  weight: 0.5
+  capability: scientific_reasoning
 - id: variable_input_dipole_window
-  criterion: '[Variable] INPUT_dipole provides dipole window position controls (`efield_pos_max`,
-    `efield_pos_dec`).'
+  criterion: '[Variable] INPUT_dipole provides dipole window position controls (`efield_pos_max`, `efield_pos_dec`).'
   axis: correctness
   verify: text_file_contains_all
-  weight: 0.3
+  weight: 0.5
+  capability: data_handling
 - id: variable_input_dipole_smearing
-  criterion: '[Variable] If INPUT_dipole includes smearing parameters, they should
-    be acceptable for this task family; missing smearing settings should not fail
-    this item.'
+  criterion: '[Variable] If INPUT_dipole includes smearing parameters, they should be acceptable for this task family; missing
+    smearing settings should not fail this item.'
   axis: correctness
   verify: text_file_numeric_range
-  weight: 0.3
+  weight: 0.5
+  capability: scientific_reasoning
 - id: input_dipole_artifact
-  criterion: Generated deliverables count even if the final answer does not quote
-    file contents; `INPUT_dipole` must be written to the workspace.
+  criterion: Generated deliverables count even if the final answer does not quote file contents; `INPUT_dipole` must be 
+    written to the workspace.
   axis: correctness
   verify: artifact_exists
   weight: 0.5
+  capability: tool_utilization
 - id: kpt_dipole_artifact
-  criterion: Generated deliverables count even if the final answer does not quote
-    file contents; `KPT_dipole` must be written to the workspace.
+  criterion: Generated deliverables count even if the final answer does not quote file contents; `KPT_dipole` must be 
+    written to the workspace.
   axis: correctness
   verify: artifact_exists
   weight: 0.5
+  capability: tool_utilization
 - id: grounding_source
-  criterion: The generated setup is grounded in base_h2o.stru and does not modify
-    the provided structure beyond preparing INPUT/KPT.
+  criterion: The generated setup is grounded in base_h2o.stru and does not modify the provided structure beyond 
+    preparing INPUT/KPT.
   axis: grounding
   verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: no_retries
-  criterion: No repeated identical tool calls with the same parameter set.
-  axis: efficiency
-  verify: no_retries
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

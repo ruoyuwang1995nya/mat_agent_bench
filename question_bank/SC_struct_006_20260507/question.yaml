@@ -3,9 +3,8 @@ task_type: simulation
 capabilities:
 - structure_manipulation
 domain: agnostic
-intent: Add missing hydrogens to the diacetylmorphine (DACMOR) molecular crystal CIF
-  and validate the formula, local molecular environment, and tetrahedral geometry
-  using MolCrysKit.
+intent: Add missing hydrogens to the diacetylmorphine (DACMOR) molecular crystal CIF and validate the formula, local 
+  molecular environment, and tetrahedral geometry using MolCrysKit.
 human_prompt_seed: '对以下通过 OSS URL 提供的 CIF 结构进行补氢处理：
 
   - `DACMOR.cif` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/evomaster/evaluation/structure_surface/cda9f292ec4b411facb478d0486b54ce/DACMOR.cif`
@@ -37,9 +36,9 @@ tags:
 data_files:
 - key: dacmor_cif
   path: DACMOR.cif
-  oss_url: https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/evomaster/evaluation/structure_surface/cda9f292ec4b411facb478d0486b54ce/DACMOR.cif
-  description: DACMOR (diacetylmorphine) molecular-crystal CIF missing explicit H
-    atoms.
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/evomaster/evaluation/structure_surface/cda9f292ec4b411facb478d0486b54ce/DACMOR.cif
+  description: DACMOR (diacetylmorphine) molecular-crystal CIF missing explicit H atoms.
 reference_answers:
 - key: file_exists
   value: dacmor_hydrogenated.cif
@@ -67,71 +66,47 @@ reference_answers:
   - C21H23NO5
   - '109'
   - dacmor_hydrogenated.cif
-- key: turn_budget
-  value:
-    max: 20
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 28000
 scoring_checklist:
 - id: file_exists
   criterion: The output file `dacmor_hydrogenated.cif` exists.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: target_formula
-  criterion: The reduced chemical formula read from dacmor_hydrogenated.cif matches
-    C21H23NO5.
+  criterion: The reduced chemical formula read from dacmor_hydrogenated.cif matches C21H23NO5.
   axis: correctness
   verify: struct_file_formula
+  capability: structure_manipulation
+  weight: 0.5
 - id: hch_angle_deg
-  criterion: The mean H-C-H angle computed from dacmor_hydrogenated.cif is close to
-    tetrahedral 109.48 degrees within a reasonable tolerance.
+  criterion: The mean H-C-H angle computed from dacmor_hydrogenated.cif is close to tetrahedral 109.48 degrees within a 
+    reasonable tolerance.
   axis: correctness
   verify: struct_file_bond_angle
+  capability: structure_manipulation
+  weight: 0.5
 - id: molcrys_local_env
-  criterion: MolCrysKit validates that the hydrogenated output has correct molecular
-    connectivity (no fragmented or over-bonded molecules), each molecule matches the
-    expected formula, and ChemicalEnvironment analysis confirms H-bearing atoms have
-    chemically consistent local geometry (hybridisation, coordination).
+  criterion: MolCrysKit validates that the hydrogenated output has correct molecular connectivity (no fragmented or 
+    over-bonded molecules), each molecule matches the expected formula, and ChemicalEnvironment analysis confirms 
+    H-bearing atoms have chemically consistent local geometry (hybridisation, coordination).
   axis: correctness
   verify: molcrys_local_env
+  capability: structure_manipulation
+  weight: 0.5
 - id: explicit_report_tokens
-  criterion: Final answer explicitly reports formula C21H23NO5, a representative H-C-H
-    angle near 109 degrees, and the `dacmor_hydrogenated.cif` output basename.
+  criterion: Final answer explicitly reports formula C21H23NO5, a representative H-C-H angle near 109 degrees, and the 
+    `dacmor_hydrogenated.cif` output basename.
   axis: correctness
   verify: contains_all
+  capability: data_handling
+  weight: 0.5
 - id: grounding_source
-  criterion: The answer states the chemical/geometry rationale (which C/N atoms receive
-    H, tetrahedral geometry targets, carbonyl/ester O should not be hydrogenated)
-    and ties checks to `dacmor_hydrogenated.cif` and the input CIF, not only procedural
-    wording disconnected from those files. Judge solely from the final answer and
-    named deliverables; do not fail because the tool-call log omits MCP, web_search,
-    or any specific tool.
+  criterion: The answer states the chemical/geometry rationale (which C/N atoms receive H, tetrahedral geometry targets,
+    carbonyl/ester O should not be hydrogenated) and ties checks to `dacmor_hydrogenated.cif` and the input CIF, not 
+    only procedural wording disconnected from those files. Judge solely from the final answer and named deliverables; do
+    not fail because the tool-call log omits MCP, web_search, or any specific tool.
   axis: grounding
   verify: llm_binary_judge
-- id: no_retries
-  criterion: Hydrogen addition is not repeated with identical parameters.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: efficiency_judge
-  criterion: The hydrogenation and validation workflow completes directly without
-    redundant exploratory steps.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
-    (tunable per task after calibration).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

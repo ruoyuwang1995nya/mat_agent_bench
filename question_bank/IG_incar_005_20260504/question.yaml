@@ -4,12 +4,11 @@ capabilities:
 - tool_utilization
 - workflow_orchestration
 domain: agnostic
-intent: 'Generate VASP INCAR for DFT+U calculation of RbPmMo2O8 with Hubbard U on
-  Mo d-orbitals. Spin-polarized.
+intent: 'Generate VASP INCAR for DFT+U calculation of RbPmMo2O8 with Hubbard U on Mo d-orbitals. Spin-polarized.
 
   '
-human_prompt_seed: 为含稀土和过渡金属的氧化物 RbPmMo2O8 生成一个 DFT+U 计算的 VASP INCAR。需要对 Mo 的 d 轨道施加
-  Hubbard U 校正。元素顺序为 Rb, Pm, Mo, O。体系为磁性体系。将完整的 INCAR 写入当前目录下的 `INCAR` 文件。
+human_prompt_seed: 为含稀土和过渡金属的氧化物 RbPmMo2O8 生成一个 DFT+U 计算的 VASP INCAR。需要对 Mo 的 d 轨道施加 Hubbard U 校正。元素顺序为 Rb, Pm, Mo, 
+  O。体系为磁性体系。将完整的 INCAR 写入当前目录下的 `INCAR` 文件。
 tags:
 - eng_vasp
 reference_answers:
@@ -50,15 +49,6 @@ reference_answers:
     filename: INCAR
     pattern: ^\s*LDAUU\s*=\s*\S+
     flags: im
-- key: turn_budget
-  value:
-    max: 8
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 15000
 - key: reasonable_params
   value:
     filename: INCAR
@@ -67,58 +57,57 @@ scoring_checklist:
   criterion: INCAR file is generated.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: incar_critical_tokens
   criterion: INCAR contains all critical parameter keywords.
   axis: correctness
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: critical_ISPIN
   criterion: INCAR sets ISPIN = 2 (critical param).
   axis: correctness
   verify: text_file_regex
+  capability: tool_utilization
+  weight: 0.5
 - id: critical_LDAU
   criterion: INCAR sets LDAU = .TRUE. (critical param).
   axis: correctness
   verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
 - id: critical_LDAUL
   criterion: INCAR sets LDAUL = -1 -1 2 -1 (critical param).
   axis: correctness
   verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
 - id: critical_LDAUTYPE
   criterion: INCAR sets LDAUTYPE = 2 (critical param).
   axis: correctness
   verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
 - id: critical_LDAUU
   criterion: INCAR sets LDAUU = 0.000 0.000 4.380 0.000 (critical param).
   axis: correctness
   verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
 - id: reasonable_params
-  criterion: The INCAR uses physically reasonable general settings for a VASP DFT+U
-    calculation. ENCUT is present (unless not relevant), EDIFF is present with a reasonable
-    value, PREC is set. Machine-specific params (KPAR, NCORE, NPAR) are optional and
-    should not be penalized if absent or different from reference.
+  criterion: The INCAR uses physically reasonable general settings for a VASP DFT+U calculation. ENCUT is present 
+    (unless not relevant), EDIFF is present with a reasonable value, PREC is set. Machine-specific params (KPAR, NCORE, 
+    NPAR) are optional and should not be penalized if absent or different from reference.
   axis: correctness
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: grounding_source
-  criterion: The generated INCAR is grounded in the provided prompt data (material
-    system, calculation type, critical parameters) rather than hallucinated. Judge
-    solely from the final answer and stated file content; do not fail because the
-    tool-call log omits MCP, web_search, or any specific tool.
+  criterion: The generated INCAR is grounded in the provided prompt data (material system, calculation type, critical 
+    parameters) rather than hallucinated. Judge solely from the final answer and stated file content; do not fail 
+    because the tool-call log omits MCP, web_search, or any specific tool.
   axis: grounding
   verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: efficiency_judge
-  criterion: The agent produced the INCAR efficiently without unnecessary tool calls,
-    redundant queries, or irrelevant exploration.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: duration_budget
-  criterion: Wall-clock run duration does not exceed benchmark ceiling.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

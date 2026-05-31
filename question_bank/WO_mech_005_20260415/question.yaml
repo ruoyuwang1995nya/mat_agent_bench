@@ -4,15 +4,12 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
-intent: Compute an equation-of-state workflow for an alloy and summarize volume-scan
-  settings and fitted EOS outputs.
-human_prompt_seed: "对给定合金结构执行 EOS 分析（Mock版）：\n1. 先 query/检索并整理 EOS 所需输入文件与结构信息；\n\
-  2. 明确体积扫描设置（0.8~1.2）与拟合模型；\n3. 不做真实计算，使用以下 mock 数据：\n   - vol_start = 0.8\n   -\
-  \ vol_end = 1.2\n   - vol_step = 0.05\n   - fit_model = Birch-Murnaghan\n   - equilibrium_volume\
-  \ = 11.42 (Å^3/atom)\n   - bulk_modulus = 178.6 (GPa)\n4. 基于 mock 值完成 EOS 后处理与结论解释。\n\
-  \n请完成以下交付：\n1) `alloy_eos_summary.json`：至少包含 `input_files`, `vol_start`, `vol_end`,\
-  \ `vol_step`, `fit_model`, `equilibrium_volume`, `bulk_modulus`；\n2) `alloy_eos_report.md`：说明\
-  \ query 输入梳理、mock 后处理流程、体积扫描策略与不确定性。\n\n最终回答中简要说明该 EOS 结果能支持哪些定性判断。\n"
+intent: Compute an equation-of-state workflow for an alloy and summarize volume-scan settings and fitted EOS outputs.
+human_prompt_seed: "对给定合金结构执行 EOS 分析（Mock版）：\n1. 先 query/检索并整理 EOS 所需输入文件与结构信息；\n2. 明确体积扫描设置（0.8~1.2）与拟合模型；\n3. 不做真实计算，使用以下
+  mock 数据：\n   - vol_start = 0.8\n   - vol_end = 1.2\n   - vol_step = 0.05\n   - fit_model = Birch-Murnaghan\n   - equilibrium_volume
+  = 11.42 (Å^3/atom)\n   - bulk_modulus = 178.6 (GPa)\n4. 基于 mock 值完成 EOS 后处理与结论解释。\n\n请完成以下交付：\n1) `alloy_eos_summary.json`：至少包含
+  `input_files`, `vol_start`, `vol_end`, `vol_step`, `fit_model`, `equilibrium_volume`, `bulk_modulus`；\n2) `alloy_eos_report.md`：说明
+  query 输入梳理、mock 后处理流程、体积扫描策略与不确定性。\n\n最终回答中简要说明该 EOS 结果能支持哪些定性判断。\n"
 tags:
 - code_mlip
 data_files: []
@@ -45,56 +42,40 @@ reference_answers:
 - key: eos_bulk_modulus_mock
   value: 178.6
   tolerance: 20.0
-- key: turn_budget
-  value:
-    max: 14
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 9000
 scoring_checklist:
 - id: eos_summary_json
   criterion: Agent writes `alloy_eos_summary.json` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: eos_report_md
   criterion: Agent writes `alloy_eos_report.md` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: eos_required_tokens
   criterion: EOS summary JSON includes required scan-range and fitted-property fields.
   axis: correctness
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: report_required_tokens
   criterion: Report explains EOS workflow, scan strategy, and uncertainty caveats.
   axis: correctness
   verify: llm_binary_judge
+  capability: workflow_orchestration
+  weight: 0.5
 - id: eos_bulk_modulus_mock
   criterion: Final answer includes a mock bulk modulus near 178.6 GPa.
   axis: correctness
   verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
 - id: grounding_source
-  criterion: Final answer is grounded in EOS artifacts and does not fabricate fitted
-    results not present in outputs.
+  criterion: Final answer is grounded in EOS artifacts and does not fabricate fitted results not present in outputs.
   axis: grounding
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical EOS submissions with the same parameters.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
-    (tunable per task after calibration).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

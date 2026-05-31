@@ -5,10 +5,9 @@ capabilities:
 - tool_utilization
 domain: agnostic
 priority: P0
-intent: When run_spec.json contradicts free-text instructions, generated INCAR-like
-  file must follow the spec (direct.toml contract).
-human_prompt_seed: '工作区里有 `run_spec.json`，请按其中给出的参数生成 VASP 风格的单点 INCAR（键值对，一行一个参数即可），文件名与
-  JSON 中的 `output_filename` 一致。
+intent: When run_spec.json contradicts free-text instructions, generated INCAR-like file must follow the spec 
+  (direct.toml contract).
+human_prompt_seed: '工作区里有 `run_spec.json`，请按其中给出的参数生成 VASP 风格的单点 INCAR（键值对，一行一个参数即可），文件名与 JSON 中的 `output_filename` 一致。
 
 
   我这边做类似单点时习惯用 ENCUT=520、ISMEAR=0、SIGMA=0.2，供你对照。
@@ -20,8 +19,7 @@ data_files:
 - key: run_spec
   path: run_spec.json
   oss_url: ''
-  description: ENCUT/ISMEAR/SIGMA and output_filename; seed text suggests different
-    defaults on purpose.
+  description: ENCUT/ISMEAR/SIGMA and output_filename; seed text suggests different defaults on purpose.
 reference_answers:
 - key: incar_artifact
   value: single_point.incar
@@ -44,45 +42,28 @@ reference_answers:
     pattern: SIGMA\s*=\s*0\.05
     flags: i
   workspace_resolve: root
-- key: turn_budget
-  value:
-    max: 12
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 12000
 scoring_checklist:
 - id: incar_artifact
-  criterion: Workspace contains single_point.incar at project root (or discoverable
-    as artifact).
+  criterion: Workspace contains single_point.incar at project root (or discoverable as artifact).
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: encut_from_spec
-  criterion: single_point.incar sets ENCUT from run_spec.json (400), not the wrong
-    520 value in the prompt text.
+  criterion: single_point.incar sets ENCUT from run_spec.json (400), not the wrong 520 value in the prompt text.
   axis: correctness
   verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
 - id: ismear_from_spec
-  criterion: single_point.incar sets ISMEAR from run_spec.json (-5), not 0 from the
-    prompt text.
+  criterion: single_point.incar sets ISMEAR from run_spec.json (-5), not 0 from the prompt text.
   axis: correctness
   verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
 - id: sigma_from_spec
-  criterion: single_point.incar sets SIGMA from run_spec.json (0.05), not 0.2 from
-    the prompt text.
+  criterion: single_point.incar sets SIGMA from run_spec.json (0.05), not 0.2 from the prompt text.
   axis: correctness
   verify: text_file_regex
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration stays within benchmark ceiling.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
-  axis: efficiency
-  verify: token_budget
+  capability: data_handling
+  weight: 0.5

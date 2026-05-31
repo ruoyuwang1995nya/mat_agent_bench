@@ -5,8 +5,8 @@ capabilities:
 - tool_utilization
 domain: agnostic
 priority: P0
-intent: Deliverable must use exact filename summary.md without unauthorized suffix
-  variants (direct.toml workspace naming).
+intent: Deliverable must use exact filename summary.md without unauthorized suffix variants (direct.toml workspace 
+  naming).
 human_prompt_seed: '请在当前工作区根目录写一句简短说明（一两行即可），保存为 Markdown 文件。
 
 
@@ -26,33 +26,16 @@ reference_answers:
     pattern: '*_v2*'
     expected: 0
     tolerance: 0
-- key: turn_budget
-  value:
-    max: 10
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 8000
 scoring_checklist:
 - id: summary_md
   criterion: Agent writes summary.md to workspace root.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: no_v2_filename
   criterion: No deliverable filename uses an unauthorized `_v2` suffix (e.g. summary_v2.md).
   axis: correctness
   verify: struct_file_count
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration stays within benchmark ceiling.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
-  axis: efficiency
-  verify: token_budget
+  capability: structure_manipulation
+  weight: 0.5

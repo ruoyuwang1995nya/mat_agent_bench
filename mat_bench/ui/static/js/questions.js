@@ -91,6 +91,22 @@ function _updateModalPrompt() {
   }
 }
 
+function openRawPromptModal(questionId) {
+  fetch(`/api/questions/${encodeURIComponent(questionId)}`)
+    .then(r => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    })
+    .then(data => {
+      document.getElementById('modal-title').textContent = `PROMPT — ${questionId}`;
+      document.getElementById('modal-fields').innerHTML = '';
+      document.getElementById('modal-fields')._templateFn = null;
+      document.getElementById('modal-prompt').value = data.prompt || '(no prompt)';
+      document.getElementById('prompt-modal').style.display = 'flex';
+    })
+    .catch(err => toast(`Failed to load prompt: ${err.message}`, 'error'));
+}
+
 function openBenchmarkModal() {
   if (!benchmarkTemplate) {
     toast('Template not loaded yet', 'error');
@@ -183,15 +199,16 @@ function renderTable() {
   document.getElementById('q-body').innerHTML = rows.map(q => `
     <tr data-id="${esc(q.id)}">
       <td><code style="font-size:.8rem;color:var(--cyan)">${esc(q.id)}</code></td>
-      <td>${(Array.isArray(q.capability) ? q.capability : [q.capability]).map(c => `<span class="badge badge-cap">${esc(c)}</span>`).join(' ')}</td>
-      <td><span class="badge" style="background:var(--bg3);color:var(--text-dim);font-size:.72rem">${esc(q.task_type)}</span></td>
       <td><span class="badge badge-dom">${esc(q.domain)}</span></td>
-      <td style="font-size:.78rem;color:var(--text-dim);max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+      <td style="max-width:160px;white-space:normal"><span class="badge" style="background:var(--bg3);color:var(--text-dim);font-size:.72rem;white-space:normal">${esc(q.task_type.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()))}</span></td>
+      <td style="max-width:180px;white-space:normal">${(Array.isArray(q.capability) ? q.capability : [q.capability]).map(c => `<span class="badge badge-cap">${esc(c)}</span>`).join(' ')}</td>
+      <td style="font-size:.78rem;color:var(--text-dim);max-width:220px;white-space:normal">
         ${q.tags.slice(0, 5).map(t => esc(t)).join(', ')}${q.tag_count > 5 ? ' …' : ''}
       </td>
       <td style="text-align:center;font-family:var(--font-data);font-size:.8rem">${q.checklist_count}</td>
       <td style="text-align:center">
-        <button class="btn btn-sm" onclick="openQuestionModal('${esc(q.id)}')" title="Show prompt for this question">📋</button>
+        <button class="btn btn-sm" onclick="openRawPromptModal('${esc(q.id)}')" title="View question prompt">👁</button>
+        <button class="btn btn-sm" onclick="openQuestionModal('${esc(q.id)}')" title="Show run prompt for this question">📋</button>
       </td>
     </tr>
   `).join('');

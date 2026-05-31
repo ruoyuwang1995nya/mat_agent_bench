@@ -5,10 +5,9 @@ capabilities:
 - tool_utilization
 domain: agnostic
 priority: P0
-intent: Extract provided .tgz so required file appears at workspace root with expected
-  name (direct.toml archive handling).
-human_prompt_seed: '工作区里有 `bundle.tgz`，里面有 `extract_me.txt`。请解压，并在根目录（与 `bundle.tgz`
-  同级）留下可打开的 `extract_me.txt`。
+intent: Extract provided .tgz so required file appears at workspace root with expected name (direct.toml archive 
+  handling).
+human_prompt_seed: '工作区里有 `bundle.tgz`，里面有 `extract_me.txt`。请解压，并在根目录（与 `bundle.tgz` 同级）留下可打开的 `extract_me.txt`。
 
 
   不要求运行任何计算。
@@ -31,33 +30,16 @@ reference_answers:
     - OK_DIRECT_CONTRACT
     flags: i
   workspace_resolve: root
-- key: turn_budget
-  value:
-    max: 15
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 12000
 scoring_checklist:
 - id: extract_me_at_root
   criterion: extract_me.txt exists in workspace and is readable at root.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: extract_me_content
   criterion: extract_me.txt contains the expected marker token from the fixture.
   axis: correctness
   verify: text_file_contains_all
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration stays within benchmark ceiling.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
-  axis: efficiency
-  verify: token_budget
+  capability: data_handling
+  weight: 0.5

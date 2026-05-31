@@ -4,13 +4,12 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
-intent: Combine database lookup and APEX elastic calculation to evaluate room-temperature
-  elastic properties of a Ni-Co-Cr alloy.
+intent: Combine database lookup and APEX elastic calculation to evaluate room-temperature elastic properties of a 
+  Ni-Co-Cr alloy.
 human_prompt_seed: '针对 Ni-Co-Cr 合金做室温弹性性质评估，要求先检索相近成分结构/弹性信息，再给出 APEX 计算结果并做对比。
 
-  请完成以下交付： 1) `nico_cr_elastic_compare.json`：至少包含 `C11`, `C12`, `C44`, `bulk_modulus_GPa`,
-  `db_reference_summary`, `comparison_note`； 2) `nico_cr_elastic_report.md`：说明数据库参考来源、APEX
-  计算设置、结果差异与不确定性。
+  请完成以下交付： 1) `nico_cr_elastic_compare.json`：至少包含 `C11`, `C12`, `C44`, `bulk_modulus_GPa`, `db_reference_summary`, `comparison_note`；
+  2) `nico_cr_elastic_report.md`：说明数据库参考来源、APEX 计算设置、结果差异与不确定性。
 
   最终回答中简要给出 C11/C12/C44/B 及与参考数据的一致性判断。'
 tags:
@@ -41,53 +40,35 @@ reference_answers:
     - APEX
     - 对比
     - 不确定性
-- key: turn_budget
-  value:
-    max: 16
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 10000
 scoring_checklist:
 - id: elastic_compare_json
   criterion: Agent writes `nico_cr_elastic_compare.json` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: elastic_report_md
   criterion: Agent writes `nico_cr_elastic_report.md` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: json_required_tokens
-  criterion: JSON contains required elastic constants, bulk modulus, and database-comparison
-    fields.
+  criterion: JSON contains required elastic constants, bulk modulus, and database-comparison fields.
   axis: correctness
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: report_required_tokens
   criterion: Report explains database reference, APEX setup, and uncertainty caveats.
   axis: correctness
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: grounding_source
-  criterion: Final answer is grounded in generated comparison artifacts and does not
-    fabricate unsupported reference or computed values.
+  criterion: Final answer is grounded in generated comparison artifacts and does not fabricate unsupported reference or 
+    computed values.
   axis: grounding
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical calls with the same parameter set.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
-    (tunable per task after calibration).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

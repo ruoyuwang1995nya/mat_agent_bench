@@ -4,16 +4,15 @@ capabilities:
 - tool_utilization
 - scientific_reasoning
 domain: agnostic
-intent: Retrieve up to two Ti-Al-O compounds with space group 63 and export CIF-oriented
-  retrieval metadata.
+intent: Retrieve up to two Ti-Al-O compounds with space group 63 and export CIF-oriented retrieval metadata.
 human_prompt_seed: '从 Materials Project 检索并返回不超过 2 个化合物，约束如下：
 
   - 仅包含元素 Ti、Al、O（不含其他元素）； - 空间群编号为 63； - 输出支持 CIF 文件导出信息。
 
   请完成以下交付：
 
-  1) `tao_spg63_candidates.json`：至少包含 `rank`, `formula`, `space_group`, `elements`,
-  `structure_identifier`, `cif_link_or_path`； 2) `tao_spg63_report.md`：说明检索条件、结果数量上限约束（<=2）以及筛选不确定性。
+  1) `tao_spg63_candidates.json`：至少包含 `rank`, `formula`, `space_group`, `elements`, `structure_identifier`, `cif_link_or_path`；
+  2) `tao_spg63_report.md`：说明检索条件、结果数量上限约束（<=2）以及筛选不确定性。
 
   最终回答中简要确认是否满足“元素集合 + 空间群 + 数量上限”三项约束。'
 tags:
@@ -51,53 +50,35 @@ reference_answers:
     - <=2
     - 不确定性
     flags: i
-- key: turn_budget
-  value:
-    max: 10
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 8000
 scoring_checklist:
 - id: candidates_json
   criterion: Agent writes `tao_spg63_candidates.json` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: retrieval_report
   criterion: Agent writes `tao_spg63_report.md` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: candidates_required_tokens
-  criterion: Candidate JSON includes required metadata and explicitly reflects Ti/Al/O
-    with space-group 63 constraints.
+  criterion: Candidate JSON includes required metadata and explicitly reflects Ti/Al/O with space-group 63 constraints.
   axis: correctness
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: report_required_tokens
-  criterion: Retrieval report states filter constraints, upper-bound candidate count,
-    and uncertainty note.
+  criterion: Retrieval report states filter constraints, upper-bound candidate count, and uncertainty note.
   axis: correctness
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: grounding_source
-  criterion: The final answer is grounded in retrieval artifacts and does not claim
-    unsupported compounds beyond reported candidates.
+  criterion: The final answer is grounded in retrieval artifacts and does not claim unsupported compounds beyond 
+    reported candidates.
   axis: grounding
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical retrieval calls with the same parameters.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

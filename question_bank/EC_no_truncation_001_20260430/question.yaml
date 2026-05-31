@@ -18,39 +18,23 @@ reference_answers:
     filename: metals_table.md
     pattern: ^\|?\s*[A-Z][a-z]?\s*\|
     flags: m
-- key: turn_budget
-  value:
-    max: 8
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 8000
 scoring_checklist:
 - id: output_artifact
   criterion: Agent writes `metals_table.md` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: no_truncation
-  criterion: The file metals_table.md must not contain any truncation indicators such
-    as '...' (ellipsis) that would indicate omitted rows. Check the file content for
-    any occurrence of '...'.
+  criterion: The file metals_table.md must not contain any truncation indicators such as '...' (ellipsis) that would 
+    indicate omitted rows. Check the file content for any occurrence of '...'.
   axis: correctness
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: row_count
   criterion: The table contains at least 20 data rows (excluding header/separator).
   axis: correctness
   verify: text_file_regex
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration does not exceed ceiling.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: data_handling
+  weight: 0.5

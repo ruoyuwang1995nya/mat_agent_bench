@@ -4,8 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
-intent: Complete an end-to-end workflow from structure retrieval to surface construction
-  to input generation.
+intent: Complete an end-to-end workflow from structure retrieval to surface construction to input generation.
 human_prompt_seed: '请完成以下端到端工作流：
 
   1. 从结构数据库中检索 TiO2 金红石结构（rutile，空间群 P4_2/mnm）
@@ -27,52 +26,36 @@ reference_answers:
   value: tio2_110_slab.cif
 - key: incar_artifact
   value: INCAR
-- key: turn_budget
-  value:
-    max: 20
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 16000
 scoring_checklist:
 - id: bulk_artifact
   criterion: Agent writes `tio2_bulk.cif` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: slab_artifact
   criterion: Agent writes `tio2_110_slab.cif` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: incar_artifact
   criterion: Agent writes `INCAR` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: pipeline_correctness
-  criterion: The workflow is logically connected — bulk structure is TiO2 rutile,
-    slab is cut from it along (110), and INCAR parameters match the static calculation
-    request.
+  criterion: The workflow is logically connected — bulk structure is TiO2 rutile, slab is cut from it along (110), and 
+    INCAR parameters match the static calculation request.
   axis: correctness
   verify: llm_binary_judge
+  capability: workflow_orchestration
+  weight: 0.5
 - id: grounding_source
-  criterion: Each step is grounded in the previous step output (slab from bulk, INCAR
-    for slab), not independently generated.
+  criterion: Each step is grounded in the previous step output (slab from bulk, INCAR for slab), not independently 
+    generated.
   axis: grounding
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical tool calls with the same parameter set.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration does not exceed ceiling.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

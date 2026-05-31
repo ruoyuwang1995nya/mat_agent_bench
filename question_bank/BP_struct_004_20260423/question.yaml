@@ -4,18 +4,15 @@ capabilities:
 - data_handling
 - scientific_reasoning
 domain: semiconductor
-intent: Perform batch post-processing of pre-computed band structures for 3 materials
-  (Si, Ge, GaAs) with unified analysis parameters. Extract band gaps and band edge
-  positions using identical k-paths, energy windows, and plot specifications across
-  all materials.
+intent: Perform batch post-processing of pre-computed band structures for 3 materials (Si, Ge, GaAs) with unified 
+  analysis parameters. Extract band gaps and band edge positions using identical k-paths, energy windows, and plot 
+  specifications across all materials.
 human_prompt_seed: '从 `postprocessing_bandstr.json` 读取 3 种材料（Si, Ge, GaAs）的带结构后处理配置。
 
-  每种材料对应一个预计算的能带数据 CSV 文件（Si_bandstructure.csv、Ge_bandstructure.csv、GaAs_bandstructure.csv），包含沿
-  M-Gamma-K 路径的能带本征值数据。CSV 列格式为：k_index, k_distance, k_label, band_1, ..., band_N，其中
-  band_1–band_4 为价带，band_5–band_7 为导带，能量单位 eV，已参考 VBM = 0。
+  每种材料对应一个预计算的能带数据 CSV 文件（Si_bandstructure.csv、Ge_bandstructure.csv、GaAs_bandstructure.csv），包含沿 M-Gamma-K 路径的能带本征值数据。CSV 列格式为：k_index,
+  k_distance, k_label, band_1, ..., band_N，其中 band_1–band_4 为价带，band_5–band_7 为导带，能量单位 eV，已参考 VBM = 0。
 
-  对每种材料执行相同的分析流程： 1. k-path 固定为 M-Gamma-K，每段 50 个 k 点 2. 能量窗口统一为 [-5, 5] eV 3. 费米面参考点：VBM（价带最大值）
-  4. 所有绘图使用相同样式和范围
+  对每种材料执行相同的分析流程： 1. k-path 固定为 M-Gamma-K，每段 50 个 k 点 2. 能量窗口统一为 [-5, 5] eV 3. 费米面参考点：VBM（价带最大值） 4. 所有绘图使用相同样式和范围
 
   输出要求： 1. 3 个带结构 PNG 图 2. 3 个数据表（CSV 格式） 3. 带隙值和边界位置汇总表
 
@@ -31,19 +28,19 @@ data_files:
   description: Batch band structure analysis configuration with unified parameters.
 - key: si_band_csv
   path: Si_bandstructure.csv
-  oss_url: https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/BP_struct_004/1776789716_Si_bandstructure.csv
-  description: Pre-computed Si band structure eigenvalues along M-Gamma-K (101 k-points,
-    7 bands, VBM=0 eV).
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/BP_struct_004/1776789716_Si_bandstructure.csv
+  description: Pre-computed Si band structure eigenvalues along M-Gamma-K (101 k-points, 7 bands, VBM=0 eV).
 - key: ge_band_csv
   path: Ge_bandstructure.csv
-  oss_url: https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/BP_struct_004/1776789717_Ge_bandstructure.csv
-  description: Pre-computed Ge band structure eigenvalues along M-Gamma-K (101 k-points,
-    7 bands, VBM=0 eV).
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/BP_struct_004/1776789717_Ge_bandstructure.csv
+  description: Pre-computed Ge band structure eigenvalues along M-Gamma-K (101 k-points, 7 bands, VBM=0 eV).
 - key: gaas_band_csv
   path: GaAs_bandstructure.csv
-  oss_url: https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/BP_struct_004/1776789717_GaAs_bandstructure.csv
-  description: Pre-computed GaAs band structure eigenvalues along M-Gamma-K (101 k-points,
-    7 bands, VBM=0 eV).
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/BP_struct_004/1776789717_GaAs_bandstructure.csv
+  description: Pre-computed GaAs band structure eigenvalues along M-Gamma-K (101 k-points, 7 bands, VBM=0 eV).
 reference_answers:
 - key: analysis_count_correct
   value: 3
@@ -72,68 +69,48 @@ reference_answers:
 - key: grounding_analysis_correct
   value:
     filename: postprocessing_bandstr.json
-- key: analysis_workflow_streamlined
-  value: Unified workflow for all 3 materials
-- key: turn_budget
-  value:
-    max: 20
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 40000
 scoring_checklist:
 - id: analysis_count_correct
   criterion: Exactly 3 materials are analyzed (Si, Ge, GaAs).
   axis: correctness
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: kpath_unified
   criterion: All 3 analyses use the same k-path (M-Gamma-K) with 50 points per segment.
   axis: correctness
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: energy_window_unified
   criterion: All 3 analyses use energy window [-5, 5] eV as the plotting range.
   axis: correctness
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: fermi_reference_unified
-  criterion: All 3 analyses use VBM (valence band maximum) as the Fermi level reference
-    point.
+  criterion: All 3 analyses use VBM (valence band maximum) as the Fermi level reference point.
   axis: correctness
   verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
 - id: output_format_consistent
-  criterion: All 3 analyses produce both PNG plot and CSV data table in consistent
-    format.
+  criterion: All 3 analyses produce both PNG plot and CSV data table in consistent format.
   axis: correctness
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: bandgap_extracted
-  criterion: 'Band gap values extracted for all 3 materials from the provided CSV
-    data and fall within expected range (Si: 0.95–1.25 eV, Ge: 0.55–0.80 eV, GaAs:
-    1.25–1.55 eV). The agent must read band gaps from the pre-computed CSV eigenvalue
+  criterion: 'Band gap values extracted for all 3 materials from the provided CSV data and fall within expected range (Si:
+    0.95–1.25 eV, Ge: 0.55–0.80 eV, GaAs: 1.25–1.55 eV). The agent must read band gaps from the pre-computed CSV eigenvalue
     data, not generate new band structures.'
   axis: correctness
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: grounding_analysis_correct
-  criterion: Analysis methodology (k-path, window, reference) matches the provided
-    configuration exactly.
+  criterion: Analysis methodology (k-path, window, reference) matches the provided configuration exactly.
   axis: grounding
   verify: llm_binary_judge
-- id: analysis_workflow_streamlined
-  criterion: All 3 materials analyzed using a single unified script or workflow template
-    (no per-material ad-hoc tweaks).
-  axis: efficiency
-  verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
-    (tunable per task after calibration).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

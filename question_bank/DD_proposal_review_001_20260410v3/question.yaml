@@ -4,15 +4,13 @@ capabilities:
 - data_handling
 - scientific_reasoning
 domain: agnostic
-intent: Evaluate a proposal excerpt and produce structured scorecard, rationale, and
-  risk-mitigation artifacts.
+intent: Evaluate a proposal excerpt and produce structured scorecard, rationale, and risk-mitigation artifacts.
 human_prompt_seed: '工作区已提供 `proposal_excerpt.md`。
 
 
   请先读取该文件，再生成：
 
-  1) `review_scorecard.json`：包含 `innovation_score`, `importance_score`, `feasibility_score`,
-  `total_score`, `funding_recommendation`。
+  1) `review_scorecard.json`：包含 `innovation_score`, `importance_score`, `feasibility_score`, `total_score`, `funding_recommendation`。
 
   2) `review_rationale.md`：每个维度至少两条依据，并给出风险点与改进建议。
 
@@ -57,7 +55,8 @@ reference_answers:
 - key: score_bounds_regex
   value:
     filename: review_scorecard.json
-    pattern: (?is)"innovation_score"\s*:\s*(?:[12]?\d|30)\b.*"importance_score"\s*:\s*(?:[12]?\d|30)\b.*"feasibility_score"\s*:\s*(?:[12]?\d|30)\b.*"total_score"\s*:\s*(?:[1-8]?\d|90)\b
+    pattern: 
+      (?is)"innovation_score"\s*:\s*(?:[12]?\d|30)\b.*"importance_score"\s*:\s*(?:[12]?\d|30)\b.*"feasibility_score"\s*:\s*(?:[12]?\d|30)\b.*"total_score"\s*:\s*(?:[1-8]?\d|90)\b
     flags: is
 - key: rationale_required_tokens
   value:
@@ -70,64 +69,46 @@ reference_answers:
     - 建议
     - 立项
     flags: i
-- key: turn_budget
-  value:
-    max: 8
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 7000
 scoring_checklist:
 - id: scorecard_artifact
   criterion: Agent writes `review_scorecard.json` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: rationale_artifact
   criterion: Agent writes `review_rationale.md` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: risk_artifact
   criterion: Agent writes `risk_mitigation.json` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: scorecard_required_tokens
   criterion: Scorecard JSON includes required score and recommendation keys.
   axis: correctness
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: score_bounds_regex
   criterion: Score fields stay within required numeric ranges.
   axis: correctness
   verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
 - id: rationale_required_tokens
-  criterion: Rationale includes all required dimensions, risks, suggestions, and recommendation
-    statement.
+  criterion: Rationale includes all required dimensions, risks, suggestions, and recommendation statement.
   axis: correctness
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: grounding_source
   criterion: Judgments are grounded in `proposal_excerpt.md` rather than generic boilerplate.
   axis: grounding
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical tool calls with the same parameter set.
-  axis: efficiency
-  verify: no_retries
-- id: efficiency_judge
-  criterion: Proposal assessment is concise and complete without unnecessary tangential
-    exploration.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

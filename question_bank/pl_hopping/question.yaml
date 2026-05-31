@@ -4,10 +4,9 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: battery
-intent: Analyze Li+ hopping in PEO-LiTFSI by comparing PMF barriers and diffusion
-  evidence for two salt-ratio conditions.
-human_prompt_seed: '文件 `free_energy_hopping_bundle.json` 给出了 PEO-LiTFSI 在两个盐浓度条件下的局域结构、PMF
-  和扩散关联数据。
+intent: Analyze Li+ hopping in PEO-LiTFSI by comparing PMF barriers and diffusion evidence for two salt-ratio 
+  conditions.
+human_prompt_seed: '文件 `free_energy_hopping_bundle.json` 给出了 PEO-LiTFSI 在两个盐浓度条件下的局域结构、PMF 和扩散关联数据。
 
   请完成一个 Li+ hopping 机制分析：
 
@@ -27,8 +26,8 @@ tags:
 data_files:
 - key: free_energy_bundle
   path: free_energy_hopping_bundle.json
-  description: Free-energy bundle with PMF barriers, minima, state labels, and corresponding
-    MD diffusion/coordination descriptors for two salt-ratio conditions.
+  description: Free-energy bundle with PMF barriers, minima, state labels, and corresponding MD diffusion/coordination 
+    descriptors for two salt-ratio conditions.
 reference_answers:
 - key: lower_barrier_condition
   value: EO_Li_20
@@ -45,56 +44,37 @@ reference_answers:
   - reaction_coordinate_note
   - hopping_mechanism
   - validation_suggestion
-- key: turn_budget
-  value:
-    max: 24
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 14000
 scoring_checklist:
 - id: barrier_eo_li_20_eV
-  criterion: PMF main barrier for EO/Li = 20 is reported within tolerance of the curated
-    value (~0.18 eV).
+  criterion: PMF main barrier for EO/Li = 20 is reported within tolerance of the curated value (~0.18 eV).
   axis: correctness
   verify: numerical_range
+  capability: data_handling
+  weight: 0.5
 - id: barrier_eo_li_10_eV
-  criterion: PMF main barrier for EO/Li = 10 is reported within tolerance of the curated
-    value (~0.33 eV).
+  criterion: PMF main barrier for EO/Li = 10 is reported within tolerance of the curated value (~0.33 eV).
   axis: correctness
   verify: numerical_range
+  capability: data_handling
+  weight: 0.5
 - id: lower_barrier_condition_correctness
-  criterion: Final mechanism analysis identifies EO/Li = 20 as the condition with
-    the lower hopping barrier and the more favorable Li+ migration pathway.
+  criterion: Final mechanism analysis identifies EO/Li = 20 as the condition with the lower hopping barrier and the more
+    favorable Li+ migration pathway.
   axis: correctness
   verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
 - id: required_fields
-  criterion: Report includes PMF profile discussion, barrier table, reaction-coordinate
-    note, hopping-mechanism interpretation, and a validation suggestion.
+  criterion: Report includes PMF profile discussion, barrier table, reaction-coordinate note, hopping-mechanism
+    interpretation, and a validation suggestion.
   axis: correctness
   verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
 - id: grounding_source
-  criterion: The PMF interpretation is explicitly tied to the provided free-energy
-    and MD descriptors from free_energy_hopping_bundle.json rather than generic statements
-    about ion transport.
+  criterion: The PMF interpretation is explicitly tied to the provided free-energy and MD descriptors from 
+    free_energy_hopping_bundle.json rather than generic statements about ion transport.
   axis: grounding
   verify: llm_binary_judge
-- id: efficiency_judge
-  criterion: The free-energy analysis compares the two conditions directly and avoids
-    redundant side analysis.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration does not exceed benchmark ceiling.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

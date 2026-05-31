@@ -4,15 +4,12 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: agnostic
-intent: Determine the crystal structure of a disordered molecular crystal (1-HTP,
-  385 K) from raw single-crystal X-ray diffraction data. The high-temperature phase
-  features cation orientational disorder, requiring split-atom or constraint-based
-  modeling. Starting from the reduced reflection file (.hkl) and the data-collection
-  summary (.p4p), the agent must determine the space group, solve the structure, refine
-  it with disorder modeling, and generate a validated CIF with no A-level checkCIF
-  alerts.
-human_prompt_seed: '文件 `A23050102A0375.hkl` 和 `A23050102A0375.p4p` 是一个有机-无机杂化硝普盐在
-  385 K 下采集的单晶 X 射线衍射数据（已经过数据还原）。该高温相中阳离子存在取向无序。请完成以下工作：
+intent: Determine the crystal structure of a disordered molecular crystal (1-HTP, 385 K) from raw single-crystal X-ray 
+  diffraction data. The high-temperature phase features cation orientational disorder, requiring split-atom or 
+  constraint-based modeling. Starting from the reduced reflection file (.hkl) and the data-collection summary (.p4p), 
+  the agent must determine the space group, solve the structure, refine it with disorder modeling, and generate a 
+  validated CIF with no A-level checkCIF alerts.
+human_prompt_seed: '文件 `A23050102A0375.hkl` 和 `A23050102A0375.p4p` 是一个有机-无机杂化硝普盐在 385 K 下采集的单晶 X 射线衍射数据（已经过数据还原）。该高温相中阳离子存在取向无序。请完成以下工作：
 
   1. 根据 .p4p 文件中的晶胞参数和系统消光规律，确定空间群；
 
@@ -30,13 +27,15 @@ tags:
 data_files:
 - key: hkl_file
   path: A23050102A0375.hkl
-  oss_url: https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/DF_scxrd_002_20260408/1775644506_A23050102A0375.hkl
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/DF_scxrd_002_20260408/1775644506_A23050102A0375.hkl
   description: Reduced reflection data file (SHELX .hkl format) for 1-HTP at 385 K.
 - key: p4p_file
   path: A23050102A0375.p4p
-  oss_url: https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/DF_scxrd_002_20260408/1775644507_A23050102A0375.p4p
-  description: Data-collection summary file (.p4p) with unit cell parameters, wavelength,
-    and crystal system information for the high-temperature disordered phase.
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/DF_scxrd_002_20260408/1775644507_A23050102A0375.p4p
+  description: Data-collection summary file (.p4p) with unit cell parameters, wavelength, and crystal system information
+    for the high-temperature disordered phase.
 reference_answers:
 - key: r1_factor
   value: 0.0637
@@ -62,74 +61,57 @@ reference_answers:
   value:
     filename: '*.cif'
     max_a_alerts: 0
-- key: turn_budget
-  value:
-    max: 40
-- key: duration_budget
-  value:
-    max: 21600000
-- key: token_budget_total
-  value:
-    max: 25000
 scoring_checklist:
 - id: r1_factor
-  criterion: Final R1 factor (on F, I>2sigma) is within tolerance of 0.0637 (human
-    baseline for disordered structure). A value ≤ 0.08 is acceptable given the disorder.
+  criterion: Final R1 factor (on F, I>2sigma) is within tolerance of 0.0637 (human baseline for disordered structure). A
+    value ≤ 0.08 is acceptable given the disorder.
   axis: correctness
   verify: numerical_range
-  weight: 2.0
+  weight: 0.5
+  capability: tool_utilization
 - id: wr2_factor
-  criterion: Final wR2 factor (on F², all data) is within tolerance of 0.2183 (human
-    baseline). Higher wR2 is expected for disordered structures; ≤ 0.25 is acceptable.
+  criterion: Final wR2 factor (on F², all data) is within tolerance of 0.2183 (human baseline). Higher wR2 is expected
+    for disordered structures; ≤ 0.25 is acceptable.
   axis: correctness
   verify: numerical_range
-  weight: 1.5
+  weight: 0.5
+  capability: tool_utilization
 - id: goof
-  criterion: Goodness-of-fit (GooF, S) is within tolerance of 1.022. A value between
-    0.9 and 1.2 indicates a well-refined structure.
+  criterion: Goodness-of-fit (GooF, S) is within tolerance of 1.022. A value between 0.9 and 1.2 indicates a
+    well-refined structure.
   axis: correctness
   verify: numerical_range
-  weight: 1.0
+  weight: 0.5
+  capability: tool_utilization
 - id: space_group_number
-  criterion: The agent correctly identifies the space group number as 4 (P2₁, monoclinic).
-    The answer or CIF must report space group No. 4.
+  criterion: The agent correctly identifies the space group number as 4 (P2₁, monoclinic). The answer or CIF must report
+    space group No. 4.
   axis: correctness
   verify: numerical_range
-  weight: 1.5
+  weight: 0.5
+  capability: scientific_reasoning
 - id: cell_volume
   criterion: Refined unit cell volume is within tolerance of 1025.98 Å³.
   axis: correctness
   verify: numerical_range
-  weight: 1.0
+  weight: 0.5
+  capability: tool_utilization
 - id: checkcif_validation
   criterion: The generated CIF passes IUCr checkCIF with zero A-level alerts.
   axis: correctness
   verify: checkcif_no_a_alerts
-  weight: 2.0
+  weight: 0.5
+  capability: structure_manipulation
 - id: disorder_modeled
-  criterion: The agent explicitly models the cation orientational disorder (e.g.,
-    using split-atom positions, PART instructions, or occupancy constraints in SHELXL)
-    and reports the disorder in the answer.
+  criterion: The agent explicitly models the cation orientational disorder (e.g., using split-atom positions, PART 
+    instructions, or occupancy constraints in SHELXL) and reports the disorder in the answer.
   axis: correctness
   verify: llm_binary_judge
-  weight: 2.0
+  weight: 0.5
+  capability: structure_manipulation
 - id: cif_generated
   criterion: The agent produces a valid CIF file as output of the refinement.
   axis: correctness
   verify: llm_binary_judge
-  weight: 1.0
-- id: turn_budget
-  criterion: Task completed within 40 turns.
-  axis: efficiency
-  verify: turn_budget
-  weight: 1.0
-- id: duration_budget
-  criterion: Task completed within 6 hours (21600 seconds).
-  axis: efficiency
-  verify: duration_budget
-  weight: 1.0
-- id: token_budget_total
-  criterion: Total token usage does not exceed 25000 tokens.
-  axis: efficiency
-  verify: token_budget
-  weight: 1.0
+  weight: 0.5
+  capability: data_handling

@@ -5,8 +5,7 @@ capabilities:
 - scientific_reasoning
 domain: semiconductor
 intent: Diagnose SCF non-convergence caused by wrong SMEARING settings for a semiconductor.
-human_prompt_seed: '读取 `case_bundle.json`，其中包含一个 Si 计算的 INCAR 参数和 OUTCAR 能量迭代摘录。 SCF
-  100 步仍未收敛，能量振幅约 5 meV，且有分数占据。请诊断根本原因，并给出修复方案。
+human_prompt_seed: '读取 `case_bundle.json`，其中包含一个 Si 计算的 INCAR 参数和 OUTCAR 能量迭代摘录。 SCF 100 步仍未收敛，能量振幅约 5 meV，且有分数占据。请诊断根本原因，并给出修复方案。
 
   '
 tags:
@@ -25,46 +24,24 @@ reference_answers:
   - evidence
   - fix_ISMEAR
   - fix_SIGMA
-- key: turn_budget
-  value:
-    max: 8
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 8000
 scoring_checklist:
 - id: root_cause
-  criterion: Correctly identifies ISMEAR/SIGMA mismatch (Methfessel-Paxton on semiconductor
-    Si) as root cause.
+  criterion: Correctly identifies ISMEAR/SIGMA mismatch (Methfessel-Paxton on semiconductor Si) as root cause.
   axis: correctness
   verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
 - id: required_fields
-  criterion: Provides root cause, evidence from fractional occupation, and concrete
-    fixes (ISMEAR=0 or -5, reduce SIGMA).
+  criterion: Provides root cause, evidence from fractional occupation, and concrete fixes (ISMEAR=0 or -5, reduce 
+    SIGMA).
   axis: correctness
   verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
 - id: grounding_evidence
-  criterion: Diagnosis is grounded in the provided INCAR/OUTCAR data from case_bundle.json,
-    citing specific parameter values.
+  criterion: Diagnosis is grounded in the provided INCAR/OUTCAR data from case_bundle.json, citing specific parameter 
+    values.
   axis: grounding
   verify: llm_binary_judge
-- id: efficiency_judge
-  criterion: Agent diagnoses directly from the bundle without unnecessary tool exploration.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
-    (tunable per task after calibration).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

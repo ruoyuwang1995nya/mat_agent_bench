@@ -4,8 +4,8 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
-intent: Build a machine-checkable DP-GEN onboarding package with milestone gates and
-  fallback actions from provided doc excerpts.
+intent: Build a machine-checkable DP-GEN onboarding package with milestone gates and fallback actions from provided doc 
+  excerpts.
 human_prompt_seed: '工作区已提供 `dpgen_docs_brief.md`（文档摘录）。
 
 
@@ -13,8 +13,7 @@ human_prompt_seed: '工作区已提供 `dpgen_docs_brief.md`（文档摘录）�
 
   1) `onboarding_tutorial.md`：包含环境准备、安装、初始数据、训练、采样、标注、迭代、常见失败点、第一周计划。
 
-  2) `dpgen_checklist.json`：包含键 `env_ready`, `data_ready`, `train_ready`, `sample_ready`,
-  `label_ready`, `iter_ready`, `week1_plan`.
+  2) `dpgen_checklist.json`：包含键 `env_ready`, `data_ready`, `train_ready`, `sample_ready`, `label_ready`, `iter_ready`, `week1_plan`.
 
   3) `milestone_gate.md`：按 Day1~Day7 给出“通过条件 + 失败回退动作（fallback）”。
 
@@ -64,61 +63,41 @@ reference_answers:
 - key: grounding_source
   value:
     filename: dpgen_docs_brief.md
-- key: turn_budget
-  value:
-    max: 8
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 7000
 scoring_checklist:
 - id: tutorial_artifact
   criterion: Agent writes `onboarding_tutorial.md` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: checklist_artifact
   criterion: Agent writes `dpgen_checklist.json` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: milestone_gate_artifact
   criterion: Agent writes `milestone_gate.md` to workspace.
   axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: required_sections
-  criterion: Tutorial covers core DP-GEN lifecycle sections and practical first-week
-    guidance.
+  criterion: Tutorial covers core DP-GEN lifecycle sections and practical first-week guidance.
   axis: correctness
   verify: llm_binary_judge
+  capability: workflow_orchestration
+  weight: 0.5
 - id: checklist_required_tokens
   criterion: Checklist JSON includes required readiness keys.
   axis: correctness
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: grounding_source
-  criterion: Tutorial is grounded in `dpgen_docs_brief.md` and avoids unsupported
-    claims not present in provided excerpts.
+  criterion: Tutorial is grounded in `dpgen_docs_brief.md` and avoids unsupported claims not present in provided 
+    excerpts.
   axis: grounding
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical tool calls with the same parameter set.
-  axis: efficiency
-  verify: no_retries
-- id: efficiency_judge
-  criterion: The response converges to required deliverables without unnecessary exploratory
-    detours.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

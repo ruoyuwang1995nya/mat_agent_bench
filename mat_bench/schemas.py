@@ -2,15 +2,13 @@
 
 Scoring model:
 - Verifiers produce binary (pass/fail) verdicts per checklist item.
-- Each checklist item has optional weight (default 1.0).
-- S_correct  = weighted average of correctness criteria  [0, 1]
-- S_ground   = binary veto: 1.0 if all grounding criteria pass (or none), else 0.0
-- S_efficiency = weighted average of efficiency criteria [0, 1]; 1.0 if no criteria
-- overall_score = S_correct × S_ground × S_efficiency
+- Each checklist item has optional weight (default 0.5) and a capability tag.
+- Efficiency rubrics are removed; grounding rubrics map to scientific_grounding capability.
+- overall_score = (sum_passed_weights - sum_failed_weights) / sum_all_weights  [-1, 1]
 """
 
 from datetime import datetime, timezone
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -188,7 +186,8 @@ class ScoringCheckItem(BaseModel):
     criterion: str
     axis: AxisLiteral = Field(default='correctness')
     verify: VerifyLiteral
-    weight: float = Field(default=1.0, ge=0.0)
+    weight: float = Field(default=0.5, ge=0.0)
+    capability: Optional[CapabilityLiteral] = None
 
 
 class CriterionResult(BaseModel):
@@ -395,7 +394,6 @@ class EvalRunRecord(BaseModel):
     grounding_weighted_score: float = 0.0
     efficiency_weighted_score: float = 0.0
     overall_weighted_score: float = 0.0
-    grounding_veto: bool = False  # True = grounding veto triggered (any grounding criterion failed)
 
     model_name: str | None = None
     duration_ms: int = Field(default=0)
