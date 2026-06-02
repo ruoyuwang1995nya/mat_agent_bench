@@ -99,6 +99,8 @@ DomainLiteral = Literal[
     'agnostic',
 ]
 
+DifficultyLiteral = Literal['easy', 'medium', 'hard']
+
 GENERIC_PROCESS_TAGS = {
     'workflow',
     'workflow_acceleration',
@@ -212,6 +214,7 @@ class QuestionItem(BaseModel):
     task_type: TaskTypeLiteral
     capabilities: list[CapabilityLiteral] = Field(min_length=1)
     domain: DomainLiteral
+    difficulty: DifficultyLiteral = Field(default='medium')
     intent: str
     human_prompt_seed: str
     tags: list[QuestionTag] = Field(default_factory=list)
