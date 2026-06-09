@@ -1,7 +1,7 @@
-"""Standalone client CLI for mat-bench serve-all servers.
+"""Standalone client CLI for mat-bench servers.
 
 The API is always mounted at {server}/bench. Pass the bare server URL
-(e.g. http://host:5000) and all requests go to /bench/... automatically.
+(e.g. http://host:8080) and all requests go to /bench/... automatically.
 
 Usage:
     mat-bench-client setup        Save token and create a session
@@ -34,7 +34,7 @@ import yaml
 # Config  (~/.mat-bench-client/config.yaml)
 # ---------------------------------------------------------------------------
 
-_DEFAULT_SERVER = 'http://localhost:8765'
+_DEFAULT_SERVER = 'http://localhost:8080'
 
 
 def _config_path() -> Path:
@@ -307,7 +307,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog='mat-bench-client',
         description=(
-            'CLI client for a mat-bench serve-all server. '
+            'CLI client for a mat-bench server. '
             'API is always at {server}/bench.'
         ),
     )

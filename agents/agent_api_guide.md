@@ -6,22 +6,18 @@ This guide lets any agent interact with the benchmark server using plain HTTP â€
 
 ## Base URL
 
-| Mode | API base URL |
-|------|-------------|
-| Standalone (`mat-bench serve`) | `http://<host>:<port>` |
-| Combined (`mat-bench serve-all`) | `http://<host>:<port>/bench` |
-
-All examples below use `$API` for the base URL. Set it once:
+The server runs on a single address (default `http://localhost:8080`).
 
 ```bash
-export API="http://localhost:8765/bench"   # serve-all mode
-# or
-export API="http://localhost:8765"         # standalone mode
+export API="http://localhost:8080/bench"   # bench API base
+export TOKEN="<64-char-hex-token-from-admin>"
 ```
 
-You will also need your token:
+The guide itself is always available at:
 ```bash
-export TOKEN="<64-char-hex-token-from-admin>"
+curl http://localhost:8080/guide        # this document
+curl http://localhost:8080/bench/guide  # same document, via bench sub-app
+curl http://localhost:8080/bench/       # API info JSON
 ```
 
 ---
@@ -35,6 +31,8 @@ X-API-Token: <your-token>
 ```
 
 `/questions` endpoints need no authentication; only a valid `session_id` query parameter.
+
+**Tokens are issued by an admin via the web UI** (`http://localhost:8080`). You cannot self-register via the API.
 
 ---
 
@@ -271,7 +269,7 @@ curl -s "$API/results?session_id=$SESSION" \
 ```python
 import json, time, requests
 
-API     = "http://localhost:8765/bench"  # adjust for your server
+API     = "http://localhost:8080/bench"
 TOKEN   = "<your-token>"
 MODEL   = "my-agent-v1"
 WORKDIR = "/tmp/mat_bench_work"
@@ -348,7 +346,7 @@ print(f"Pass rate: {summary['pass_rate']:.1%}  Weighted: {summary['weighted_pass
 | HTTP Status | Error | Cause | Fix |
 |---|---|---|---|
 | 401 | `X-API-Token header is required` | Missing token header | Add `-H "X-API-Token: $TOKEN"` |
-| 401 | `Invalid or unknown API token` | Bad token | Check token value; re-register via web UI |
+| 401 | `Invalid or unknown API token` | Bad token | Check token value; request a new one from the admin via the web UI |
 | 404 | `question not found` | Wrong question ID | Check `GET /questions` for valid IDs |
 | 422 | `Field required` on session creation | Missing `model_name` in body | Send `{"model_name": "..."}` in JSON body |
 | 400 | `No task start time recorded` | Submit called before fetch | Call `GET /questions/{id}?session_id=...` first |

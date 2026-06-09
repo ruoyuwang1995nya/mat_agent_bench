@@ -2,7 +2,7 @@
 
 Subcommands:
     mat-bench run           Run benchmark with an agent script
-    mat-bench serve         Start harness-less HTTP benchmark server
+    mat-bench serve         Start benchmark API and web UI together on a single port
     mat-bench list          List questions in the question bank
     mat-bench grade         Grade a JSONL submission file
     mat-bench report        Re-generate reports from existing JSONL
@@ -123,81 +123,6 @@ def _cmd_run(args: argparse.Namespace) -> None:
     sys.exit(rc)
 
 
-def _add_serve_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser(
-        'serve',
-        help='Start harness-less HTTP benchmark server',
-        description=(
-            'Serve the question bank over HTTP so any agent with HTTP access '
-            'can run the benchmark without a local harness.'
-        ),
-    )
-    p.add_argument(
-        '--host',
-        type=str,
-        default='127.0.0.1',
-        help='Host to bind to (default: 127.0.0.1).',
-    )
-    p.add_argument(
-        '--port',
-        type=int,
-        default=8765,
-        help='Port to listen on (default: 8765).',
-    )
-    p.add_argument(
-        '--question-bank-dir',
-        type=str,
-        default='question_bank',
-        help='Path to question_bank directory (default: question_bank).',
-    )
-    p.add_argument(
-        '--llm-judge',
-        type=str,
-        default=os.environ.get('MAT_BENCH_LLM_JUDGE'),
-        metavar='PROVIDER/MODEL',
-        help=(
-            "LLM judge for llm_binary_judge criteria, e.g. "
-            "'anthropic/claude-sonnet-4-20250514'. "
-            "Falls back to MAT_BENCH_LLM_JUDGE env var."
-        ),
-    )
-    p.add_argument(
-        '--env-file',
-        type=str,
-        default='.env',
-        metavar='FILE',
-        help='Path to .env file for LLM config (default: .env if it exists).',
-    )
-    p.add_argument(
-        '--grading-workers',
-        type=int,
-        default=4,
-        help='Number of parallel grading threads (default: 4).',
-    )
-    p.add_argument(
-        '--parallel-checklist-workers',
-        type=int,
-        default=1,
-        metavar='N',
-        help='Parallel LLM judge calls per question checklist (default: 1).',
-    )
-    p.add_argument(
-        '--store-dir',
-        type=str,
-        default=None,
-        metavar='DIR',
-        help='Directory for persistent data: DBs, workspaces, and logs (default: ~/.matbench).',
-    )
-    p.add_argument(
-        '--log-level',
-        type=str,
-        default='info',
-        choices=['debug', 'info', 'warning', 'error', 'critical'],
-        help='Uvicorn log level (default: info).',
-    )
-    p.set_defaults(func=_cmd_serve)
-
-
 def _load_env_file(path: str) -> None:
     """Load KEY=VALUE pairs from a .env file into os.environ (no override)."""
     env_path = Path(path)
@@ -215,207 +140,13 @@ def _load_env_file(path: str) -> None:
                 os.environ[key] = value
 
 
-def _cmd_serve(args: argparse.Namespace) -> None:
-    _load_env_file(args.env_file)
-    try:
-        import uvicorn
-    except ImportError:
-        print(
-            'error: uvicorn is required for mat-bench serve.\n'
-            'Install it with: pip install "mat-bench[server]"',
-            file=sys.stderr,
-        )
-        sys.exit(1)
-
-    from .server import app, init_server
-    if app is None:
-        print(
-            'error: fastapi is required for mat-bench serve.\n'
-            'Install it with: pip install "mat-bench[server]"',
-            file=sys.stderr,
-        )
-        sys.exit(1)
-
-    from .registry import Registry
-    from .harness import parse_llm_judge_config
-
-    _REPO_ROOT = Path(__file__).resolve().parent.parent
-
-    qb_dir = Path(args.question_bank_dir)
-    if not qb_dir.is_absolute():
-        qb_dir = _REPO_ROOT / qb_dir
-
-    registry = Registry(qb_dir)
-    print(f'Loaded {len(registry)} questions from {qb_dir}', file=sys.stderr)
-
-    from datetime import datetime
-    store_dir = Path(args.store_dir) if args.store_dir else Path.home() / ".matbench"
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    output_dir = store_dir / 'runs' / f'serve_{timestamp}'
-
-    llm_cfg = None
-    has_env = os.environ.get('MAT_BENCH_LLM_MODEL') and os.environ.get('MAT_BENCH_LLM_API_KEY')
-    if args.llm_judge or has_env:
-        try:
-            llm_cfg = parse_llm_judge_config(args.llm_judge or None)
-        except ValueError as exc:
-            print(f'error: {exc}', file=sys.stderr)
-            sys.exit(1)
-
-    init_server(
-        registry=registry,
-        output_dir=output_dir,
-        llm_cfg=llm_cfg,
-        grading_workers=args.grading_workers,
-        store_dir=store_dir,
-        parallel_checklist_workers=args.parallel_checklist_workers,
-    )
-    log_file = str(output_dir / "server.log")
-    log_config = {
-        "version": 1,
-        "disable_existing_loggers": False,
-        "formatters": {
-            "default": {
-                "()": "uvicorn.logging.DefaultFormatter",
-                "fmt": "%(levelprefix)s %(message)s",
-                "use_colors": None,
-            },
-            "access": {
-                "()": "uvicorn.logging.AccessFormatter",
-                "fmt": '%(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s',
-            },
-            "file": {
-                "format": "%(asctime)s %(levelname)-8s %(name)s  %(message)s",
-                "datefmt": "%Y-%m-%d %H:%M:%S",
-            },
-        },
-        "handlers": {
-            "default": {
-                "formatter": "default",
-                "class": "logging.StreamHandler",
-                "stream": "ext://sys.stderr",
-            },
-            "access": {
-                "formatter": "access",
-                "class": "logging.StreamHandler",
-                "stream": "ext://sys.stdout",
-            },
-            "file": {
-                "formatter": "file",
-                "class": "logging.FileHandler",
-                "filename": log_file,
-            },
-        },
-        "loggers": {
-            "uvicorn": {
-                "handlers": ["default", "file"],
-                "level": args.log_level.upper(),
-                "propagate": False,
-            },
-            "uvicorn.error": {
-                "handlers": ["default", "file"],
-                "level": args.log_level.upper(),
-                "propagate": False,
-            },
-            "uvicorn.access": {
-                "handlers": ["access", "file"],
-                "level": "DEBUG",
-                "propagate": False,
-            },
-            "mat_bench": {
-                "handlers": ["default", "file"],
-                "level": "INFO",
-                "propagate": False,
-            },
-        },
-    }
-    print(f'Output directory: {output_dir}', file=sys.stderr)
-    print(f'Server log: {log_file}', file=sys.stderr)
-    print(f'Starting server at http://{args.host}:{args.port}', file=sys.stderr)
-    uvicorn.run(app, host=args.host, port=args.port, log_level=args.log_level, log_config=log_config)
-
-
-
-def _add_serve_ui_parser(subparsers: argparse._SubParsersAction) -> None:
+def _add_serve_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser(
-        'serve-ui',
-        help='Start the mat-bench web UI (question bank + leaderboard)',
-        description=(
-            'Launch a web interface for managing the question bank and '
-            'visualising leaderboard results from past evaluation runs.'
-        ),
-    )
-    p.add_argument(
-        '--host',
-        type=str,
-        default='0.0.0.0',
-        help='Host to bind to (default: 0.0.0.0).',
-    )
-    p.add_argument(
-        '--port',
-        type=int,
-        default=8080,
-        help='Port to listen on (default: 8080).',
-    )
-    p.add_argument(
-        '--question-bank-dir',
-        type=str,
-        default=None,
-        help='Path to question_bank directory (default: question_bank next to the package).',
-    )
-    p.add_argument(
-        '--store-dir',
-        type=str,
-        default=None,
-        metavar='DIR',
-        help='mat-bench store directory for leaderboard data (default: ~/.matbench).',
-    )
-    p.add_argument(
-        '--backend-url',
-        type=str,
-        default='http://localhost:8765',
-        metavar='URL',
-        help='URL of the running mat-bench backend server, used for token generation (default: http://localhost:8765).',
-    )
-    p.add_argument(
-        '--log-level',
-        type=str,
-        default='info',
-        choices=['debug', 'info', 'warning', 'error', 'critical'],
-        help='Uvicorn log level (default: info).',
-    )
-    p.set_defaults(func=_cmd_serve_ui)
-
-
-def _cmd_serve_ui(args: argparse.Namespace) -> None:
-    try:
-        import uvicorn
-    except ImportError:
-        print(
-            'error: uvicorn is required for mat-bench serve-ui.\n'
-            'Install it with: pip install "mat-bench[server]"',
-            file=sys.stderr,
-        )
-        sys.exit(1)
-
-    from .ui.app import create_app
-
-    qb_dir = Path(args.question_bank_dir) if args.question_bank_dir else None
-    store_dir = Path(args.store_dir) if args.store_dir else None
-    app = create_app(question_bank_dir=qb_dir, store_dir=store_dir, backend_url=args.backend_url)
-
-    print(f'Starting mat-bench UI at http://{args.host}:{args.port}', file=sys.stderr)
-    uvicorn.run(app, host=args.host, port=args.port, log_level=args.log_level)
-
-
-def _add_serve_all_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser(
-        'serve-all',
+        'serve',
         help='Start benchmark API and web UI together on a single port',
         description=(
             'Launch both the benchmark API and the web UI in one process on a '
-            'single port. The API is mounted at /bench, the UI at /. '
-            'Eliminates the need for a separate backend server.'
+            'single port. The bench API is mounted at /bench, the UI at /. '
         ),
     )
     p.add_argument(
@@ -481,16 +212,16 @@ def _add_serve_all_parser(subparsers: argparse._SubParsersAction) -> None:
         choices=['debug', 'info', 'warning', 'error', 'critical'],
         help='Uvicorn log level (default: info).',
     )
-    p.set_defaults(func=_cmd_serve_all)
+    p.set_defaults(func=_cmd_serve)
 
 
-def _cmd_serve_all(args: argparse.Namespace) -> None:
+def _cmd_serve(args: argparse.Namespace) -> None:
     _load_env_file(args.env_file)
     try:
         import uvicorn
     except ImportError:
         print(
-            'error: uvicorn is required for mat-bench serve-all.\n'
+            'error: uvicorn is required for mat-bench serve.\n'
             'Install it with: pip install "mat-bench[server]"',
             file=sys.stderr,
         )
@@ -533,10 +264,10 @@ def _cmd_serve_all(args: argparse.Namespace) -> None:
         parallel_checklist_workers=args.parallel_checklist_workers,
     )
 
-    print(f'Starting mat-bench (combined) at http://{args.host}:{args.port}', file=sys.stderr)
-    print(f'  UI:      http://{args.host}:{args.port}/', file=sys.stderr)
-    print(f'  API:     http://{args.host}:{args.port}/bench', file=sys.stderr)
-    print(f'  API docs: http://{args.host}:{args.port}/bench/docs', file=sys.stderr)
+    print(f'Starting mat-bench at http://{args.host}:{args.port}', file=sys.stderr)
+    print(f'  UI:       http://{args.host}:{args.port}/', file=sys.stderr)
+    print(f'  Guide:    http://{args.host}:{args.port}/guide', file=sys.stderr)
+    print(f'  Bench API: http://{args.host}:{args.port}/bench', file=sys.stderr)
     log_config = {
         "version": 1,
         "disable_existing_loggers": False,
@@ -685,8 +416,6 @@ def main() -> None:
 
     _add_run_parser(subparsers)
     _add_serve_parser(subparsers)
-    _add_serve_ui_parser(subparsers)
-    _add_serve_all_parser(subparsers)
     _add_list_parser(subparsers)
     _add_grade_parser(subparsers)
     _add_report_parser(subparsers)

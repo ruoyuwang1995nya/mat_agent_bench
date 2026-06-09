@@ -159,7 +159,6 @@ def create_app(
             grading_workers=grading_workers,
             store_dir=store,
             parallel_checklist_workers=parallel_checklist_workers,
-            allow_direct_registration=False,
         )
         _backend_url = ""
     else:
@@ -200,6 +199,16 @@ def create_app(
     @app.get("/")
     async def root():
         return RedirectResponse("/static/index.html")
+
+    @app.get("/guide")
+    async def agent_guide():
+        from fastapi.responses import PlainTextResponse
+        path = Path(__file__).resolve().parent.parent.parent / "agents" / "agent_api_guide.md"
+        return PlainTextResponse(path.read_text(encoding="utf-8"))
+
+    @app.get("/docs")
+    async def docs_redirect():
+        return RedirectResponse("/bench/docs")
 
     # ------------------------------------------------------------------
     # Auth endpoints

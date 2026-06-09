@@ -30,8 +30,8 @@ cd "$ROOT_DIR"
 
 kill_port "$PORT"
 
-echo "Starting mat-bench (combined) on port $PORT..."
-nohup mat-bench serve-all --host "$HOST" --port "$PORT" --parallel-checklist-workers "$CHECKLIST_WORKERS" >"$ROOT_DIR/server.log" 2>&1 &
+echo "Starting mat-bench on port $PORT..."
+nohup mat-bench serve --host "$HOST" --port "$PORT" --parallel-checklist-workers "$CHECKLIST_WORKERS" >"$ROOT_DIR/server.log" 2>&1 &
 SERVER_PID=$!
 
 echo "Waiting for server to be ready..."
