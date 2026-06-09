@@ -29,6 +29,7 @@ from .schemas import (
     QuestionItem,
     ReferenceAnswer,
     ScoringCheckItem,
+    TaskTypeLiteral,
     TokenUsageRecord,
 )
 
@@ -62,4 +63,5 @@ __all__ = [
     'EvaluationSummary',
     'LLMConfig',
     'TokenUsageRecord',
+    'TaskTypeLiteral',
 ]

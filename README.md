@@ -2,7 +2,13 @@
 
 **MAT-AGENT-BENCH** — a benchmark toolkit for evaluating AI agents on materials science tasks.
 
-The benchmark covers 10 capability categories (structure retrieval, structure construction, input generation, workflow orchestration, batch processing, data diagnosis, execution contract, scientific analysis, safety/refusal, and more) and grades agent runs against a structured question bank using a binary pass/fail checklist system with per-item weights.
+The benchmark covers 10 capability categories (structure retrieval, structure construction, input generation, workflow orchestration, batch processing, data diagnosis, execution contract, scientific analysis, safety/refusal, and more) and grades agent runs against a structured question bank using a multiplicative scoring model:
+
+- **Correctness** (`S_correct`, 0–1): weighted average of content criteria (result accuracy, trajectory correctness, etc.)
+- **Grounding** (`S_ground`, binary veto): 1 if all grounding criteria pass, 0 if any fail — a zero here zeros the entire score
+- **Efficiency** (`S_efficiency`, 0–1 coefficient): weighted average of budget criteria (tokens, turns, wall-clock); defaults to 1 when no efficiency criteria are defined
+
+**Final score = S_correct × S_ground × S_efficiency**
 
 ---
 

@@ -1,6 +1,10 @@
 id: IG_vasp_dftu_001_20260508
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: Generate VASP INCAR for NiO with DFT+U (Dudarev) settings.
 human_prompt_seed: '工作区中有 NiO.vasp（NaCl结构氧化镍，4个原子：2 Ni + 2 O，POSCAR 中原子顺序为 Ni O）。
 
@@ -37,15 +41,9 @@ reference_answers:
     filename: INCAR_dftu
     pattern: LDAUU\s*=\s*6\.2\s+0
     flags: i
-- key: turn_budget
-  value:
-    max: 12
 - key: duration_budget
   value:
     max: 7200000
-- key: token_budget_total
-  value:
-    max: 10000
 - key: must_ispin
   value:
     filename: INCAR_dftu
@@ -54,42 +52,37 @@ reference_answers:
 scoring_checklist:
 - id: incar_dftu_artifact
   criterion: INCAR_dftu file exists in workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: must_ldau
   criterion: LDAU = .TRUE. is set to enable DFT+U.
-  axis: correctness
   verify: text_file_contains_all
+  capability: tool_utilization
+  weight: 0.5
 - id: must_ldautype
   criterion: LDAUTYPE = 2 (Dudarev method) is specified.
-  axis: correctness
   verify: text_file_contains_all
+  capability: scientific_reasoning
+  weight: 0.5
 - id: must_ldaul
   criterion: LDAUL array matches species order (2 for Ni d-orbital, -1 or 0 for O).
-  axis: correctness
   verify: text_file_regex
+  capability: scientific_reasoning
+  weight: 0.5
 - id: must_ldauu
   criterion: LDAUU array sets 6.2 for Ni and 0 for O, matching POSCAR species order.
-  axis: correctness
   verify: text_file_regex
+  capability: tool_utilization
+  weight: 0.5
 - id: must_ispin
   criterion: INCAR_dftu sets ISPIN = 2 (required for antiferromagnetic NiO).
-  axis: correctness
   verify: text_file_regex
+  capability: scientific_reasoning
+  weight: 0.5
 - id: grounding_dftu
-  criterion: Agent explains the physical basis for U value choice and why Dudarev
-    (not Liechtenstein) method is appropriate.
-  axis: grounding
+  criterion: Agent explains the physical basis for U value choice and why Dudarev (not Liechtenstein) method is 
+    appropriate.
   verify: llm_binary_judge
-- id: no_retries
-  axis: efficiency
-  verify: no_retries
-  criterion: No repeated identical tool calls.
-- id: turn_budget
-  axis: efficiency
-  verify: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-- id: token_budget_total
-  axis: efficiency
-  verify: token_budget
-  criterion: Total token usage stays within benchmark ceiling.
+  capability: scientific_grounding
+  weight: 0.5

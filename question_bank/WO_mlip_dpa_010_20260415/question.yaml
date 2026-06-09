@@ -1,14 +1,15 @@
 id: WO_mlip_dpa_010_20260415
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
-intent: Fine-tune a DPA3 potential for a fixed step budget and summarize key hyperparameters
-  and outcomes.
-human_prompt_seed: "执行 DPA3 微调流程评估（Mock版）：\n1. 先 query/检索并整理训练所需输入文件（数据集、模型配置、训练参数）；\n\
-  2. 明确目标训练步数与学习率策略；\n3. 不做真实训练，使用以下 mock 结果：\n   - train_steps = 3000\n   - lr_type\
-  \ = cosine\n   - start_lr = 1.0e-2\n   - stop_lr = 1.0e-5\n   - valid_ratio = 0.2\n\
-  \   - best_valid_loss = 0.021\n   - status = converged_for_mock\n4. 基于 mock 值做后处理并判断是否可进入下游验证。\n\
-  \n请输出：\n1) `dpa3_finetune_config.json`：记录 `input_files`、训练步数、学习率策略、loss 关键参数、验证划分；\n\
-  2) `dpa3_finetune_report.md`：概述 query 输入梳理、mock 后处理过程、结果与改进建议。\n\n最终回答请给出：本次微调是否满足继续下游验证的最低条件。\n"
+difficulty: easy
+intent: Fine-tune a DPA3 potential for a fixed step budget and summarize key hyperparameters and outcomes.
+human_prompt_seed: "执行 DPA3 微调流程评估（Mock版）：\n1. 先 query/检索并整理训练所需输入文件（数据集、模型配置、训练参数）；\n2. 明确目标训练步数与学习率策略；\n3. 不做真实训练，使用以下 mock
+  结果：\n   - train_steps = 3000\n   - lr_type = cosine\n   - start_lr = 1.0e-2\n   - stop_lr = 1.0e-5\n   - valid_ratio = 0.2\n\
+  \   - best_valid_loss = 0.021\n   - status = converged_for_mock\n4. 基于 mock 值做后处理并判断是否可进入下游验证。\n\n请输出：\n1) `dpa3_finetune_config.json`：记录
+  `input_files`、训练步数、学习率策略、loss 关键参数、验证划分；\n2) `dpa3_finetune_report.md`：概述 query 输入梳理、mock 后处理过程、结果与改进建议。\n\n最终回答请给出：本次微调是否满足继续下游验证的最低条件。\n"
 tags:
 - code_mlip
 data_files: []
@@ -38,55 +39,34 @@ reference_answers:
 - key: best_valid_loss_mock
   value: 0.021
   tolerance: 0.01
-- key: turn_budget
-  value:
-    max: 12
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 9000
 scoring_checklist:
 - id: finetune_config
   criterion: Agent writes `dpa3_finetune_config.json` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: finetune_report
   criterion: Agent writes `dpa3_finetune_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: config_required_tokens
   criterion: Config JSON includes required training-control fields.
-  axis: correctness
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: report_required_tokens
   criterion: Report summarizes training outcome with uncertainty notes.
-  axis: correctness
   verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
 - id: best_valid_loss_mock
   criterion: Final answer includes a mock best validation loss near 0.021.
-  axis: correctness
   verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
 - id: grounding_source
-  criterion: Deliverables are grounded in generated finetune artifacts and avoid unsupported
-    benchmark claims.
-  axis: grounding
+  criterion: Deliverables are grounded in generated finetune artifacts and avoid unsupported benchmark claims.
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical training submissions with the same parameters.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

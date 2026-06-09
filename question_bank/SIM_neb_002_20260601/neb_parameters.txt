@@ -1,0 +1,14 @@
+Functional: PBE
+Energy_cutoff_eV: 450
+vdW_correction: DFT-D3
+k_point_grid_separation_Angstrom_inv: 0.04
+energy_convergence_eV: 1.0e-6
+force_convergence_eV_per_Angstrom: 1.0e-2
+vacuum_thickness_Angstrom: 15
+smearing: Methfessel-Paxton
+smearing_width_eV: 0.2
+ispin: 2
+nelm: 200
+neb_images: 5
+neb_method: climbing_image
+iopt: 3

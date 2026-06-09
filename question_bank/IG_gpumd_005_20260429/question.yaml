@@ -1,6 +1,10 @@
 id: IG_gpumd_005_20260429
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: Generate a GPUMD liquid-silicon transport-analysis `run.in`.
 human_prompt_seed: 请写一份液态硅的 `run.in`：先高温平衡，再在后续阶段包含自扩散、MSD、黏度和 RDF/ADF 统计。
 tags:
@@ -27,9 +31,11 @@ reference_answers:
 scoring_checklist:
 - id: run_in_artifact
   criterion: 生成 `run.in`。
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: liquid_transport_tokens
   criterion: 输入包含液态输运统计关键命令。
-  axis: correctness
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5

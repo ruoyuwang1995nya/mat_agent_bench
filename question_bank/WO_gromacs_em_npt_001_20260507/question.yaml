@@ -1,15 +1,18 @@
 id: WO_gromacs_em_npt_001_20260507
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
-intent: Submit GROMACS energy minimization and NPT equilibration on Bohrium, verify
-  convergence and output structure.
+difficulty: easy
+intent: Submit GROMACS energy minimization and NPT equilibration on Bohrium, verify convergence and output structure.
 human_prompt_seed: '对提供的 SPC 水盒子体系执行 GROMACS 能量最小化 + NPT 平衡模拟。
 
-  已提供文件： - `conf.gro`: 216 个 SPC 水分子的初始坐标 - `topol.top`: 拓扑文件 - `em.mdp`: 能量最小化参数
-  - `npt.mdp`: NPT 平衡参数（2 ns, 298.15 K, 1 bar）
+  已提供文件： - `conf.gro`: 216 个 SPC 水分子的初始坐标 - `topol.top`: 拓扑文件 - `em.mdp`: 能量最小化参数 - `npt.mdp`: NPT 平衡参数（2 ns, 298.15 K, 1
+  bar）
 
-  请完成以下步骤： 1) 在 Bohrium GROMACS 镜像上提交能量最小化（EM），确认 Fmax < 1000 kJ/mol/nm 2) 用 EM 输出作为
-  NPT 输入，提交 NPT 平衡 3) 输出最终结构 `npt_final.gro` 到工作目录
+  请完成以下步骤： 1) 在 Bohrium GROMACS 镜像上提交能量最小化（EM），确认 Fmax < 1000 kJ/mol/nm 2) 用 EM 输出作为 NPT 输入，提交 NPT 平衡 3) 输出最终结构 `npt_final.gro`
+  到工作目录
 
   在最终回答中报告：EM 收敛步数、NPT 最终密度 (g/cm³)。'
 tags:
@@ -30,47 +33,24 @@ data_files:
 reference_answers:
 - key: npt_output
   value: npt_final.gro
-- key: turn_budget
-  value:
-    max: 25
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 30000
 scoring_checklist:
 - id: npt_output
   criterion: Agent produces `npt_final.gro` in the workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: em_convergence
   criterion: Final answer reports EM convergence (steps and Fmax < 1000).
-  axis: correctness
   verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
 - id: npt_density
-  criterion: Final answer reports NPT equilibrium density close to 1.0 g/cm³ (within
-    ±0.1 for SPC water at 298K).
-  axis: correctness
+  criterion: Final answer reports NPT equilibrium density close to 1.0 g/cm³ (within ±0.1 for SPC water at 298K).
   verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
 - id: grounding_source
-  criterion: The reported density and convergence values come from actual GROMACS
-    output logs, not textbook recall.
-  axis: grounding
+  criterion: The reported density and convergence values come from actual GROMACS output logs, not textbook recall.
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical Bohrium submissions.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes within turn budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock duration within budget.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage within budget.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

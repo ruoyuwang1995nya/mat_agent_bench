@@ -1,8 +1,10 @@
 id: SC_struct_012_20260412v2
-capability: structure_construction
+task_type: simulation
+capabilities:
+- structure_manipulation
 domain: agnostic
-intent: Construct corundum (alpha-Al2O3) using Wyckoff-position information and validate
-  lattice/formula consistency.
+difficulty: easy
+intent: Construct corundum (alpha-Al2O3) using Wyckoff-position information and validate lattice/formula consistency.
 human_prompt_seed: '请基于刚玉（corundum, alpha-Al2O3）的 Wyckoff 位点信息构建晶体结构，并导出为 `corundum_wyckoff.cif`。
 
   已知目标信息： - 空间群编号：167； - 晶格常数近似：a=b≈4.7602 Å, c≈12.9933 Å； - 采用 Wyckoff 位点方式构建，而不是只给出最终化学式。
@@ -46,65 +48,40 @@ reference_answers:
     - lattice
     - coordinate
     flags: i
-- key: turn_budget
-  value:
-    max: 16
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 9000
 scoring_checklist:
 - id: structure_artifact
   criterion: Agent writes `corundum_wyckoff.cif` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: notes_artifact
   criterion: Agent writes `wyckoff_construction_notes.md` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: formula_check
   criterion: Output CIF has reduced formula consistent with Al2O3.
-  axis: correctness
   verify: struct_file_formula
+  capability: structure_manipulation
+  weight: 0.5
 - id: lattice_a
   criterion: Lattice parameter a is consistent with corundum reference scale.
-  axis: correctness
   verify: struct_file_cell_param
+  capability: structure_manipulation
+  weight: 0.5
 - id: lattice_c
   criterion: Lattice parameter c is consistent with corundum reference scale.
-  axis: correctness
   verify: struct_file_cell_param
+  capability: structure_manipulation
+  weight: 0.5
 - id: notes_required_tokens
   criterion: Notes describe Wyckoff-based construction details.
-  axis: correctness
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: grounding_source
-  criterion: The final answer is grounded in `corundum_wyckoff.cif` and the Wyckoff-construction
-    notes, rather than generic mineral background.
-  axis: grounding
+  criterion: The final answer is grounded in `corundum_wyckoff.cif` and the Wyckoff-construction notes, rather than 
+    generic mineral background.
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical tool calls with the same parameter set.
-  axis: efficiency
-  verify: no_retries
-- id: efficiency_judge
-  criterion: Workflow converges quickly from Wyckoff information to structure export
-    and documentation, without redundant rebuild loops.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
-    (tunable per task after calibration).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

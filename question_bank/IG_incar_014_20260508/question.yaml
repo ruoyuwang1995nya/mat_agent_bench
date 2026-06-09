@@ -1,12 +1,15 @@
 id: IG_incar_014_20260508
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
-intent: 'Generate VASP INCAR for static calculation of hydrogen-passivated SiO2 slab
-  H16O24Si12. Insulator, fixed cell (ISIF=2).
+difficulty: easy
+intent: 'Generate VASP INCAR for static calculation of hydrogen-passivated SiO2 slab H16O24Si12. Insulator, fixed cell (ISIF=2).
 
   '
-human_prompt_seed: 为氢钝化的 SiO2 slab 模型 H16O24Si12 生成一个静态计算的 VASP INCAR。体系是绝缘体 slab，需要固定晶胞形状。将完整的
-  INCAR 写入当前目录下的 `INCAR` 文件。
+human_prompt_seed: 为氢钝化的 SiO2 slab 模型 H16O24Si12 生成一个静态计算的 VASP INCAR。体系是绝缘体 slab，需要固定晶胞形状。将完整的 INCAR 写入当前目录下的 `INCAR` 
+  文件。
 tags:
 - eng_vasp
 - struct_surface
@@ -35,15 +38,6 @@ reference_answers:
     filename: INCAR
     pattern: (?ims)\A(?!.*^\s*NSW\s*=)(?:.|\n)*\Z|^\s*NSW\s*=\s*0\b
     flags: im
-- key: turn_budget
-  value:
-    max: 8
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 15000
 - key: reasonable_params
   value:
     filename: INCAR
@@ -60,62 +54,51 @@ reference_answers:
 scoring_checklist:
 - id: incar_artifact
   criterion: INCAR file is generated.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: incar_critical_tokens
   criterion: INCAR contains all critical parameter keywords.
-  axis: correctness
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: optional_IBRION
   criterion: INCAR may omit IBRION; if provided, it must be IBRION = -1.
-  axis: correctness
   verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
 - id: critical_ISIF
   criterion: INCAR sets ISIF = 2 (critical param).
-  axis: correctness
   verify: text_file_regex
+  capability: tool_utilization
+  weight: 0.5
 - id: optional_NSW
   criterion: INCAR may omit NSW; if provided, it must be NSW = 0.
-  axis: correctness
   verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
 - id: reasonable_params
-  criterion: The INCAR uses physically reasonable general settings for a VASP static
-    SCF calculation. ENCUT is present (unless not relevant), EDIFF is present with
-    a reasonable value, PREC is set. Machine-specific params (KPAR, NCORE, NPAR) are
-    optional and should not be penalized if absent or different from reference.
-  axis: correctness
+  criterion: The INCAR uses physically reasonable general settings for a VASP static SCF calculation. ENCUT is present 
+    (unless not relevant), EDIFF is present with a reasonable value, PREC is set. Machine-specific params (KPAR, NCORE, 
+    NPAR) are optional and should not be penalized if absent or different from reference.
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: grounding_source
-  criterion: The generated INCAR is grounded in the provided prompt data (material
-    system, calculation type, critical parameters) rather than hallucinated. Judge
-    solely from the final answer and stated file content; do not fail because the
-    tool-call log omits MCP, web_search, or any specific tool.
-  axis: grounding
+  criterion: The generated INCAR is grounded in the provided prompt data (material system, calculation type, critical 
+    parameters) rather than hallucinated. Judge solely from the final answer and stated file content; do not fail 
+    because the tool-call log omits MCP, web_search, or any specific tool.
   verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5
 - id: correct_ISMEAR_insulator
-  criterion: INCAR sets ISMEAR = 0 (Gaussian) or ISMEAR = -5 (tetrahedron) which are
-    appropriate for insulators. Positive ISMEAR values (Methfessel-Paxton, for metals)
-    must not be used for insulating systems.
-  axis: correctness
+  criterion: INCAR sets ISMEAR = 0 (Gaussian) or ISMEAR = -5 (tetrahedron) which are appropriate for insulators. 
+    Positive ISMEAR values (Methfessel-Paxton, for metals) must not be used for insulating systems.
   verify: text_file_regex
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: efficiency_judge
-  criterion: The agent produced the INCAR efficiently without unnecessary tool calls,
-    redundant queries, or irrelevant exploration.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: duration_budget
-  criterion: Wall-clock run duration does not exceed benchmark ceiling.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_reasoning
+  weight: 0.5
 - id: critical_IVDW
   criterion: INCAR sets IVDW = 11 or 12 (critical param).
-  axis: correctness
   verify: text_file_regex
+  capability: data_handling
+  weight: 0.5

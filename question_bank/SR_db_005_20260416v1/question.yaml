@@ -1,14 +1,16 @@
 id: SR_db_005_20260416v1
-capability: structure_retrieval
+task_type: search_and_interpretation
+capabilities:
+- tool_utilization
+- scientific_reasoning
 domain: agnostic
-intent: Retrieve three oxide structures with band gap greater than 2 eV and summarize
-  filter compliance.
+difficulty: easy
+intent: Retrieve three oxide structures with band gap greater than 2 eV and summarize filter compliance.
 human_prompt_seed: '检索并返回 3 个氧化物结构，要求带隙大于 2 eV。
 
   请完成以下交付：
 
-  1) `oxide_bg_gt2_candidates.json`：列出 3 个候选，每条至少包含 `rank`, `formula`, `band_gap_eV`,
-  `database_source`, `structure_identifier`；
+  1) `oxide_bg_gt2_candidates.json`：列出 3 个候选，每条至少包含 `rank`, `formula`, `band_gap_eV`, `database_source`, `structure_identifier`；
 
   2) `oxide_bg_gt2_report.md`：说明检索条件（氧化物约束、带隙阈值、候选数量）以及筛选中可能的不确定性；
 
@@ -49,57 +51,35 @@ reference_answers:
     - 候选
     - 不确定性
     flags: i
-- key: turn_budget
-  value:
-    max: 10
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 8000
 scoring_checklist:
 - id: candidates_json
   criterion: Agent writes `oxide_bg_gt2_candidates.json` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: retrieval_report
   criterion: Agent writes `oxide_bg_gt2_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: candidates_required_tokens
-  criterion: Candidate JSON includes required metadata fields for oxide and band-gap
-    screening.
-  axis: correctness
+  criterion: Candidate JSON includes required metadata fields for oxide and band-gap screening.
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: bandgap_regex
   criterion: Candidate JSON provides explicit band-gap values greater than 2 eV.
-  axis: correctness
   verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
 - id: report_required_tokens
-  criterion: Retrieval report states filter constraints, candidate-count handling,
-    and uncertainty note.
-  axis: correctness
+  criterion: Retrieval report states filter constraints, candidate-count handling, and uncertainty note.
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: grounding_source
-  criterion: The final answer is grounded in retrieval results and does not fabricate
-    band-gap values beyond reported metadata.
-  axis: grounding
+  criterion: The final answer is grounded in retrieval results and does not fabricate band-gap values beyond reported 
+    metadata.
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical retrieval calls with the same parameters.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

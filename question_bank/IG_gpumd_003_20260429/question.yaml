@@ -1,6 +1,10 @@
 id: IG_gpumd_003_20260429
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: Generate a GPUMD NEMD `run.in` with heat source/sink and grouped statistics.
 human_prompt_seed: 请写一份用于界面热输运 NEMD 的 `run.in`：需要固定区、热源/热汇、温度统计，以及后续 SHC 相关设置。
 tags:
@@ -25,9 +29,11 @@ reference_answers:
 scoring_checklist:
 - id: run_in_artifact
   criterion: 生成 `run.in`。
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: nemd_core_tokens
   criterion: 输入包含 NEMD 热源/热汇与温度统计关键命令。
-  axis: correctness
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5

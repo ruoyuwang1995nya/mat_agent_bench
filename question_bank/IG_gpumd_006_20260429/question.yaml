@@ -1,6 +1,10 @@
 id: IG_gpumd_006_20260429
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: Generate a GPUMD active-learning `run.in` with multi-model observation.
 human_prompt_seed: 请准备一个主动学习场景的 `run.in`：需要多势函数观察、不确定性触发保存，以及观察者输出设置。
 tags:
@@ -23,9 +27,11 @@ reference_answers:
 scoring_checklist:
 - id: run_in_artifact
   criterion: 生成 `run.in`。
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: active_learning_tokens
   criterion: 输入包含主动学习触发与观察者输出关键命令。
-  axis: correctness
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5

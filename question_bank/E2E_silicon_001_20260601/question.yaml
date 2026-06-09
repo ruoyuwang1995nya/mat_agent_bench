@@ -1,0 +1,127 @@
+id: E2E_silicon_001_20260601
+task_type: end_to_end_research
+capabilities:
+- scientific_reasoning
+- tool_utilization
+- workflow_orchestration
+- data_handling
+- scientific_grounding
+domain: semiconductor
+difficulty: hard
+intent: Starting from the diamond-cubic silicon crystal structure, design and execute a multi-stage computational 
+  workflow to compute the equation of state, fit a Birch-Murnaghan EOS model, and extract equilibrium volume, bulk 
+  modulus, and minimum energy.
+human_prompt_seed: 'Starting from the provided equilibrium structure of diamond-cubic silicon (poscar.vasp), compute the equation
+  of state and extract key equilibrium properties. Report results in results.json with keys: equilibrium_volume_A3 (float), bulk_modulus_GPa (float), minimum_energy_eV (float), eos_fit_residual (float), and
+  num_volume_points (int). Include your full methodology, parameter choices, and any assumptions in methodology.txt. Also
+  provide eos_data.csv with columns: volume_A3, energy_eV, scaling_pct.'
+tags:
+- eng_vasp
+- eos
+- birch_murnaghan
+- bulk_modulus
+- workflow_e2e
+data_files:
+- key: poscar
+  path: poscar.vasp
+  description: Diamond-cubic silicon equilibrium structure from Materials Project (mp-149)
+reference_answers:
+- key: results_exists
+  value: results.json
+- key: results_equilibrium_volume
+  value:
+    checks:
+    - key: equilibrium_volume_A3
+      max: 24.0
+      min: 16.0
+    filename: results.json
+- key: results_bulk_modulus
+  value:
+    checks:
+    - key: bulk_modulus_GPa
+      max: 110
+      min: 80
+    filename: results.json
+- key: results_energy
+  value:
+    checks:
+    - key: minimum_energy_eV
+      max: -9.0
+      min: -11.0
+    filename: results.json
+- key: results_num_points
+  value:
+    checks:
+    - key: num_volume_points
+      expected: 5
+      tolerance: 0
+    filename: results.json
+- key: methodology_exists
+  value: methodology.txt
+- key: eos_data_exists
+  value: eos_data.csv
+- key: grounding_check
+  value:
+    expected: 'yes'
+    question: Does the methodology trace back to the common workflow approach described in the paper, using 
+      volume-scaled structures with position relaxation at fixed volume/shape and Birch-Murnaghan fitting?
+- key: workflow_orchestration_check
+  value:
+    expected: 'yes'
+    question: 'Does the agent''s methodology demonstrate a correct multi-stage workflow: structure generation -> relaxation
+      setup/execution -> energy collection -> EOS fitting?'
+scoring_checklist:
+- id: results_exists
+  verify: artifact_exists
+  weight: 0.08
+  criterion: '[Must] results.json file exists with all required keys'
+  capability: data_handling
+- id: results_equilibrium_volume
+  verify: answer_json_numeric
+  weight: 0.12
+  criterion: '[Suggested] Equilibrium volume is in the physically reasonable range for Si (16-24 A3 for 2-atom cell)'
+  capability: scientific_reasoning
+- id: results_bulk_modulus
+  verify: answer_json_numeric
+  weight: 0.12
+  criterion: '[Suggested] Bulk modulus is in the physically reasonable range for Si (80-110 GPa, consistent with experimental
+    ~98 GPa)'
+  capability: scientific_reasoning
+- id: results_energy
+  verify: answer_json_numeric
+  weight: 0.08
+  criterion: '[Suggested] Minimum energy per atom is in a reasonable range for Si with PBE (-11 to -9 eV/atom)'
+  capability: data_handling
+- id: results_num_points
+  verify: answer_json_numeric
+  weight: 0.08
+  criterion: '[Must] At least 5 volume points were used for EOS fitting'
+  capability: workflow_orchestration
+- id: methodology_exists
+  verify: artifact_exists
+  weight: 0.05
+  criterion: '[Must] methodology.txt exists and describes the full workflow'
+  capability: data_handling
+- id: eos_data_exists
+  verify: artifact_exists
+  weight: 0.05
+  criterion: '[Must] eos_data.csv exists with volume_A3, energy_eV, and scaling_pct columns'
+  capability: data_handling
+- id: grounding_check
+  verify: llm_binary_judge
+  weight: 0.12
+  criterion: '[Must] Methodology traces back to the common workflow EOS approach from the paper'
+  capability: scientific_grounding
+- id: workflow_orchestration_check
+  verify: llm_binary_judge
+  weight: 0.12
+  criterion: '[Must] Agent demonstrates correct multi-stage workflow sequencing: structure generation, relaxation, energy
+    extraction, EOS fitting'
+  capability: workflow_orchestration
+reference_answer_prompt: '1. Start from mp-149 Si structure (diamond cubic, 2 atoms/cell, ~20 A3 cell volume). 2. Generate
+  5 volume-scaled structures at -5%, -2.5%, 0%, +2.5%, +5% by scaling lattice vectors by f^(1/3). 3. For each structure, run
+  VASP relaxation with ISIF=2 (positions only), PBE functional, precise protocol (ENCUT>=520, EDIFF=1E-8, EDIFFG=-0.001).
+  4. Extract total energy from each relaxed OUTCAR (free energy TOTEN). 5. Fit Birch-Murnaghan EOS: E(V) = E0 + (9V0B0/16)*{[(V0/V)^(2/3)-1]^3*B0''
+  + [(V0/V)^(2/3)-1]^2*[6-4(V0/V)^(2/3)]}. 6. Extract V0 (equilibrium volume), B0 (bulk modulus in GPa), E0 (minimum energy).
+  Expected: V0 ~20 A3 for 2-atom cell (~10 A3/atom), B0 ~98 GPa, E0 ~-10.8 eV/atom. 7. Write results.json, methodology.txt,
+  eos_data.csv.'

@@ -159,13 +159,23 @@ def create_app(
             grading_workers=grading_workers,
             store_dir=store,
             parallel_checklist_workers=parallel_checklist_workers,
-            allow_direct_registration=False,
         )
         _backend_url = ""
     else:
         _bench_app = None
         _mint_token = None
         _backend_url = backend_url.rstrip("/")
+
+    # Cache total question count and per-capability counts for normalized scoring
+    try:
+        _all_qs = Registry(qb_dir).list_questions()
+        _total_questions = len(_all_qs)
+        _cap_question_counts: dict[str, int] = {}
+        for _q in _all_qs:
+            _cap_question_counts[_q.capability] = _cap_question_counts.get(_q.capability, 0) + 1
+    except Exception:
+        _total_questions = 0
+        _cap_question_counts = {}
 
     app = FastAPI(title="mat-bench UI", docs_url=None, redoc_url=None)
     app.mount("/static", StaticFiles(directory=_STATIC_DIR, html=True), name="static")
@@ -189,6 +199,16 @@ def create_app(
     @app.get("/")
     async def root():
         return RedirectResponse("/static/index.html")
+
+    @app.get("/guide")
+    async def agent_guide():
+        from fastapi.responses import PlainTextResponse
+        path = Path(__file__).resolve().parent.parent.parent / "agents" / "agent_api_guide.md"
+        return PlainTextResponse(path.read_text(encoding="utf-8"))
+
+    @app.get("/docs")
+    async def docs_redirect():
+        return RedirectResponse("/bench/docs")
 
     # ------------------------------------------------------------------
     # Auth endpoints
@@ -253,6 +273,7 @@ def create_app(
     @app.get("/api/questions")
     async def list_questions(
         capability: str | None = Query(None),
+        task_type: str | None = Query(None),
         domain: str | None = Query(None),
         tags: list[str] | None = Query(None),
     ):
@@ -260,19 +281,33 @@ def create_app(
             registry = Registry(qb_dir)
         except FileNotFoundError as exc:
             raise HTTPException(404, str(exc))
-        questions = registry.list_questions(capability=capability, domain=domain, tags=tags)
+        questions = registry.list_questions(capability=capability, task_type=task_type, domain=domain, tags=tags)
         return [
             {
                 "id": q.id,
                 "capability": q.capability,
+                "task_type": q.task_type,
                 "domain": q.domain,
                 "intent": q.intent,
                 "tags": q.tags,
                 "tag_count": len(q.tags),
+                "difficulty": q.item.difficulty,
                 "checklist_count": len(q.item.scoring_checklist),
             }
             for q in questions
         ]
+
+    @app.get("/api/questions/{question_id}")
+    async def get_question(question_id: str):
+        try:
+            registry = Registry(qb_dir)
+        except FileNotFoundError as exc:
+            raise HTTPException(404, str(exc))
+        try:
+            q = registry.get_question(question_id)
+        except KeyError:
+            raise HTTPException(404, f"Question '{question_id}' not found")
+        return {"id": q.id, "prompt": q.item.human_prompt_seed}
 
     @app.post("/api/questions/upload")
     async def upload_question(file: UploadFile = File(...)):
@@ -370,7 +405,7 @@ def create_app(
         result = []
         for sd in session_meta.values():
             recs = sd["records"]
-            ms = build_summary(recs) if recs else None
+            ms = build_summary(recs, _total_questions) if recs else None
             result.append(
                 {
                     "session_id": sd["session_id"],
@@ -419,7 +454,11 @@ def create_app(
 
         leaderboard = []
         for agent_name, recs in by_agent.items():
-            ms = build_summary(recs)
+            ms = build_summary(recs, _total_questions)
+            cap_scores: dict[str, float] = {}
+            for rec in recs:
+                for cap in rec.capabilities:
+                    cap_scores[cap] = cap_scores.get(cap, 0.0) + rec.overall_weighted_score
             leaderboard.append(
                 {
                     "agent": agent_name,
@@ -429,7 +468,8 @@ def create_app(
                     "weighted_score": round(ms.weighted_pass_rate, 4),
                     "questions_passed": ms.questions_passed,
                     "by_capability": {
-                        k: round(v.pass_rate(), 4) for k, v in ms.by_capability.items()
+                        cap: round(total / max(_cap_question_counts.get(cap, 1), 1), 4)
+                        for cap, total in cap_scores.items()
                     },
                     "by_domain": {
                         k: round(v.pass_rate(), 4) for k, v in ms.by_domain.items()
@@ -437,7 +477,7 @@ def create_app(
                 }
             )
 
-        leaderboard.sort(key=lambda x: x["questions_passed"], reverse=True)
+        leaderboard.sort(key=lambda x: x["weighted_score"], reverse=True)
         return {"leaderboard": leaderboard, "total_evaluations": len(rows)}
 
     @app.get("/api/leaderboard/{agent_name}/questions")
@@ -448,7 +488,7 @@ def create_app(
         agent_recs = by_agent.get(agent_name)
         if not agent_recs:
             raise HTTPException(404, f"No results for agent '{agent_name}'")
-        ms = build_summary(agent_recs)
+        ms = build_summary(agent_recs, _total_questions)
 
         by_q_key: dict[str, list[EvalRunRecord]] = defaultdict(list)
         for rec in agent_recs:
@@ -460,15 +500,12 @@ def create_app(
             questions.append({
                 "question_id": qpr.question_id,
                 "mode": key.split(":", 1)[1] if ":" in key else "",
-                "capability": qpr.capability,
+                "capability": ', '.join(qpr.capabilities) if qpr.capabilities else '',
                 "domain": qpr.domain,
                 "runs": qpr.runs,
                 "passed": op,
                 "total": ot,
                 "pass_rate": round(op / ot, 4) if ot else 0.0,
-                "correctness": f"{qpr.correctness[0]}/{qpr.correctness[1]}",
-                "grounding": f"{qpr.grounding[0]}/{qpr.grounding[1]}",
-                "efficiency": f"{qpr.efficiency[0]}/{qpr.efficiency[1]}",
                 "safety_vetoed": qpr.safety_veto_count > 0,
                 "criteria": _agg_criteria(by_q_key.get(key, [])),
                 "criteria_detail": _agg_criteria_detail(by_q_key.get(key, [])),
@@ -494,7 +531,7 @@ def create_app(
         if not session_recs:
             raise HTTPException(404, f"No results for session '{session_id}'")
 
-        ms = build_summary(session_recs)
+        ms = build_summary(session_recs, _total_questions)
 
         by_q_key: dict[str, list[EvalRunRecord]] = defaultdict(list)
         for rec in session_recs:
@@ -506,15 +543,12 @@ def create_app(
             questions.append({
                 "question_id": qpr.question_id,
                 "mode": key.split(":", 1)[1] if ":" in key else "",
-                "capability": qpr.capability,
+                "capability": ', '.join(qpr.capabilities) if qpr.capabilities else '',
                 "domain": qpr.domain,
                 "runs": qpr.runs,
                 "passed": op,
                 "total": ot,
                 "pass_rate": round(op / ot, 4) if ot else 0.0,
-                "correctness": f"{qpr.correctness[0]}/{qpr.correctness[1]}",
-                "grounding": f"{qpr.grounding[0]}/{qpr.grounding[1]}",
-                "efficiency": f"{qpr.efficiency[0]}/{qpr.efficiency[1]}",
                 "safety_vetoed": qpr.safety_veto_count > 0,
                 "criteria": _agg_criteria(by_q_key.get(key, [])),
                 "criteria_detail": _agg_criteria_detail(by_q_key.get(key, [])),
@@ -545,7 +579,7 @@ def _agg_criteria_detail(recs: list[EvalRunRecord]) -> list[dict]:
             if cid not in agg:
                 agg[cid] = {
                     "criterion_id": cid,
-                    "axis": cr.axis,
+                    "capability": cr.capability,
                     "passed": 0,
                     "total": 0,
                     "reasons": [],

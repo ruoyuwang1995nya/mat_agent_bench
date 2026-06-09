@@ -1,15 +1,17 @@
 id: DFT_pxrd_001_20260408
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: agnostic
-intent: Perform Pawley refinement on variable-temperature PXRD patterns to extract
-  lattice parameters at each temperature, identify two structural phases (low-temperature
-  RTP and high-temperature HTP), and fit linear thermal expansion equations for each
-  phase.
+difficulty: easy
+intent: Perform Pawley refinement on variable-temperature PXRD patterns to extract lattice parameters at each 
+  temperature, identify two structural phases (low-temperature RTP and high-temperature HTP), and fit linear thermal 
+  expansion equations for each phase.
 human_prompt_seed: '文件 `_td-pxrd_test.txt` 包含一个化合物在 8 个温度下的变温粉末 X 射线衍射（PXRD）数据，温度标签对应关系为：25°C→303K、40°C→323K、60°C→343K、80°C→363K、100°C→383K、115°C→393K、130°C→403K、140°C→413K。该化合物为单斜晶系。
 
-  请对每个温度的 PXRD 图谱进行 Pawley 精修，提取晶格参数（a、b、c、β、V），并分析结果： 1. 识别两个结构相：低温相（1-RTP，303K–363K）和高温相（1-HTP，383K–413K）；
-  2. 分别对两个相的各晶格参数（a、b、c、β、V）随温度的变化进行线性拟合，给出拟合方程（斜率、截距、R²）； 3. 报告各温度下的精修结果（晶格参数与 Rp/Rwp
-  指标）。
+  请对每个温度的 PXRD 图谱进行 Pawley 精修，提取晶格参数（a、b、c、β、V），并分析结果： 1. 识别两个结构相：低温相（1-RTP，303K–363K）和高温相（1-HTP，383K–413K）； 2. 分别对两个相的各晶格参数（a、b、c、β、V）随温度的变化进行线性拟合，给出拟合方程（斜率、截距、R²）；
+  3. 报告各温度下的精修结果（晶格参数与 Rp/Rwp 指标）。
 
   '
 tags:
@@ -19,9 +21,10 @@ tags:
 data_files:
 - key: vt_pxrd_data
   path: _td-pxrd_test.txt
-  oss_url: https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/DF_thermo_001_20260408/1775629319__td-pxrd_test.txt
-  description: Variable-temperature PXRD patterns at 8 temperatures (303K–413K), CSV
-    format with paired (2theta, intensity) columns for each temperature.
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/DF_thermo_001_20260408/1775629319__td-pxrd_test.txt
+  description: Variable-temperature PXRD patterns at 8 temperatures (303K–413K), CSV format with paired (2theta, 
+    intensity) columns for each temperature.
 reference_answers:
 - key: rtp_V_303K
   value: 999.81
@@ -69,112 +72,74 @@ reference_answers:
   - HTP
   - slope
   - intercept
-- key: turn_budget
-  value:
-    max: 20
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 12000
 scoring_checklist:
 - id: rtp_V_303K
-  criterion: Refined unit cell volume at 303 K (RTP phase) is within tolerance of
-    999.81 Å³.
-  axis: correctness
+  criterion: Refined unit cell volume at 303 K (RTP phase) is within tolerance of 999.81 Å³.
   verify: numerical_range
-  weight: 1.5
+  weight: 0.5
+  capability: tool_utilization
 - id: rtp_V_363K
-  criterion: Refined unit cell volume at 363 K (RTP phase) is within tolerance of
-    1011.67 Å³.
-  axis: correctness
+  criterion: Refined unit cell volume at 363 K (RTP phase) is within tolerance of 1011.67 Å³.
   verify: numerical_range
-  weight: 1.0
+  weight: 0.5
+  capability: tool_utilization
 - id: htp_V_383K
-  criterion: Refined unit cell volume at 383 K (HTP phase) is within tolerance of
-    1022.73 Å³.
-  axis: correctness
+  criterion: Refined unit cell volume at 383 K (HTP phase) is within tolerance of 1022.73 Å³.
   verify: numerical_range
-  weight: 1.5
+  weight: 0.5
+  capability: tool_utilization
 - id: htp_V_413K
-  criterion: Refined unit cell volume at 413 K (HTP phase) is within tolerance of
-    1026.10 Å³.
-  axis: correctness
+  criterion: Refined unit cell volume at 413 K (HTP phase) is within tolerance of 1026.10 Å³.
   verify: numerical_range
-  weight: 1.0
+  weight: 0.5
+  capability: tool_utilization
 - id: rtp_a_303K
-  criterion: Refined lattice parameter a at 303 K (RTP phase) is within tolerance
-    of 10.828 Å.
-  axis: correctness
+  criterion: Refined lattice parameter a at 303 K (RTP phase) is within tolerance of 10.828 Å.
   verify: numerical_range
-  weight: 1.0
+  weight: 0.5
+  capability: tool_utilization
 - id: htp_a_383K
-  criterion: Refined lattice parameter a at 383 K (HTP phase) is within tolerance
-    of 11.0506 Å.
-  axis: correctness
+  criterion: Refined lattice parameter a at 383 K (HTP phase) is within tolerance of 11.0506 Å.
   verify: numerical_range
-  weight: 1.0
+  weight: 0.5
+  capability: tool_utilization
 - id: rtp_V_slope
-  criterion: Linear fit slope of V vs T for RTP phase (303–363 K) is within tolerance
-    of 0.2013 Å³/K.
-  axis: correctness
+  criterion: Linear fit slope of V vs T for RTP phase (303–363 K) is within tolerance of 0.2013 Å³/K.
   verify: numerical_range
-  weight: 2.0
+  weight: 0.5
+  capability: tool_utilization
 - id: htp_V_slope
-  criterion: Linear fit slope of V vs T for HTP phase (383–413 K) is within tolerance
-    of 0.1154 Å³/K.
-  axis: correctness
+  criterion: Linear fit slope of V vs T for HTP phase (383–413 K) is within tolerance of 0.1154 Å³/K.
   verify: numerical_range
-  weight: 2.0
+  weight: 0.5
+  capability: tool_utilization
 - id: rtp_a_slope
-  criterion: Linear fit slope of a vs T for RTP phase is within tolerance of 0.00129
-    Å/K.
-  axis: correctness
+  criterion: Linear fit slope of a vs T for RTP phase is within tolerance of 0.00129 Å/K.
   verify: numerical_range
-  weight: 1.5
+  weight: 0.5
+  capability: tool_utilization
 - id: htp_c_slope
-  criterion: Linear fit slope of c vs T for HTP phase is within tolerance of -0.00053
-    Å/K (negative thermal expansion along c axis in HTP phase).
-  axis: correctness
+  criterion: Linear fit slope of c vs T for HTP phase is within tolerance of -0.00053 Å/K (negative thermal expansion 
+    along c axis in HTP phase).
   verify: numerical_range
-  weight: 1.5
+  weight: 0.5
+  capability: tool_utilization
 - id: required_fields
-  criterion: Answer reports both RTP and HTP phases with linear fit equations including
-    slope, intercept, and R² for at least V vs T in each phase.
-  axis: correctness
+  criterion: Answer reports both RTP and HTP phases with linear fit equations including slope, intercept, and R² for at 
+    least V vs T in each phase.
   verify: llm_binary_judge
-  weight: 1.0
+  weight: 0.5
+  capability: tool_utilization
 - id: phase_transition_identified
-  criterion: Answer identifies a structural phase transition between 363 K and 383
-    K, with distinct lattice parameters for the two phases (notably a jump in a and
-    β at the transition).
-  axis: correctness
+  criterion: Answer identifies a structural phase transition between 363 K and 383 K, with distinct lattice parameters 
+    for the two phases (notably a jump in a and β at the transition).
   verify: llm_binary_judge
-  weight: 1.5
+  weight: 0.5
+  capability: scientific_reasoning
 - id: grounding_source
-  criterion: Lattice parameters and fit results are derived from Pawley refinement
-    of the provided PXRD data file, not from literature values or hallucination. Judge
-    from the final answer and stated methodology; do not fail because the tool-call
-    log omits specific tools.
-  axis: grounding
+  criterion: Lattice parameters and fit results are derived from Pawley refinement of the provided PXRD data file, not 
+    from literature values or hallucination. Judge from the final answer and stated methodology; do not fail because the
+    tool-call log omits specific tools.
   verify: llm_binary_judge
-- id: efficiency_judge
-  criterion: Pawley refinement and thermal expansion fitting are performed in a direct
-    pipeline without unnecessary repeated refinements or redundant parameter sweeps.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
-    (tunable per task after calibration).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

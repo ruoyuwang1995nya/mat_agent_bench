@@ -1,11 +1,12 @@
 id: SC_struct_SiH_20260507
-capability: structure_construction
+task_type: simulation
+capabilities:
+- structure_manipulation
 domain: semiconductor
-intent: Passivate dangling bonds on both top and bottom surfaces of a Si(100) slab
-  with hydrogen atoms.
-human_prompt_seed: '读取 `hydrogen_cap_spec.json`，对 Si(100) slab 上下两个表面的悬挂键进行氢饱和。 要求：识别
-  slab 顶部和底部所有欠配位 Si 原子，添加 H 使其达到四配位。 Si-H 键长约 1.48 A。输出结构文件为 `Si100_H_passivated_POSCAR`，并报告添加的
-  H 原子总数。`hydrogen_cap_spec.json` 中的 6 层 slab 与 2x1 重构用于限定输入背景；硬性验收项为上下表面均完成四配位、Si-H
+difficulty: easy
+intent: Passivate dangling bonds on both top and bottom surfaces of a Si(100) slab with hydrogen atoms.
+human_prompt_seed: '读取 `hydrogen_cap_spec.json`，对 Si(100) slab 上下两个表面的悬挂键进行氢饱和。 要求：识别 slab 顶部和底部所有欠配位 Si 原子，添加 H 使其达到四配位。
+  Si-H 键长约 1.48 A。输出结构文件为 `Si100_H_passivated_POSCAR`，并报告添加的 H 原子总数。`hydrogen_cap_spec.json` 中的 6 层 slab 与 2x1 重构用于限定输入背景；硬性验收项为上下表面均完成四配位、Si-H
   键长合理、最终 POSCAR 中 H 原子总数为 4。
 
   '
@@ -54,71 +55,41 @@ reference_answers:
   - hydrogen_count
   - si_h_bond_length_A
   - all_si_four_coordination
-- key: turn_budget
-  value:
-    max: 20
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 8000
 scoring_checklist:
 - id: si_h_bond_length_A
   criterion: A representative Si-H bond length in the POSCAR output is near 1.48 A.
-  axis: correctness
   verify: struct_file_bond_length
+  capability: structure_manipulation
+  weight: 0.5
 - id: si_coordination
-  criterion: The mean coordination number of ALL Si atoms in the POSCAR (cutoff 2.6
-    A) is approximately 4 (within ±0.5), confirming that dangling bonds on both top
-    and bottom surfaces are predominantly saturated.
-  axis: correctness
+  criterion: The mean coordination number of ALL Si atoms in the POSCAR (cutoff 2.6 A) is approximately 4 (within ±0.5),
+    confirming that dangling bonds on both top and bottom surfaces are predominantly saturated.
   verify: struct_file_coordination
+  capability: structure_manipulation
+  weight: 0.5
 - id: si_si_h_angle_deg
-  criterion: The mean Si-Si-H angle read from the POSCAR is close to tetrahedral 109.47
-    degrees (tolerance 8 degrees), confirming that passivating H atoms sit at tetrahedral
-    positions around the surface Si atoms.
-  axis: correctness
+  criterion: The mean Si-Si-H angle read from the POSCAR is close to tetrahedral 109.47 degrees (tolerance 8 degrees), 
+    confirming that passivating H atoms sit at tetrahedral positions around the surface Si atoms.
   verify: struct_file_bond_angle
+  capability: structure_manipulation
+  weight: 0.5
 - id: h_atom_count
-  criterion: The final POSCAR contains exactly 4 H atoms, matching top-and-bottom
-    passivation of the 2x1 Si(100) slab background.
-  axis: correctness
+  criterion: The final POSCAR contains exactly 4 H atoms, matching top-and-bottom passivation of the 2x1 Si(100) slab 
+    background.
   verify: struct_file_atom_count
+  capability: structure_manipulation
+  weight: 0.5
 - id: required_fields
-  criterion: Output includes structure file, total number of added H atoms (covering
-    both surfaces), representative Si-H bond length, and an explicit check that all
-    Si atoms (top and bottom) reach four coordination.
-  axis: correctness
+  criterion: Output includes structure file, total number of added H atoms (covering both surfaces), representative Si-H
+    bond length, and an explicit check that all Si atoms (top and bottom) reach four coordination.
   verify: llm_binary_judge
+  capability: structure_manipulation
+  weight: 0.5
 - id: grounding_source
-  criterion: The answer cites the structural physics (Si(100) facets, dangling bonds
-    on both surfaces, target coordination, Si-H bond length) and ties passivation
-    checks to the delivered POSCAR, not only generic semiconductor chemistry recall
-    disconnected from that file. Judge solely from the final answer and named deliverables;
-    do not fail because the tool-call log omits MCP, web_search, or any specific tool.
-  axis: grounding
+  criterion: The answer cites the structural physics (Si(100) facets, dangling bonds on both surfaces, target 
+    coordination, Si-H bond length) and ties passivation checks to the delivered POSCAR, not only generic semiconductor 
+    chemistry recall disconnected from that file. Judge solely from the final answer and named deliverables; do not fail
+    because the tool-call log omits MCP, web_search, or any specific tool.
   verify: llm_binary_judge
-- id: no_retries
-  criterion: Slab construction and passivation run without repeated identical attempts.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: efficiency_judge
-  criterion: Passivation workflow completes in a direct pipeline without unnecessary
-    intermediate structure rebuilds.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
-    (tunable per task after calibration).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

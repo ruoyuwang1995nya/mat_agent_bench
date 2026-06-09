@@ -1,13 +1,15 @@
 id: DF_scxrd_001_20260408
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: agnostic
-intent: Determine the crystal structure of an ordered molecular crystal (1-RTP, 293
-  K) from raw single-crystal X-ray diffraction data. Starting from the reduced reflection
-  file (.hkl) and the data-collection summary (.p4p), the agent must determine the
-  space group, solve the structure, refine it, and generate a validated CIF with no
-  A-level checkCIF alerts.
-human_prompt_seed: '文件 `A23050101A0735.hkl` 和 `A23050101A0735.p4p` 是一个有机-无机杂化硝普盐在
-  293 K 下采集的单晶 X 射线衍射数据（已经过数据还原）。请完成以下工作：
+difficulty: easy
+intent: Determine the crystal structure of an ordered molecular crystal (1-RTP, 293 K) from raw single-crystal X-ray 
+  diffraction data. Starting from the reduced reflection file (.hkl) and the data-collection summary (.p4p), the agent 
+  must determine the space group, solve the structure, refine it, and generate a validated CIF with no A-level checkCIF 
+  alerts.
+human_prompt_seed: '文件 `A23050101A0735.hkl` 和 `A23050101A0735.p4p` 是一个有机-无机杂化硝普盐在 293 K 下采集的单晶 X 射线衍射数据（已经过数据还原）。请完成以下工作：
 
   1. 根据 .p4p 文件中的晶胞参数和系统消光规律，确定空间群；
 
@@ -25,13 +27,15 @@ tags:
 data_files:
 - key: hkl_file
   path: A23050101A0735.hkl
-  oss_url: https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/DF_scxrd_001_20260408/1775644505_A23050101A0735.hkl
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/DF_scxrd_001_20260408/1775644505_A23050101A0735.hkl
   description: Reduced reflection data file (SHELX .hkl format) for 1-RTP at 293 K.
 - key: p4p_file
   path: A23050101A0735.p4p
-  oss_url: https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/DF_scxrd_001_20260408/1775644506_A23050101A0735.p4p
-  description: Data-collection summary file (.p4p) with unit cell parameters, wavelength,
-    and crystal system information.
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/DF_scxrd_001_20260408/1775644506_A23050101A0735.p4p
+  description: Data-collection summary file (.p4p) with unit cell parameters, wavelength, and crystal system 
+    information.
 reference_answers:
 - key: r1_factor
   value: 0.0418
@@ -57,67 +61,43 @@ reference_answers:
   value:
     filename: '*.cif'
     max_a_alerts: 0
-- key: turn_budget
-  value:
-    max: 30
-- key: duration_budget
-  value:
-    max: 14400000
-- key: token_budget_total
-  value:
-    max: 20000
 scoring_checklist:
 - id: r1_factor
-  criterion: Final R1 factor (on F, I>2sigma) is within tolerance of 0.0418 (human
-    baseline). A value ≤ 0.05 is acceptable for a well-refined ordered structure.
-  axis: correctness
+  criterion: Final R1 factor (on F, I>2sigma) is within tolerance of 0.0418 (human baseline). A value ≤ 0.05 is 
+    acceptable for a well-refined ordered structure.
   verify: numerical_range
-  weight: 2.0
+  weight: 0.5
+  capability: tool_utilization
 - id: wr2_factor
-  criterion: Final wR2 factor (on F², all data) is within tolerance of 0.0981 (human
-    baseline). A value ≤ 0.12 is acceptable.
-  axis: correctness
+  criterion: Final wR2 factor (on F², all data) is within tolerance of 0.0981 (human baseline). A value ≤ 0.12 is 
+    acceptable.
   verify: numerical_range
-  weight: 1.5
+  weight: 0.5
+  capability: tool_utilization
 - id: goof
-  criterion: Goodness-of-fit (GooF, S) is within tolerance of 1.048. A value between
-    0.9 and 1.2 indicates a well-refined structure.
-  axis: correctness
+  criterion: Goodness-of-fit (GooF, S) is within tolerance of 1.048. A value between 0.9 and 1.2 indicates a 
+    well-refined structure.
   verify: numerical_range
-  weight: 1.0
+  weight: 0.5
+  capability: tool_utilization
 - id: space_group_number
-  criterion: The agent correctly identifies the space group number as 4 (P2₁, monoclinic).
-    The answer or CIF must report space group No. 4.
-  axis: correctness
+  criterion: The agent correctly identifies the space group number as 4 (P2₁, monoclinic). The answer or CIF must report
+    space group No. 4.
   verify: numerical_range
-  weight: 1.5
+  weight: 0.5
+  capability: scientific_reasoning
 - id: cell_volume
   criterion: Refined unit cell volume is within tolerance of 1001.05 Å³.
-  axis: correctness
   verify: numerical_range
-  weight: 1.0
+  weight: 0.5
+  capability: tool_utilization
 - id: checkcif_validation
   criterion: The generated CIF passes IUCr checkCIF with zero A-level alerts.
-  axis: correctness
   verify: checkcif_no_a_alerts
-  weight: 2.0
+  weight: 0.5
+  capability: structure_manipulation
 - id: cif_generated
   criterion: The agent produces a valid CIF file as output of the refinement.
-  axis: correctness
   verify: llm_binary_judge
-  weight: 1.0
-- id: turn_budget
-  criterion: Task completed within 30 turns.
-  axis: efficiency
-  verify: turn_budget
-  weight: 1.0
-- id: duration_budget
-  criterion: Task completed within 4 hours (14400 seconds).
-  axis: efficiency
-  verify: duration_budget
-  weight: 1.0
-- id: token_budget_total
-  criterion: Total token usage does not exceed 20000 tokens.
-  axis: efficiency
-  verify: token_budget
-  weight: 1.0
+  weight: 0.5
+  capability: data_handling

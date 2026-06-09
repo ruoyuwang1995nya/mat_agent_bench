@@ -191,13 +191,13 @@ async function downloadSessionCSV(sessionId, agentName) {
     const data = await res.json();
     const questions = data.questions || [];
     if (!questions.length) { toast('No results for this session.', 'info'); return; }
-    const headers = ['question_id','capability','domain','mode','runs','passed','total','pass_rate','correctness','grounding','efficiency','safety_vetoed','criteria_detail'];
+    const headers = ['question_id','capability','domain','mode','runs','passed','total','pass_rate','overall','safety_vetoed','criteria_detail'];
     const lines = [headers.join(',')];
     for (const q of questions) {
       const detail = (q.criteria_detail || []).map(c => {
         const verdict = c.passed === c.total ? 'PASS' : (c.passed === 0 ? 'FAIL' : `${c.passed}/${c.total}`);
         const reason = (c.reasons || []).join('; ');
-        return reason ? `${c.criterion_id}(${c.axis}):${verdict}:${reason}` : `${c.criterion_id}(${c.axis}):${verdict}`;
+        return reason ? `${c.criterion_id}(${c.capability || ''}):${verdict}:${reason}` : `${c.criterion_id}(${c.capability || ''}):${verdict}`;
       }).join(' | ');
       const row = { ...q, criteria_detail: detail };
       lines.push(headers.map(h => {

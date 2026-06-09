@@ -1,13 +1,15 @@
 id: WO_compopt_001_20260508
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: alloy
-intent: Use DART GA to search for an optimal high-entropy alloy composition with target
-  hardness properties under element-fraction constraints.
-human_prompt_seed: 'I am designing a CrCoNiFe-based high-entropy alloy and need to
-  find compositions that maximize Vickers hardness. Each element must stay between
-  10-40 at%. Please search the composition space and return the top 3 candidate compositions
-  with their predicted hardness values. Output results to `candidates.csv` with columns:
-  rank, Cr, Co, Ni, Fe, predicted_hardness_HV.'
+difficulty: easy
+intent: Use DART GA to search for an optimal high-entropy alloy composition with target hardness properties under 
+  element-fraction constraints.
+human_prompt_seed: 'I am designing a CrCoNiFe-based high-entropy alloy and need to find compositions that maximize Vickers
+  hardness. Each element must stay between 10-40 at%. Please search the composition space and return the top 3 candidate compositions
+  with their predicted hardness values. Output results to `candidates.csv` with columns: rank, Cr, Co, Ni, Fe, predicted_hardness_HV.'
 tags: []
 data_files: []
 reference_answers:
@@ -25,15 +27,6 @@ reference_answers:
   value:
     filename: candidates.csv
     pattern: hardness
-- key: turn_budget
-  value:
-    max: 18
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 12000
 - key: hardness_range
   value:
     filename: candidates.csv
@@ -44,12 +37,12 @@ reference_answers:
 scoring_checklist:
 - id: candidates_csv
   criterion: Agent writes `candidates.csv` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: csv_has_elements
-  criterion: The candidates.csv file contains all four element names (Cr, Co, Ni,
-    Fe) as column headers or within data rows.
-  axis: correctness
+  criterion: The candidates.csv file contains all four element names (Cr, Co, Ni, Fe) as column headers or within data 
+    rows.
   verify: text_file_contains_all
   params:
     path: candidates.csv
@@ -58,36 +51,24 @@ scoring_checklist:
     - Co
     - Ni
     - Fe
+  capability: data_handling
+  weight: 0.5
 - id: csv_has_hardness
   criterion: The candidates.csv file contains a hardness column with numeric predictions.
-  axis: correctness
   verify: text_file_regex
   params:
     path: candidates.csv
     pattern: hardness
+  capability: data_handling
+  weight: 0.5
 - id: hardness_range
-  criterion: Predicted hardness values in candidates.csv are within physically plausible
-    range for HEAs (100-1200 HV).
-  axis: correctness
+  criterion: Predicted hardness values in candidates.csv are within physically plausible range for HEAs (100-1200 HV).
   verify: text_file_numeric_range
+  capability: scientific_reasoning
+  weight: 0.5
 - id: grounding_source
-  criterion: Results are grounded in optimization outputs and do not fabricate composition-property
-    values without tool evidence.
-  axis: grounding
+  criterion: Results are grounded in optimization outputs and do not fabricate composition-property values without tool 
+    evidence.
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical tool calls with the same parameter set.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) does not exceed benchmark ceiling.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

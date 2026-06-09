@@ -1,14 +1,15 @@
 id: WO_mech_007_20260501
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
-intent: Calculate GaAs elastic constants and bulk modulus with ABACUS and summarize
-  the tensor outputs.
-human_prompt_seed: "计算 GaAs 弹性常数与体模量（Mock版）：\n1. 先 query/检索并整理 ABACUS 弹性计算所需输入文件；\n\
-  2. 给出关键设置（应变幅度、k 点、截断能/精度策略）；\n3. 不做真实计算，使用以下 mock 结果：\n   - C11 = 118.4 GPa\n \
-  \  - C12 = 53.7 GPa\n   - C44 = 59.2 GPa\n   - bulk_modulus_GPa = 75.3\n4. 基于 mock\
-  \ 值完成后处理、一致性检查与解释。\n\n请完成以下交付：\n1) `gaas_elastic_abacus.json`：至少包含 `input_files`,\
-  \ `C11`, `C12`, `C44`, `bulk_modulus_GPa`, `calculation_settings`；\n2) `gaas_elastic_abacus_report.md`：说明\
-  \ query 输入梳理、mock 后处理流程与不确定性。\n\n最终回答中简要给出 C11/C12/C44 与体模量。\n"
+difficulty: easy
+intent: Calculate GaAs elastic constants and bulk modulus with ABACUS and summarize the tensor outputs.
+human_prompt_seed: "计算 GaAs 弹性常数与体模量（Mock版）：\n1. 先 query/检索并整理 ABACUS 弹性计算所需输入文件；\n2. 给出关键设置（应变幅度、k 点、截断能/精度策略）；\n3. 不做真实计算，使用以下
+  mock 结果：\n   - C11 = 118.4 GPa\n   - C12 = 53.7 GPa\n   - C44 = 59.2 GPa\n   - bulk_modulus_GPa = 75.3\n4. 基于 mock 值完成后处理、一致性检查与解释。\n\
+  \n请完成以下交付：\n1) `gaas_elastic_abacus.json`：至少包含 `input_files`, `C11`, `C12`, `C44`, `bulk_modulus_GPa`, `calculation_settings`；\n\
+  2) `gaas_elastic_abacus_report.md`：说明 query 输入梳理、mock 后处理流程与不确定性。\n\n最终回答中简要给出 C11/C12/C44 与体模量。\n"
 tags:
 - eng_abacus
 data_files: []
@@ -38,57 +39,35 @@ reference_answers:
 - key: gaas_c11_mock
   value: 118.4
   tolerance: 12.0
-- key: turn_budget
-  value:
-    max: 14
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 9000
 scoring_checklist:
 - id: elastic_json
   criterion: Agent writes `gaas_elastic_abacus.json` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: elastic_report
   criterion: Agent writes `gaas_elastic_abacus_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: json_required_tokens
   criterion: JSON includes required elastic-constant and bulk-modulus fields.
-  axis: correctness
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: report_required_tokens
   criterion: Report explains settings and uncertainty caveats.
-  axis: correctness
   verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
 - id: gaas_c11_mock
   criterion: Final answer includes a mock C11 value near 118.4 GPa.
-  axis: correctness
   verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
 - id: grounding_source
-  criterion: Final answer values match the provided mock data (C11=118.4, C12=53.7,
-    C44=59.2, bulk_modulus=75.3 GPa) and are presented in the generated artifact files
-    (JSON + report), not hallucinated from other sources.
-  axis: grounding
+  criterion: Final answer values match the provided mock data (C11=118.4, C12=53.7, C44=59.2, bulk_modulus=75.3 GPa) and
+    are presented in the generated artifact files (JSON + report), not hallucinated from other sources.
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical elastic submissions with the same parameters.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
-    (tunable per task after calibration).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

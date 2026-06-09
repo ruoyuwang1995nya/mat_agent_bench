@@ -1,24 +1,24 @@
 id: PXRD_pawley_303K_001_20260502_v1
-capability: scientific_analysis
+task_type: material_characterization
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: agnostic
-intent: Perform Pawley refinement on a single PXRD pattern at 303 K to extract all
-  lattice parameters (a, b, c, beta, V) and report the weighted profile R-factor (wR).
-human_prompt_seed: '文件 `pxrd_303K.xy` 是一个有机-无机杂化硝普盐在 303 K（30 °C）下采集的粉末 X 射线衍射（PXRD）数据（Cu
-  Kα1, λ = 1.5406 Å, 2θ 范围 5°–50°, 步长 ~0.02°, 两列格式: 2θ 强度）。
+difficulty: easy
+intent: Perform Pawley refinement on a single PXRD pattern at 303 K to extract all lattice parameters (a, b, c, beta, V)
+  and report the weighted profile R-factor (wR).
+human_prompt_seed: '文件 `pxrd_303K.xy` 是一个有机-无机杂化硝普盐在 303 K（30 °C）下采集的粉末 X 射线衍射（PXRD）数据（Cu Kα1, λ = 1.5406 Å, 2θ 范围 5°–50°,
+  步长 ~0.02°, 两列格式: 2θ 强度）。
 
-  该化合物为单斜晶系，空间群 P 21（No. 4）。文献参考晶胞：a ≈ 10.83 Å, b ≈ 9.62 Å, c ≈ 10.13 Å, beta ≈ 108.75°,
-  V ≈ 1000 Å³。
+  该化合物为单斜晶系，空间群 P 21（No. 4）。文献参考晶胞：a ≈ 10.83 Å, b ≈ 9.62 Å, c ≈ 10.13 Å, beta ≈ 108.75°, V ≈ 1000 Å³。
 
-  精修策略建议： - 建议使用 14°–50° 2θ 区间以避开低角伪影 - 基线 / 背景函数使用低阶（0–1 阶）以避免过拟合 - 若多次精修收敛到不同盆地，选择
-  wR 最低且体积与初猜偏差最小的结果
+  精修策略建议： - 建议使用 14°–50° 2θ 区间以避开低角伪影 - 基线 / 背景函数使用低阶（0–1 阶）以避免过拟合 - 若多次精修收敛到不同盆地，选择 wR 最低且体积与初猜偏差最小的结果
 
   请对该 PXRD 图谱进行 Pawley 精修，提取精修后的晶格参数并报告精修质量。
 
-  【机器评分约定】最终答案末尾追加一个 eval_results 标签包裹的 JSON 块（数值无单位，约定： a/b/c 单位 Å, beta 单位°, V 单位
-  Å³, wR 单位 %），格式如下：
+  【机器评分约定】最终答案末尾追加一个 eval_results 标签包裹的 JSON 块（数值无单位，约定： a/b/c 单位 Å, beta 单位°, V 单位 Å³, wR 单位 %），格式如下：
 
-  <eval_results> {"a": ..., "b": ..., "c": ..., "beta": ..., "V": ..., "wR": ...}
-  </eval_results>
+  <eval_results> {"a": ..., "b": ..., "c": ..., "beta": ..., "V": ..., "wR": ...} </eval_results>
 
   数值必须来自实际 Pawley 精修结果，不得填入 prompt 中的初猜近似值。 '
 tags:
@@ -27,8 +27,8 @@ data_files:
 - key: pxrd_data
   path: pxrd_303K.xy
   oss_url: ''
-  description: PXRD pattern at 303 K (Cu Kalpha1, 5-50 deg 2theta), two-column format
-    (2theta, intensity). Generated from real laboratory diffractometer scan.
+  description: PXRD pattern at 303 K (Cu Kalpha1, 5-50 deg 2theta), two-column format (2theta, intensity). Generated 
+    from real laboratory diffractometer scan.
 reference_answers:
 - key: cell_a
   value:
@@ -69,72 +69,46 @@ reference_answers:
 - key: grounding_source
   value:
     filename: pxrd_303K.xy
-- key: turn_budget
-  value:
-    max: 60
-- key: duration_budget
-  value:
-    max: 3600000
-- key: token_budget_total
-  value:
-    max: 50000
 scoring_checklist:
 - id: cell_a
-  criterion: Refined lattice parameter a is within tolerance (target 10.828 ± 0.04
-    Å). Read from the eval_results JSON path a.
-  axis: correctness
+  criterion: Refined lattice parameter a is within tolerance (target 10.828 ± 0.04 Å). Read from the eval_results JSON 
+    path a.
   verify: answer_json_numeric
-  weight: 1.5
+  weight: 0.5
+  capability: tool_utilization
 - id: cell_b
-  criterion: Refined lattice parameter b is within tolerance (target 9.57 ± 0.08 Å).
-    Read from the eval_results JSON path b.
-  axis: correctness
+  criterion: Refined lattice parameter b is within tolerance (target 9.57 ± 0.08 Å). Read from the eval_results JSON 
+    path b.
   verify: answer_json_numeric
-  weight: 1.5
+  weight: 0.5
+  capability: tool_utilization
 - id: cell_c
-  criterion: Refined lattice parameter c is within tolerance (target 10.14 ± 0.06
-    Å). Read from the eval_results JSON path c.
-  axis: correctness
+  criterion: Refined lattice parameter c is within tolerance (target 10.14 ± 0.06 Å). Read from the eval_results JSON 
+    path c.
   verify: answer_json_numeric
-  weight: 1.5
+  weight: 0.5
+  capability: tool_utilization
 - id: cell_beta
-  criterion: Refined monoclinic angle beta is within tolerance (target 108.1 ± 1.2°).
-    Read from the eval_results JSON path beta.
-  axis: correctness
+  criterion: Refined monoclinic angle beta is within tolerance (target 108.1 ± 1.2°). Read from the eval_results JSON 
+    path beta.
   verify: answer_json_numeric
-  weight: 1.5
+  weight: 0.5
+  capability: tool_utilization
 - id: cell_V
-  criterion: Refined unit cell volume V is within tolerance (target 997.0 ± 12.0 Å³).
-    Read from the eval_results JSON path V.
-  axis: correctness
+  criterion: Refined unit cell volume V is within tolerance (target 997.0 ± 12.0 Å³). Read from the eval_results JSON 
+    path V.
   verify: answer_json_numeric
-  weight: 2.0
+  weight: 0.5
+  capability: tool_utilization
 - id: wR_factor
-  criterion: Weighted profile R-factor wR is within tolerance (target 16.0 ± 4.0 %).
-    Read from the eval_results JSON path wR.
-  axis: correctness
+  criterion: Weighted profile R-factor wR is within tolerance (target 16.0 ± 4.0 %). Read from the eval_results JSON 
+    path wR.
   verify: answer_json_numeric
-  weight: 1.0
+  weight: 0.5
+  capability: tool_utilization
 - id: grounding_source
-  criterion: Lattice parameters and wR are derived from Pawley refinement of the provided
-    PXRD data file, not from literature values or hallucination. Judge from the final
-    answer and stated methodology.
-  axis: grounding
+  criterion: Lattice parameters and wR are derived from Pawley refinement of the provided PXRD data file, not from 
+    literature values or hallucination. Judge from the final answer and stated methodology.
   verify: llm_binary_judge
-- id: efficiency_judge
-  criterion: Pawley refinement is performed in a direct pipeline without unnecessary
-    repeated refinements or redundant parameter sweeps.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) does not exceed 1 hour.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

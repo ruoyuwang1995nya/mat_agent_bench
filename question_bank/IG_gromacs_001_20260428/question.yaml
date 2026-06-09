@@ -1,6 +1,10 @@
 id: IG_gromacs_001_20260428
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: Generate GROMACS simulation parameter file for energy minimization.
 human_prompt_seed: '请为一个蛋白质体系生成 GROMACS 能量最小化的参数文件，要求：
 
@@ -31,44 +35,25 @@ reference_answers:
     - emtol
     - emstep
     flags: i
-- key: turn_budget
-  value:
-    max: 10
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 8000
 scoring_checklist:
 - id: input_artifact
   criterion: Agent writes `em.mdp` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: required_keywords
-  criterion: The MDP file contains essential energy minimization parameters (integrator,
-    steep, nsteps, emtol, emstep).
-  axis: correctness
+  criterion: The MDP file contains essential energy minimization parameters (integrator, steep, nsteps, emtol, emstep).
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: physical_params
-  criterion: The MDP file uses correct values matching the request (steep integrator,
-    50000 steps, emtol=1000, emstep=0.01, cutoff 1.0 nm, Verlet scheme).
-  axis: correctness
+  criterion: The MDP file uses correct values matching the request (steep integrator, 50000 steps, emtol=1000, 
+    emstep=0.01, cutoff 1.0 nm, Verlet scheme).
   verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
 - id: grounding_source
-  criterion: All parameter values are directly traceable to the user request, not
-    arbitrary defaults.
-  axis: grounding
+  criterion: All parameter values are directly traceable to the user request, not arbitrary defaults.
   verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration does not exceed ceiling.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

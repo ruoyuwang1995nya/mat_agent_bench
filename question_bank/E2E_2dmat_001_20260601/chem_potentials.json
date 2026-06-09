@@ -1,0 +1,1 @@
+{"mu_N_N2": -8.234, "mu_C_graphene": -9.123, "description": "Chemical potentials under N-rich limit: mu_N taken from N2 molecule, mu_C from graphene. For the N-rich condition, mu_B is determined by mu_BN = mu_B + mu_N.", "units": "eV"}

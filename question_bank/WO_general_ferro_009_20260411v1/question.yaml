@@ -1,12 +1,16 @@
 id: WO_general_ferro_009_20260411v1
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: semiconductor
-intent: Explain principle, applications, and limitations of the double-wave method
-  in Sawyer-Tower ferroelectric measurements.
+difficulty: easy
+intent: Explain principle, applications, and limitations of the double-wave method in Sawyer-Tower ferroelectric 
+  measurements.
 human_prompt_seed: '请围绕 Sawyer-Tower 铁电测试中的 double-wave method，给出结构化说明。
 
-  请输出： 1) `double_wave_sawyer_tower_notes.md`：包含原理、典型应用、局限性与误差来源； 2) `double_wave_keypoints.json`：至少包含
-  `principle`, `applications`, `limitations`, `best_practices`。
+  请输出： 1) `double_wave_sawyer_tower_notes.md`：包含原理、典型应用、局限性与误差来源； 2) `double_wave_keypoints.json`：至少包含 `principle`, `applications`,
+  `limitations`, `best_practices`。
 
   最终回答请用简短段落总结：该方法最适合与最不适合的使用场景。'
 tags:
@@ -37,51 +41,29 @@ reference_answers:
     - limitations
     - best_practices
     flags: i
-- key: turn_budget
-  value:
-    max: 8
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 7000
 scoring_checklist:
 - id: notes_md
   criterion: Agent writes `double_wave_sawyer_tower_notes.md` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: keypoints_json
   criterion: Agent writes `double_wave_keypoints.json` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: notes_tokens
   criterion: Notes cover principle, applications, limitations, and error sources.
-  axis: correctness
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: json_tokens
   criterion: Keypoint JSON includes all required structured fields.
-  axis: correctness
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: grounding_source
-  criterion: Deliverables are grounded in methodological references and avoid unsupported
-    claims.
-  axis: grounding
+  criterion: Deliverables are grounded in methodological references and avoid unsupported claims.
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical tool calls with the same parameter set.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

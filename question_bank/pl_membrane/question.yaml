@@ -1,10 +1,13 @@
 id: pl_membrane
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: polymer
-intent: Compare PIM-1, Matrimid, and 6FDA-DAM membranes for CO2/N2 separation by integrating
-  solubility, diffusivity, free-volume, and ranking metrics.
-human_prompt_seed: '文件 `membrane_screening_bundle.json` 汇总了 PIM-1、Matrimid 和 6FDA-DAM
-  三类聚合物膜在 CO2/N2 分离中的中间数据。
+difficulty: easy
+intent: Compare PIM-1, Matrimid, and 6FDA-DAM membranes for CO2/N2 separation by integrating solubility, diffusivity, 
+  free-volume, and ranking metrics.
+human_prompt_seed: '文件 `membrane_screening_bundle.json` 汇总了 PIM-1、Matrimid 和 6FDA-DAM 三类聚合物膜在 CO2/N2 分离中的中间数据。
 
   请完成一份膜材料筛选报告：
 
@@ -22,8 +25,8 @@ tags:
 data_files:
 - key: membrane_bundle
   path: membrane_screening_bundle.json
-  description: Membrane-screening bundle with solubility, diffusivity, permeability,
-    selectivity, and free-volume descriptors for CO2/N2 separation.
+  description: Membrane-screening bundle with solubility, diffusivity, permeability, selectivity, and free-volume 
+    descriptors for CO2/N2 separation.
 reference_answers:
 - key: best_balanced_candidate
   value: 6FDA-DAM
@@ -40,56 +43,32 @@ reference_answers:
   - tradeoff_discussion
   - free_volume_note
   - recommendation
-- key: turn_budget
-  value:
-    max: 24
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 14000
 scoring_checklist:
 - id: pim1_permeability_barrer
-  criterion: PIM-1 CO2 permeability is reported within tolerance of the curated value
-    (~5400 Barrer).
-  axis: correctness
+  criterion: PIM-1 CO2 permeability is reported within tolerance of the curated value (~5400 Barrer).
   verify: numerical_range
+  capability: data_handling
+  weight: 0.5
 - id: dam_selectivity
-  criterion: 6FDA-DAM CO2/N2 selectivity is reported within tolerance of the curated
-    value (~28).
-  axis: correctness
+  criterion: 6FDA-DAM CO2/N2 selectivity is reported within tolerance of the curated value (~28).
   verify: numerical_range
+  capability: data_handling
+  weight: 0.5
 - id: recommendation_correctness
-  criterion: Final recommendation identifies 6FDA-DAM as the best balanced membrane,
-    while recognizing that PIM-1 has the highest throughput.
-  axis: correctness
+  criterion: Final recommendation identifies 6FDA-DAM as the best balanced membrane, while recognizing that PIM-1 has 
+    the highest throughput.
   verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
 - id: required_fields
-  criterion: Report includes permeability and selectivity tables, trade-off discussion,
-    free-volume note, and a clear recommendation.
-  axis: correctness
+  criterion: Report includes permeability and selectivity tables, trade-off discussion, free-volume note, and a clear 
+    recommendation.
   verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
 - id: grounding_source
-  criterion: The answer uses the provided solubility, diffusivity, permeability, and
-    free-volume evidence from membrane_screening_bundle.json rather than generic membrane
-    heuristics alone.
-  axis: grounding
+  criterion: The answer uses the provided solubility, diffusivity, permeability, and free-volume evidence from 
+    membrane_screening_bundle.json rather than generic membrane heuristics alone.
   verify: llm_binary_judge
-- id: efficiency_judge
-  criterion: Completes the membrane comparison without redundant reformulation and
-    clearly separates transport and sorption effects.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration does not exceed benchmark ceiling.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

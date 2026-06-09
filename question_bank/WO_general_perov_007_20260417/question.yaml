@@ -1,12 +1,16 @@
 id: WO_general_perov_007_20260417
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: semiconductor
-intent: Query high-efficiency perovskite additives and produce recommendation plus
-  a proposal draft based on predicted performance.
+difficulty: easy
+intent: Query high-efficiency perovskite additives and produce recommendation plus a proposal draft based on predicted 
+  performance.
 human_prompt_seed: '请围绕“高效率（>26%）钙钛矿添加剂设计”完成一份推荐与提案。
 
-  请输出： 1) `perovskite_additive_candidates.json`：至少包含 `smiles`, `predicted_effect`,
-  `selection_reason`, `similar_formulation_hint`； 2) `perovskite_additive_proposal.md`：基于最佳候选，给出研究目标、验证方案、预期结果与风险。
+  请输出： 1) `perovskite_additive_candidates.json`：至少包含 `smiles`, `predicted_effect`, `selection_reason`, `similar_formulation_hint`；
+  2) `perovskite_additive_proposal.md`：基于最佳候选，给出研究目标、验证方案、预期结果与风险。
 
   最终回答中简要说明：为什么该候选最值得优先验证。'
 tags: []
@@ -34,51 +38,29 @@ reference_answers:
     - 预期结果
     - 风险
     - 不确定性
-- key: turn_budget
-  value:
-    max: 14
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 9000
 scoring_checklist:
 - id: additive_json
   criterion: Agent writes `perovskite_additive_candidates.json` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: proposal_md
   criterion: Agent writes `perovskite_additive_proposal.md` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: additive_tokens
   criterion: Candidate JSON includes required additive-recommendation fields.
-  axis: correctness
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: proposal_tokens
   criterion: Proposal document covers objectives, validation plan, and uncertainty/risk.
-  axis: correctness
   verify: llm_binary_judge
+  capability: workflow_orchestration
+  weight: 0.5
 - id: grounding_source
-  criterion: Deliverables are grounded in generated candidate analysis rather than
-    unsupported additive claims.
-  axis: grounding
+  criterion: Deliverables are grounded in generated candidate analysis rather than unsupported additive claims.
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical tool calls with the same parameter set.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

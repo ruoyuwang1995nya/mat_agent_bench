@@ -1,46 +1,28 @@
 id: CR_SC_ZnO_Au_HCOO_20260406
-capability: structure_construction
+task_type: simulation
+capabilities:
+- structure_manipulation
 domain: catalysis
-intent: Build Au13 cluster CIF, ZnO(001) two-layer 2x2x1 slab with Au single atom
-  and HCOO adsorbate on-top per doc 3.1.3.
-human_prompt_seed: '按文档 3.1.3：（1）用 ASE 或等价方式构建 Au13 团簇并保存为 CIF；（2）ZnO(001) 切面 slab，两层厚、2×2×1
-  扩胞； （3）在两个表面 O 位点之一上放置单原子 Au；（4）在 Au 上放置 HCOO，采用 on-top 排布，初始吸附高度合理（约 1.5–2.5 Å）且无严重原子重叠。
-  输出团簇与 adslab 的结构文件，并附简短几何说明。
+difficulty: easy
+intent: Build Au13 cluster CIF, ZnO(001) two-layer 2x2x1 slab with Au single atom and HCOO adsorbate on-top per doc 
+  3.1.3.
+human_prompt_seed: '按文档 3.1.3：（1）用 ASE 或等价方式构建 Au13 团簇并保存为 CIF；（2）ZnO(001) 切面 slab，两层厚、2×2×1 扩胞； （3）在两个表面 O 位点之一上放置单原子 Au；（4）在
+  Au 上放置 HCOO，采用 on-top 排布，初始吸附高度合理（约 1.5–2.5 Å）且无严重原子重叠。 输出团簇与 adslab 的结构文件，并附简短几何说明。
 
   '
 tags:
 - catalysis_lab
 - phy_surface
 data_files: []
-reference_answers:
-- key: turn_budget
-  value:
-    max: 28
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 16000
+reference_answers: []
 scoring_checklist:
 - id: multi_part_deliverables
   criterion: 同时交付 Au13 团簇 CIF、含单 Au 的 ZnO(001) adslab，且 HCOO 为 on-top 初始构型；层数/扩胞与文档一致。
-  axis: correctness
   verify: llm_binary_judge
+  capability: structure_manipulation
+  weight: 0.5
 - id: grounding_source
   criterion: 各子结构与相对排布在答案中可追踪（文件名与几何关系一致），非仅文字宣称。
-  axis: grounding
   verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within a generous benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

@@ -1,10 +1,12 @@
 id: WO_elec_001_20260411v2
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: semiconductor
-intent: 'Run band-structure workflow for Si: locate structure, compute bands along
-  high-symmetry path, report gap.'
-human_prompt_seed: '计算 Si 的能带结构：从数据库获取金刚石结构 Si，先做 SCF 计算， 然后沿高对称 k 路径 (G-X-L-G) 计算能带，判断带隙类型（直接/间接）并输出带隙值
-  (eV)。 注意 DFT 带隙与实验值的偏差，给出不确定性说明。
+difficulty: easy
+intent: 'Run band-structure workflow for Si: locate structure, compute bands along high-symmetry path, report gap.'
+human_prompt_seed: '计算 Si 的能带结构：从数据库获取金刚石结构 Si，先做 SCF 计算， 然后沿高对称 k 路径 (G-X-L-G) 计算能带，判断带隙类型（直接/间接）并输出带隙值 (eV)。 注意 DFT 带隙与实验值的偏差，给出不确定性说明。
 
   '
 tags:
@@ -23,57 +25,26 @@ reference_answers:
   - gap_type
   - gap_value
   - uncertainty_note
-- key: turn_budget
-  value:
-    max: 18
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 8000
 scoring_checklist:
 - id: gap_type
   criterion: Band-gap type is correctly identified as indirect (not direct).
-  axis: correctness
   verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
 - id: gap_value_eV
   criterion: Gap value is in expected DFT range.
-  axis: correctness
   verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
 - id: required_fields
-  criterion: Report includes high-symmetry k-path, gap type classification, gap value,
-    and DFT uncertainty note.
-  axis: correctness
+  criterion: Report includes high-symmetry k-path, gap type classification, gap value, and DFT uncertainty note.
   verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
 - id: grounding_source
-  criterion: Stated band gap values are tied to band-structure or calculation outcomes
-    described in the final answer, not only generic training recall. Judge from the
-    answer and named outputs; do not fail because the tool-call log omits MCP, web_search,
-    or any specific tool.
-  axis: grounding
+  criterion: Stated band gap values are tied to band-structure or calculation outcomes described in the final answer, 
+    not only generic training recall. Judge from the answer and named outputs; do not fail because the tool-call log 
+    omits MCP, web_search, or any specific tool.
   verify: llm_binary_judge
-- id: no_retries
-  criterion: Band structure calculation is not repeated unnecessarily for the same
-    k-path.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: efficiency_judge
-  criterion: Si band structure workflow (fetch → SCF → bands → report) completes without
-    redundant intermediate steps.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
-    (tunable per task after calibration).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

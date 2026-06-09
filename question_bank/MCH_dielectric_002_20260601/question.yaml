@@ -1,0 +1,128 @@
+id: MCH_dielectric_002_20260601
+task_type: material_characterization
+capabilities:
+- scientific_reasoning
+- data_handling
+- structure_manipulation
+domain: semiconductor
+difficulty: medium
+intent: Given a crystal structure file and its space group, determine the number of independent elements in the 
+  dielectric tensor based on crystal system symmetry, then compute the polycrystalline dielectric constant from the full
+  tensor.
+human_prompt_seed: Given the CIF file crystal_structure.cif for Cs2Ti(WO4)3 (a trigonal crystal system), compute the 
+  the dielectric tensor and polycrystalline dielectric constant ε using VASP. Write your analysis to tensor_analysis.txt and the computed 
+  scalar dielectric constant to epsilon_scalar.txt. You should identify the number of independent tensor elements in tensor_analysis.txt.
+tags:
+- dielectric_tensor
+- crystal_symmetry
+- tensor_analysis
+data_files:
+- key: structure
+  path: crystal_structure.cif
+  description: CIF file for Cs2Ti(WO4)3, a high-dielectric candidate identified in the paper (space group R-3c, trigonal
+    system)
+reference_answers:
+- key: artifact_analysis
+  value: tensor_analysis.txt
+- key: artifact_epsilon
+  value: epsilon_scalar.txt
+- key: independent_count
+  value:
+    tokens:
+    - '2'
+    filename: tensor_analysis.txt
+- key: trigonal_form
+  value:
+    tokens:
+    - ε1
+    - ε3
+    filename: tensor_analysis.txt
+- key: epsilon_value
+  value:
+    checks:
+    - key: value
+      max: 200
+      min: 100
+    filename: epsilon_scalar.txt
+scoring_checklist:
+- id: artifact_analysis
+  verify: artifact_exists
+  weight: 0.5
+  criterion: '[Must] The file tensor_analysis.txt exists'
+  capability: tool_utilization
+- id: artifact_epsilon
+  verify: artifact_exists
+  weight: 0.5
+  criterion: '[Must] The file epsilon_scalar.txt exists'
+  capability: tool_utilization
+- id: independent_count
+  verify: text_file_contains_all
+  weight: 0.5
+  criterion: '[Must] Analysis correctly identifies 2 independent elements for trigonal system'
+  capability: structure_manipulation
+- id: trigonal_form
+  verify: text_file_contains_all
+  weight: 0.5
+  criterion: '[Must] Analysis identifies the tensor form diag(ε1, ε1, ε3) for trigonal system'
+  capability: scientific_reasoning
+- id: epsilon_value
+  verify: text_file_numeric_range
+  weight: 0.5
+  criterion: '[Must] Polycrystalline dielectric constant ε is computed correctly (expected ~180.89 for Cs2Ti(WO4)3 from paper)'
+  capability: data_handling
+reference_answer_prompt: 'Objective: Determine the number of independent dielectric tensor elements from crystal symmetry.
+  Compute the dielectric tensor using VASP density functional perturbation theory (DFPT). Compute the polycrystalline dielectric
+  constant from the resulting tensor.
+
+  Procedure:
+
+  Read crystal_structure.cif. Determine the space group and crystal system using a symmetry analysis tool such as pymatgen
+  or spglib. The structure belongs to space group R-3c (No. 167), which is a trigonal crystal system.
+
+  For a trigonal crystal, the dielectric tensor has the symmetry form
+
+  ε = [[ε1, 0, 0], [0, ε1, 0], [0, 0, ε3]]
+
+  Therefore, the dielectric tensor contains two independent elements:
+
+  ε1 = εxx = εyy ε3 = εzz
+
+  Perform a full structural relaxation using VASP. Perform a DFPT dielectric calculation on the relaxed structure.
+
+  Example INCAR settings:
+
+  LEPSILON = .TRUE. IBRION = 8 NSW = 0 ISMEAR = 0 SIGMA = 0.05 EDIFF = 1E-8 PREC = Accurate
+
+  Use a converged KSPACING and plane-wave cutoff.
+
+  After the DFPT calculation completes, extract the resulting 3×3 dielectric tensor:
+
+  ε = [[εxx, εxy, εxz], [εyx, εyy, εyz], [εzx, εzy, εzz]]
+
+  Verify consistency with trigonal symmetry:
+
+  εxx ≈ εyy εxy ≈ εyx ≈ 0 εxz ≈ εyz ≈ 0 εzx ≈ εzy ≈ 0
+
+  Small numerical deviations may be present due to finite convergence tolerances.
+
+  Compute the polycrystalline dielectric constant using the orientational average
+
+  ε_poly = Tr(ε) / 3
+
+  i.e.,
+
+  ε_poly = (εxx + εyy + εzz) / 3
+
+  For a trigonal dielectric tensor,
+
+  ε_poly = (2ε1 + ε3) / 3
+
+  Expected Key Conclusion:
+
+  Space group: R-3c Crystal system: trigonal Independent dielectric tensor elements: 2
+
+  Polycrystalline dielectric constant:
+
+  ε_poly = (εxx + εyy + εzz)/3 = (2ε1 + ε3)/3
+
+  From the paper, Cs2Ti(WO4)3 has ε∞=5.34, ε0=175.55, ε=180.89.'

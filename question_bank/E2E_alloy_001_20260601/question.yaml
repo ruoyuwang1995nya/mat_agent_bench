@@ -1,0 +1,116 @@
+id: E2E_alloy_001_20260601
+task_type: end_to_end_research
+capabilities:
+- scientific_reasoning
+- tool_utilization
+- workflow_orchestration
+- data_handling
+- scientific_grounding
+domain: alloy
+difficulty: hard
+intent: Starting from crystal structures of two Mg-Zn intermetallic phases, perform a complete computational workflow to
+  determine relative phase stability through formation energy, elastic anisotropy, and thermodynamic properties, then 
+  rank the phases by overall stability.
+human_prompt_seed: Starting from the provided crystal structures of three Mg-Zn intermetallic phases (C-MgZn2, H-MgZn2),
+  determine their relative phase stability through a complete computational analysis. Compute formation energies, 
+  elastic anisotropy indicators, and thermodynamic stability metrics (Debye temperature, Grüneisen parameter). 
+  Synthesize all results into a final stability ranking. Report all intermediate and final results in 
+  phase_stability_report.json with the structure specified in the output contract.
+tags:
+- end_to_end
+- dft_workflow
+- phase_stability
+- thermodynamics
+data_files:
+- key: h_mgzn2
+  path: MgZn2_hex.poscar
+  description: "POSCAR file for hexagonal H-MgZn2 (space group P63/mmc)"
+- key: c_mgzn2
+  path: MgZn2_cubic.poscar
+  description: "POSCAR file for cubic C-MgZn2 (space group Fd-3m)"
+reference_answers:
+- key: artifact_report
+  value: phase_stability_report.json
+- key: text_report_phases
+  value:
+    flags: []
+    tokens:
+    - C-MgZn2
+    - H-MgZn2
+    filename: phase_stability_report.json
+- key: json_ranking
+  value:
+    checks:
+    - key: stability_ranking.0
+      expected: H-MgZn2
+      tolerance: 0
+    filename: phase_stability_report.json
+- key: json_formation_energies
+  value:
+    checks:
+    - key: formation_energies.H-MgZn2_kJ_mol
+      max: -12.5
+      min: -13.5
+    - key: formation_energies.C-MgZn2_kJ_mol
+      max: -12.3
+      min: -13.3
+    filename: phase_stability_report.json
+- key: json_debye_ordering
+  value:
+    checks:
+    - key: debye_temperatures.C-MgZn2_K
+      max: 380
+      min: 350
+    filename: phase_stability_report.json
+- key: grounding_source
+  value: structures.tar.gz
+- key: duration_budget
+  value:
+    max: 1800000
+scoring_checklist:
+- id: artifact_report
+  verify: artifact_exists
+  weight: 0.1
+  criterion: '[Must] phase_stability_report.json file exists with complete analysis'
+  capability: tool_utilization
+- id: text_report_phases
+  verify: text_file_contains_all
+  weight: 0.1
+  criterion: '[Must] Report contains entries for all three phases (C-MgZn2, H-MgZn2)'
+  capability: data_handling
+- id: json_ranking
+  verify: text_file_contains_all
+  weight: 0.2
+  criterion: '[Must] Stability ranking identifies H-MgZn2 as most stable (lowest formation energy, -12.965 kJ/mol)'
+  capability: scientific_reasoning
+- id: json_formation_energies
+  verify: text_file_numeric_range
+  weight: 0.15
+  criterion: '[Must] Formation energies are within tolerance of paper values (all within ~0.5 kJ/mol of reference)'
+  capability: scientific_reasoning
+- id: json_debye_ordering
+  verify: text_file_numeric_range
+  weight: 0.1
+  criterion: '[Suggested] Debye temperature ordering C-MgZn2 > H-MgZn2 > Mg4Zn7 is correctly reflected'
+  capability: data_handling
+- id: workflow_sequence
+  verify: llm_binary_judge
+  weight: 0.15
+  criterion: '[Must] Analysis follows correct multi-step sequence: structure preparation → energy calculation → elastic analysis
+    → thermodynamic evaluation → final ranking'
+  capability: workflow_orchestration
+- id: grounding_e2e
+  verify: llm_binary_judge
+  weight: 0.2
+  criterion: '[Must] All computed properties and the final stability ranking are consistent with the paper''s conclusions
+    about phase stability in Mg-Zn alloys'
+  capability: scientific_grounding
+- id: duration_budget
+  verify: duration_budget
+  weight: 0.0
+  criterion: '[Variable] Agent completed within duration budget'
+  capability: tool_utilization
+reference_answer_prompt: 'Full workflow: (1) DFT structural optimization for each phase → (2) Formation energy calculation:
+  H-MgZn2 (-12.965 kJ/mol) most stable, then C-MgZn2 (-12.820) → (3) Elastic anisotropy: C-MgZn2 nearly isotropic (AU=0.050),
+  H-MgZn2 strongly anisotropic (AU=1.479) → (4) Thermodynamics: C-MgZn2 highest Debye temp (366 K), best thermal stability
+  → (5) Overall stability ranking by formation energy: 1st H-MgZn2, 2nd C-MgZn2.'

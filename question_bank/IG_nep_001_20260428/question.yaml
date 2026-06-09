@@ -1,6 +1,10 @@
 id: IG_nep_001_20260428
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: Draft a practical nep.in from provided training structures.
 human_prompt_seed: '目录里有一份 NEP 训练数据 `train.xyz`。
 
@@ -85,82 +89,56 @@ reference_answers:
 - key: grounding_source
   value:
     filename: train.xyz
-- key: turn_budget
-  value:
-    max: 14
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 18000
 scoring_checklist:
 - id: must_nep_in_artifact
   criterion: '[Must] `nep.in` is generated.'
-  axis: correctness
   verify: artifact_exists
-  weight: 1.0
+  weight: 0.5
+  capability: tool_utilization
 - id: must_nep_note_artifact
   criterion: '[Must] `nep_input_note.md` is generated.'
-  axis: correctness
   verify: artifact_exists
-  weight: 0.6
+  weight: 0.5
+  capability: tool_utilization
 - id: must_nep_core_tokens
   criterion: '[Must] `nep.in` includes core NEP training keywords.'
-  axis: correctness
   verify: text_file_contains_all
-  weight: 1.0
+  weight: 0.5
+  capability: tool_utilization
 - id: must_type_statement
   criterion: '[Must] `type` line is syntactically valid and species tokens are well-formed.'
-  axis: correctness
   verify: text_file_regex
-  weight: 1.0
+  weight: 0.5
+  capability: data_handling
 - id: must_cutoff_range
   criterion: '[Must] cutoff values stay in documented valid range.'
-  axis: correctness
   verify: text_file_regex
-  weight: 1.0
+  weight: 0.5
+  capability: tool_utilization
 - id: variable_cutoff_consistency
-  criterion: '[Variable] Angular/radial cutoff relation follows documented constraints
-    (including reasonable angular <= radial setup).'
-  axis: correctness
+  criterion: '[Variable] Angular/radial cutoff relation follows documented constraints (including reasonable angular <= radial
+    setup).'
   verify: llm_binary_judge
   weight: 0.5
+  capability: scientific_reasoning
 - id: variable_dataset_reading_quality
-  criterion: '[Variable] `type` and parameter choices reflect actual reading of train.xyz
-    (species/composition/scale), not a generic boilerplate file.'
-  axis: correctness
+  criterion: '[Variable] `type` and parameter choices reflect actual reading of train.xyz (species/composition/scale), not
+    a generic boilerplate file.'
   verify: llm_binary_judge
-  weight: 0.8
+  weight: 0.5
+  capability: data_handling
 - id: suggested_hparam_ranges
   criterion: '[Suggested] major hyperparameters are within recommended NEP boundaries.'
-  axis: correctness
   verify: text_file_numeric_range
-  weight: 0.7
+  weight: 0.5
+  capability: scientific_reasoning
 - id: variable_scale_aware_setup
-  criterion: '[Variable] Hyperparameter choices are adapted to observed data scale/composition
-    (not copied as fixed template).'
-  axis: correctness
+  criterion: '[Variable] Hyperparameter choices are adapted to observed data scale/composition (not copied as fixed template).'
   verify: llm_binary_judge
-  weight: 0.7
+  weight: 0.5
+  capability: workflow_orchestration
 - id: grounding_source
-  criterion: Type ordering and setup must be grounded in provided train/test inputs,
-    without fabricating unseen species.
-  axis: grounding
+  criterion: Type ordering and setup must be grounded in provided train/test inputs, without fabricating unseen species.
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical tool calls.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes within turn budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Duration is within budget.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total tokens are within budget.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

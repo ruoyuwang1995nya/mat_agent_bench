@@ -326,7 +326,8 @@ def run_single_question(
     if skip_grading:
         return EvalRunRecord(
             question_id=qid,
-            capability=question.capability,
+            capabilities=list(question.capability),
+            task_type=question.task_type,
             domain=question.domain,
             mode=mode,  # type: ignore[arg-type]
             repeat_idx=repeat_idx,
@@ -362,7 +363,8 @@ def run_single_question(
         _log(f"grading error: {exc}")
         return EvalRunRecord(
             question_id=qid,
-            capability=question.capability,
+            capabilities=list(question.capability),
+            task_type=question.task_type,
             domain=question.domain,
             mode=mode,  # type: ignore[arg-type]
             repeat_idx=repeat_idx,
@@ -475,7 +477,14 @@ def build_cli_parser() -> argparse.ArgumentParser:
         "--capability",
         type=str,
         default=None,
-        help="Filter by capability (e.g. input_generation).",
+        help="Filter by capability tag (e.g. scientific_reasoning).",
+    )
+    parser.add_argument(
+        "--task-type",
+        type=str,
+        default=None,
+        dest="task_type",
+        help="Filter by task type (e.g. simulation, material_characterization).",
     )
     parser.add_argument(
         "--domain",
@@ -591,6 +600,7 @@ def run_benchmark(args: argparse.Namespace) -> int:
     else:
         questions = registry.list_questions(
             capability=args.capability,
+            task_type=args.task_type,
             domain=args.domain,
         )
 
@@ -633,10 +643,10 @@ def run_benchmark(args: argparse.Namespace) -> int:
         if print_lock:
             with print_lock:
                 print(
-                    f"{tag} {q.id} ({q.capability}/{q.domain})", file=sys.stderr
+                    f"{tag} {q.id} ({'+'.join(q.capability)}/{q.task_type}/{q.domain})", file=sys.stderr
                 )
         else:
-            print(f"{tag} {q.id} ({q.capability}/{q.domain})", file=sys.stderr)
+            print(f"{tag} {q.id} ({'+'.join(q.capability)}/{q.task_type}/{q.domain})", file=sys.stderr)
         return run_single_question(
             q,
             agent_script=agent_script,

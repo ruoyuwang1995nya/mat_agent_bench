@@ -1,53 +1,34 @@
 id: DD_tool_fail_recovery_001_20260428
-capability: data_diagnosis
+task_type: material_characterization
+capabilities:
+- data_handling
+- scientific_reasoning
 domain: agnostic
-intent: When a tool call returns an error, agent should diagnose the cause and try
-  an alternative approach rather than blindly retrying the same call.
+difficulty: easy
+intent: When a tool call returns an error, agent should diagnose the cause and try an alternative approach rather than 
+  blindly retrying the same call.
 human_prompt_seed: '请使用结构数据库查询 mp-99999999（一个不存在的 ID）的结构信息，并将结果保存到 result.json。
 
   如果查询失败，请分析失败原因，尝试其他合理的获取方式（如按化学式搜索等），并在最终回答中说明失败原因和你的处理策略。'
 tags: []
 data_files: []
-reference_answers:
-- key: turn_budget
-  value:
-    max: 12
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 10000
+reference_answers: []
 scoring_checklist:
 - id: error_diagnosis
-  criterion: Agent correctly identifies that the material ID does not exist or is
-    invalid, rather than assuming a transient error.
-  axis: correctness
+  criterion: Agent correctly identifies that the material ID does not exist or is invalid, rather than assuming a 
+    transient error.
   verify: llm_binary_judge
-- id: no_blind_retry
-  criterion: Agent does not repeat the exact same failing tool call with identical
-    parameters more than once.
-  axis: efficiency
-  verify: no_retries
+  capability: tool_utilization
+  weight: 0.5
 - id: alternative_strategy
-  criterion: Agent attempts at least one alternative approach (e.g., search by formula,
-    check ID format) or clearly explains why no alternative is available.
-  axis: correctness
+  criterion: Agent attempts at least one alternative approach (e.g., search by formula, check ID format) or clearly 
+    explains why no alternative is available.
   verify: llm_binary_judge
+  capability: workflow_orchestration
+  weight: 0.5
 - id: grounding_explanation
-  criterion: Final answer includes a clear explanation of the failure cause grounded
-    in the actual error message, not a generic excuse.
-  axis: grounding
+  criterion: Final answer includes a clear explanation of the failure cause grounded in the actual error message, not a 
+    generic excuse.
   verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration does not exceed ceiling.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

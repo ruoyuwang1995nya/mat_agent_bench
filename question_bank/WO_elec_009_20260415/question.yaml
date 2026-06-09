@@ -1,15 +1,16 @@
 id: WO_elec_009_20260415
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: semiconductor
-intent: Compute Si phonon dispersion with ABACUS (including relaxation step) and summarize
-  key spectrum outcomes.
-human_prompt_seed: "计算 Si 的声子特征（Mock版）：\n1. 先 query/检索并梳理本任务所需输入文件（结构文件、参数文件、声子相关输入）；\n\
-  2. 给出你会采用的声子设置（k 路径/采样、超胞或最小长度、位移步长）；\n3. 不做真实 ABACUS 计算，使用以下 mock 结果进行后处理：\n  \
-  \ - supercell_or_min_length = \"3x3x3\"\n   - displacement_step = 0.01\n   - gamma_optical_frequency_THz\
-  \ = 15.6\n   - imaginary_mode_check = false\n4. 汇总是否存在虚频，并给出结果可信度与不确定性说明。\n\n请完成以下交付：\n\
-  1) `si_phonon_abacus.json`：至少包含 `input_files`, `kpath_or_sampling`, `supercell_or_min_length`,\
-  \ `displacement_step`, `imaginary_mode_check`, `key_frequency_summary`；\n2) `si_phonon_abacus_report.md`：说明\
-  \ query 输入梳理 + mock 后处理流程、关键结论与不确定性。\n\n最终回答请简要说明是否出现虚频，并标注为 mock 后处理结论。\n"
+difficulty: easy
+intent: Compute Si phonon dispersion with ABACUS (including relaxation step) and summarize key spectrum outcomes.
+human_prompt_seed: "计算 Si 的声子特征（Mock版）：\n1. 先 query/检索并梳理本任务所需输入文件（结构文件、参数文件、声子相关输入）；\n2. 给出你会采用的声子设置（k 路径/采样、超胞或最小长度、位移步长）；\n\
+  3. 不做真实 ABACUS 计算，使用以下 mock 结果进行后处理：\n   - supercell_or_min_length = \"3x3x3\"\n   - displacement_step = 0.01\n   - gamma_optical_frequency_THz
+  = 15.6\n   - imaginary_mode_check = false\n4. 汇总是否存在虚频，并给出结果可信度与不确定性说明。\n\n请完成以下交付：\n1) `si_phonon_abacus.json`：至少包含 `input_files`,
+  `kpath_or_sampling`, `supercell_or_min_length`, `displacement_step`, `imaginary_mode_check`, `key_frequency_summary`；\n\
+  2) `si_phonon_abacus_report.md`：说明 query 输入梳理 + mock 后处理流程、关键结论与不确定性。\n\n最终回答请简要说明是否出现虚频，并标注为 mock 后处理结论。\n"
 tags:
 - eng_abacus
 data_files: []
@@ -39,57 +40,35 @@ reference_answers:
 - key: gamma_freq_mock
   value: 15.6
   tolerance: 1.0
-- key: turn_budget
-  value:
-    max: 18
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 9000
 scoring_checklist:
 - id: phonon_json
   criterion: Agent writes `si_phonon_abacus.json` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: phonon_report
   criterion: Agent writes `si_phonon_abacus_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: json_required_tokens
   criterion: JSON contains key phonon workflow and imaginary-mode-check fields.
-  axis: correctness
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: report_required_tokens
   criterion: Report explains relax→phonon workflow and uncertainty caveats.
-  axis: correctness
   verify: llm_binary_judge
+  capability: workflow_orchestration
+  weight: 0.5
 - id: gamma_freq_mock
-  criterion: Final answer includes a mock gamma optical frequency value near 15.6
-    THz.
-  axis: correctness
+  criterion: Final answer includes a mock gamma optical frequency value near 15.6 THz.
   verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
 - id: grounding_source
-  criterion: Final answer is grounded in generated phonon artifacts and does not fabricate
-    unsupported dispersion conclusions.
-  axis: grounding
+  criterion: Final answer is grounded in generated phonon artifacts and does not fabricate unsupported dispersion 
+    conclusions.
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical tool calls with the same parameter set.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
-    (tunable per task after calibration).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

@@ -1,8 +1,12 @@
 id: pl_adhesion
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: polymer
-intent: Compare polyimide adhesion on hydroxyl-rich, epoxy-rich, and carboxyl-rich
-  graphene-oxide surfaces using curated adsorption, MD, and adhesion-work evidence.
+difficulty: easy
+intent: Compare polyimide adhesion on hydroxyl-rich, epoxy-rich, and carboxyl-rich graphene-oxide surfaces using curated
+  adsorption, MD, and adhesion-work evidence.
 human_prompt_seed: '文件 `interface_adhesion_bundle.json` 汇总了聚酰亚胺短链与三类氧化石墨烯表面的界面项目数据。
 
   请完成一个界面粘附分析报告：
@@ -21,8 +25,8 @@ tags:
 data_files:
 - key: interface_bundle
   path: interface_adhesion_bundle.json
-  description: Interface bundle with adsorption energies, MD-derived contact descriptors,
-    adhesion work, and surface-chemistry ranking.
+  description: Interface bundle with adsorption energies, MD-derived contact descriptors, adhesion work, and 
+    surface-chemistry ranking.
 reference_answers:
 - key: best_surface
   value: GO-COOH-rich
@@ -39,55 +43,32 @@ reference_answers:
   - surface_chemistry_mechanism
   - recommendation
   - scaleup_risk
-- key: turn_budget
-  value:
-    max: 24
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 14000
 scoring_checklist:
 - id: cooh_adhesion_work_J_m2
-  criterion: GO-COOH-rich adhesion work is reported within tolerance of the curated
-    value (~0.81 J/m^2).
-  axis: correctness
+  criterion: GO-COOH-rich adhesion work is reported within tolerance of the curated value (~0.81 J/m^2).
   verify: numerical_range
+  capability: data_handling
+  weight: 0.5
 - id: cooh_adsorption_eV
-  criterion: GO-COOH-rich adsorption energy is reported within tolerance of the curated
-    value (~-1.48 eV).
-  axis: correctness
+  criterion: GO-COOH-rich adsorption energy is reported within tolerance of the curated value (~-1.48 eV).
   verify: numerical_range
+  capability: data_handling
+  weight: 0.5
 - id: recommendation_correctness
-  criterion: Final recommendation identifies GO-COOH-rich as the strongest adhesion
-    surface and ranks GO-OH-rich ahead of GO-epoxy-rich overall.
-  axis: correctness
+  criterion: Final recommendation identifies GO-COOH-rich as the strongest adhesion surface and ranks GO-OH-rich ahead 
+    of GO-epoxy-rich overall.
   verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
 - id: required_fields
-  criterion: Report includes an adhesion table, orientation discussion, surface-chemistry
-    mechanism, recommendation, and at least one scale-up risk.
-  axis: correctness
+  criterion: Report includes an adhesion table, orientation discussion, surface-chemistry mechanism, recommendation, and
+    at least one scale-up risk.
   verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
 - id: grounding_source
-  criterion: The answer grounds interface conclusions in the provided adsorption,
-    contact-area, orientation, and adhesion-work evidence from interface_adhesion_bundle.json.
-  axis: grounding
+  criterion: The answer grounds interface conclusions in the provided adsorption, contact-area, orientation, and 
+    adhesion-work evidence from interface_adhesion_bundle.json.
   verify: llm_binary_judge
-- id: efficiency_judge
-  criterion: Interface analysis is completed directly and does not drift into unrelated
-    surface-science discussion.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration does not exceed benchmark ceiling.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

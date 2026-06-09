@@ -1,6 +1,10 @@
 id: IG_cp2k_001_20260428
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: Generate a CP2K DFT single-point energy input file for a simple bulk system.
 human_prompt_seed: '请为 MgO 岩盐结构（a=4.212 Å）生成 CP2K DFT 单点能计算输入文件，要求：
 
@@ -29,43 +33,25 @@ reference_answers:
     - SCF
     - CUTOFF
     flags: i
-- key: turn_budget
-  value:
-    max: 10
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 8000
 scoring_checklist:
 - id: input_artifact
   criterion: Agent writes `cp2k.inp` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: required_keywords
-  criterion: The input file contains essential CP2K sections and keywords (FORCE_EVAL,
-    DFT, PBE, SCF, CUTOFF).
-  axis: correctness
+  criterion: The input file contains essential CP2K sections and keywords (FORCE_EVAL, DFT, PBE, SCF, CUTOFF).
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: physical_params
-  criterion: The input file uses physically reasonable parameters for MgO (PBE functional,
-    DZVP basis, GTH pseudopotentials, cutoff ~400 Ry, SCF convergence 1E-6).
-  axis: correctness
+  criterion: The input file uses physically reasonable parameters for MgO (PBE functional, DZVP basis, GTH 
+    pseudopotentials, cutoff ~400 Ry, SCF convergence 1E-6).
   verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
 - id: grounding_source
   criterion: Parameters match the user request and standard CP2K MgO calculation practice.
-  axis: grounding
   verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration does not exceed ceiling.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

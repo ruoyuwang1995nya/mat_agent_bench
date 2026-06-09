@@ -5,7 +5,8 @@ run the benchmark without a local harness.
 
 Endpoints::
 
-    POST /token                           Register a new persistent API token
+    GET  /                                Bench API info (version, guide link)
+    GET  /guide                           Agent HTTP API reference (plain text, no auth)
     POST /sessions                        Create a new session (requires X-API-Token header)
     GET  /questions                       List questions (filter: capability, domain, limit)
     GET  /questions/{id}                  Full question details + data file list (requires session_id; starts duration timer)
@@ -16,7 +17,7 @@ Endpoints::
 
 Authentication:
     All /submit and /results endpoints require the X-API-Token header.
-    Obtain a token via POST /token, then create a session via POST /sessions.
+    Obtain a token from the web UI, then create a session via POST /sessions.
 
 Submission form fields:
     meta      JSON string with answer, model_name, num_turns, duration_ms,
@@ -115,8 +116,6 @@ _task_starts_lock = threading.Lock()
 _token_store: "TokenStore | None" = None
 _session_store: "SessionStore | None" = None
 
-# When False, POST /token returns 403 (set by UI in combined mode to force human registration)
-_allow_direct_registration: bool = True
 
 
 # ---------------------------------------------------------------------------
@@ -132,14 +131,11 @@ def init_server(
     store_dir: Path | None = None,
     parallel_checklist_workers: int = 1,
     max_submissions_per_question: int = 1,
-    allow_direct_registration: bool = True,
 ) -> None:
     """Initialise server state. Must be called before uvicorn.run()."""
     global _registry, _llm_cfg, _output_dir, _results, _grading_executor
     global _token_store, _session_store, _task_starts, _parallel_checklist_workers
     global _grading_pending, _submission_counts, _max_submissions_per_question
-    global _allow_direct_registration
-    _allow_direct_registration = allow_direct_registration
     _registry = registry
     _llm_cfg = llm_cfg
     _output_dir = output_dir
@@ -254,7 +250,7 @@ def _do_grade(
 
 try:
     from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query, Request
-    from fastapi.responses import FileResponse
+    from fastapi.responses import FileResponse, PlainTextResponse
 
     app = FastAPI(
         title="mat-bench server",
@@ -281,20 +277,16 @@ try:
     # Token & session endpoints
     # ------------------------------------------------------------------
 
-    @app.post("/token")
-    async def create_token() -> dict:
-        """Register a new persistent API token. No authentication required."""
-        if not _allow_direct_registration:
-            raise HTTPException(
-                403,
-                detail="Direct token registration is disabled. Register via the web UI.",
-            )
-        token_str = secrets.token_hex(32)
-        record = TokenRecord(token=token_str, created_at=datetime.now(timezone.utc))
-        with _tokens_lock:
-            _tokens[token_str] = record
-        _token_store.save_token(token_str, record.created_at)
-        return {"token": token_str, "created_at": record.created_at.isoformat()}
+    @app.get("/")
+    async def bench_info() -> dict:
+        """Bench API info — version and guide link."""
+        return {"api": "mat-bench", "version": "0.1.0", "guide": "/guide"}
+
+    @app.get("/guide")
+    async def agent_guide() -> PlainTextResponse:
+        """Return the agent HTTP API guide as plain text/markdown."""
+        path = Path(__file__).parent.parent.parent / "agents" / "agent_api_guide.md"
+        return PlainTextResponse(path.read_text(encoding="utf-8"))
 
     @app.post("/sessions")
     async def create_session(
@@ -625,13 +617,22 @@ try:
         return [
             {
                 "question_id": r.question_id,
-                "capability": r.capability,
+                "capability": r.capabilities,
                 "domain": r.domain,
                 "run_status": r.run_status,
                 "passed": r.total_count > 0 and r.passed_count >= r.total_count,
                 "passed_count": r.passed_count,
                 "total_count": r.total_count,
                 "overall_weighted_score": r.overall_weighted_score,
+                "criteria_results": {
+                    cid: {
+                        "criterion_id": cr.criterion_id,
+                        "capability": cr.capability,
+                        "passed": cr.passed,
+                        "reason": cr.reason,
+                    }
+                    for cid, cr in r.criteria_results.items()
+                },
             }
             for r in matches
         ]
@@ -653,7 +654,9 @@ try:
                 records = [rec for tok, sid, rec in _results.values() if tok == token]
         if not records:
             return {"total": 0, "results": []}
-        summary = build_summary(records)
+        registry = _require_registry()
+        total_q = len(registry.list_questions())
+        summary = build_summary(records, total_q)
         return {
             "total": len(records),
             "questions_passed": summary.questions_passed,
@@ -662,7 +665,7 @@ try:
             "results": [
                 {
                     "question_id": r.question_id,
-                    "capability": r.capability,
+                    "capability": r.capabilities,
                     "domain": r.domain,
                     "run_status": r.run_status,
                     "passed_count": r.passed_count,

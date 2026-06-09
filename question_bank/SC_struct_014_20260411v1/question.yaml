@@ -1,12 +1,15 @@
 id: SC_struct_014_20260411v1
-capability: structure_construction
+task_type: simulation
+capabilities:
+- structure_manipulation
 domain: agnostic
-intent: Build a perovskite crystal from explicit space group and Wyckoff position
-  inputs and verify formula/lattice consistency.
+difficulty: easy
+intent: Build a perovskite crystal from explicit space group and Wyckoff position inputs and verify formula/lattice 
+  consistency.
 human_prompt_seed: '请按给定空间群和 Wyckoff 位点信息构建晶体结构，并导出 `srtio3_wyckoff.cif`：
 
-  - 空间群：Pm-3m（No. 221） - 晶格常数：a=b=c=3.90 Å，alpha=beta=gamma=90° - 位点： - Sr: 1b (0.5,
-  0.5, 0.5) - Ti: 1a (0.0, 0.0, 0.0) - O:  3d (0.5, 0.0, 0.0)
+  - 空间群：Pm-3m（No. 221） - 晶格常数：a=b=c=3.90 Å，alpha=beta=gamma=90° - 位点： - Sr: 1b (0.5, 0.5, 0.5) - Ti: 1a (0.0, 0.0, 0.0) -
+  O:  3d (0.5, 0.0, 0.0)
 
   同时生成 `wyckoff_build_report.md`，说明如何把上述位点映射到结构构建参数，并给出结果自检要点（化学式、晶格参数）。
 
@@ -42,63 +45,34 @@ reference_answers:
     - lattice
     - uncertainty
     flags: i
-- key: turn_budget
-  value:
-    max: 14
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 9000
 scoring_checklist:
 - id: structure_artifact
   criterion: Agent writes `srtio3_wyckoff.cif` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: report_artifact
   criterion: Agent writes `wyckoff_build_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: formula_check
   criterion: Output CIF has reduced formula consistent with SrTiO3.
-  axis: correctness
   verify: struct_file_formula
+  capability: structure_manipulation
+  weight: 0.5
 - id: lattice_a
-  criterion: Lattice parameter a is consistent with the target cubic scale around
-    3.90 Å.
-  axis: correctness
+  criterion: Lattice parameter a is consistent with the target cubic scale around 3.90 Å.
   verify: struct_file_cell_param
+  capability: structure_manipulation
+  weight: 0.5
 - id: report_required_tokens
-  criterion: Report explains Wyckoff-position mapping, space-group setting, and uncertainty
-    caveats.
-  axis: correctness
+  criterion: Report explains Wyckoff-position mapping, space-group setting, and uncertainty caveats.
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: grounding_source
-  criterion: The final answer is grounded in `srtio3_wyckoff.cif` and the report,
-    not generic perovskite descriptions.
-  axis: grounding
+  criterion: The final answer is grounded in `srtio3_wyckoff.cif` and the report, not generic perovskite descriptions.
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical tool calls with the same parameter set.
-  axis: efficiency
-  verify: no_retries
-- id: efficiency_judge
-  criterion: Workflow converges directly from Wyckoff inputs to structure export and
-    validation note without redundant exploratory steps.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
-    (tunable per task after calibration).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

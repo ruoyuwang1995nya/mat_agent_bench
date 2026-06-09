@@ -1,8 +1,11 @@
 id: WO_general_postproc_002_20260422
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
-intent: Produce structured post-processing pipeline artifacts with per-stage validation
-  gates and rerun policy.
+difficulty: easy
+intent: Produce structured post-processing pipeline artifacts with per-stage validation gates and rerun policy.
 human_prompt_seed: '工作区已提供 `result_manifest.json`。
 
 
@@ -56,56 +59,34 @@ reference_answers:
 - key: grounding_source
   value:
     filename: result_manifest.json
-- key: turn_budget
-  value:
-    max: 8
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 7000
 scoring_checklist:
 - id: pipeline_artifact
   criterion: Agent writes `postproc_pipeline.json` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: outline_artifact
   criterion: Agent writes `report_outline.md` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: rerun_artifact
   criterion: Agent writes `rerun_policy.md` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: pipeline_required_tokens
-  criterion: Pipeline includes required post-processing targets and step metadata
-    fields.
-  axis: correctness
+  criterion: Pipeline includes required post-processing targets and step metadata fields.
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: outline_required_tokens
   criterion: Report outline covers required outputs and three target analysis families.
-  axis: correctness
   verify: llm_binary_judge
+  capability: workflow_orchestration
+  weight: 0.5
 - id: grounding_source
-  criterion: Deliverables are grounded in `result_manifest.json` and avoid fabricating
-    unavailable numeric results.
-  axis: grounding
+  criterion: Deliverables are grounded in `result_manifest.json` and avoid fabricating unavailable numeric results.
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical tool calls with the same parameter set.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

@@ -1,12 +1,16 @@
 id: IG_incar_003_20260506
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
-intent: 'Generate VASP INCAR for structure relaxation of perovskite ErNaO3. Full cell+ion
-  optimization (ISIF=3), spin-polarized (Er3+ f electrons).
+difficulty: easy
+intent: 'Generate VASP INCAR for structure relaxation of perovskite ErNaO3. Full cell+ion optimization (ISIF=3), spin-polarized
+  (Er3+ f electrons).
 
   '
-human_prompt_seed: 为钙钛矿 ErNaO3 生成一个结构弛豫(relaxation)计算的 VASP INCAR。需要同时优化离子位置和晶胞参数。Er
-  含 f 电子，需要自旋极化。将完整的 INCAR 写入当前目录下的 `INCAR` 文件。
+human_prompt_seed: 为钙钛矿 ErNaO3 生成一个结构弛豫(relaxation)计算的 VASP INCAR。需要同时优化离子位置和晶胞参数。Er 含 f 电子，需要自旋极化。将完整的 INCAR 写入当前目录下的 
+  `INCAR` 文件。
 tags:
 - eng_vasp
 reference_answers:
@@ -48,15 +52,6 @@ reference_answers:
     filename: INCAR
     pattern: ^\s*NSW\s*=
     flags: im
-- key: turn_budget
-  value:
-    max: 8
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 15000
 - key: reasonable_params
   value:
     filename: INCAR
@@ -68,64 +63,55 @@ reference_answers:
 scoring_checklist:
 - id: incar_artifact
   criterion: INCAR file is generated.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: incar_critical_tokens
   criterion: INCAR contains all critical parameter keywords.
-  axis: correctness
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: critical_EDIFF
   criterion: INCAR sets EDIFF = 0.0001 (critical param).
-  axis: correctness
   verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
 - id: critical_IBRION
   criterion: INCAR sets IBRION = 1 or 2 (critical param).
-  axis: correctness
   verify: text_file_regex
+  capability: tool_utilization
+  weight: 0.5
 - id: critical_ISIF
   criterion: INCAR sets ISIF = 3 (critical param).
-  axis: correctness
   verify: text_file_regex
+  capability: tool_utilization
+  weight: 0.5
 - id: critical_ISPIN
   criterion: INCAR sets ISPIN = 2 (critical param).
-  axis: correctness
   verify: text_file_regex
+  capability: tool_utilization
+  weight: 0.5
 - id: critical_NSW
   criterion: INCAR contains NSW assignment (critical param).
-  axis: correctness
   verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
 - id: reasonable_params
-  criterion: The INCAR uses physically reasonable general settings for a VASP full
-    cell relaxation calculation. ENCUT is present (unless not relevant), EDIFF is
-    present with a reasonable value, PREC is set. Machine-specific params (KPAR, NCORE,
-    NPAR) are optional and should not be penalized if absent or different from reference.
-  axis: correctness
+  criterion: The INCAR uses physically reasonable general settings for a VASP full cell relaxation calculation. ENCUT is
+    present (unless not relevant), EDIFF is present with a reasonable value, PREC is set. Machine-specific params (KPAR,
+    NCORE, NPAR) are optional and should not be penalized if absent or different from reference.
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: grounding_source
-  criterion: The generated INCAR is grounded in the provided prompt data (material
-    system, calculation type, critical parameters) rather than hallucinated. Judge
-    solely from the final answer and stated file content; do not fail because the
-    tool-call log omits MCP, web_search, or any specific tool.
-  axis: grounding
+  criterion: The generated INCAR is grounded in the provided prompt data (material system, calculation type, critical 
+    parameters) rather than hallucinated. Judge solely from the final answer and stated file content; do not fail 
+    because the tool-call log omits MCP, web_search, or any specific tool.
   verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: efficiency_judge
-  criterion: The agent produced the INCAR efficiently without unnecessary tool calls,
-    redundant queries, or irrelevant exploration.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: duration_budget
-  criterion: Wall-clock run duration does not exceed benchmark ceiling.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5
 - id: critical_LORBIT
   criterion: INCAR sets LORBIT = 11 (critical param).
-  axis: correctness
   verify: text_file_regex
+  capability: data_handling
+  weight: 0.5

@@ -1,17 +1,17 @@
 id: SR_recommend_20260430
-capability: structure_retrieval
+task_type: search_and_interpretation
+capabilities:
+- tool_utilization
+- scientific_reasoning
 domain: agnostic
-intent: Recommend soluble acrylate NTD photoresist monomers and provide verified SMILES
-  from databases.
-human_prompt_seed: 'Recommend acrylate-type monomers suitable for NTD photoresist
-  formulations with relatively high solubility.
+difficulty: easy
+intent: Recommend soluble acrylate NTD photoresist monomers and provide verified SMILES from databases.
+human_prompt_seed: 'Recommend acrylate-type monomers suitable for NTD photoresist formulations with relatively high solubility.
 
-  For each candidate include: `name`, `SMILES`, `CAS` (if available), `source_database`
-  (where the SMILES/CAS was obtained).
+  For each candidate include: `name`, `SMILES`, `CAS` (if available), `source_database` (where the SMILES/CAS was obtained).
 
-  DO NOT FABRICATE any SMILES, CAS, or identifiers. All chemistry identifiers must
-  be retrieved from authoritative databases accessible via the system (do not invent
-  values or guess SMILES).'
+  DO NOT FABRICATE any SMILES, CAS, or identifiers. All chemistry identifiers must be retrieved from authoritative databases
+  accessible via the system (do not invent values or guess SMILES).'
 tags:
 - meta_database
 data_files: []
@@ -22,39 +22,14 @@ reference_answers:
   value:
     reference_list_file: reference_list.json
     min_ratio: 0.6
-- key: turn_budget
-  value:
-    max: 5
-- key: duration_budget
-  value:
-    max: 180000
-- key: token_budget_total
-  value:
-    max: 8000
 scoring_checklist:
 - id: grounding_source
   criterion: Outputs are grounded in provided inputs and do not fabricate.
-  axis: grounding
   verify: llm_binary_judge
-  weight: 1.0
+  weight: 0.5
+  capability: scientific_grounding
 - id: recommendation_hit_rate
   criterion: Recommendation hit rate >= 0.6 against provided reference list.
-  axis: correctness
   verify: text_file_contains_all
-  weight: 1.0
-- id: no_retries
-  criterion: No repeated identical tool calls.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes within turn budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Duration is within budget.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total tokens are within budget.
-  axis: efficiency
-  verify: token_budget
+  weight: 0.5
+  capability: data_handling

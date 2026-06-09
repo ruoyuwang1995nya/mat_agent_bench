@@ -2,13 +2,13 @@
 
 Scoring model:
 - Verifiers produce binary (pass/fail) verdicts per checklist item.
-- Each checklist item has optional weight (default 1.0).
-- Axis score = sum(pass_i * weight_i) / sum(weight_i) for items in that axis.
-- Overall score = sum(axis_weight_a * axis_score_a) / sum(active_axis_weight_a).
+- Each checklist item has a weight (default 0.5) = penalty deducted on failure.
+- Grounding rubrics use capability='scientific_grounding'.
+- overall_score = max(0, 1 - sum_failed_weights)  [0, 1]
 """
 
 from datetime import datetime, timezone
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -70,18 +70,22 @@ VerifyLiteral = Literal[
     'atomworld_active_task',
 ]
 
-AxisLiteral = Literal['correctness', 'grounding', 'efficiency']
-
 CapabilityLiteral = Literal[
-    'structure_construction',
-    'structure_retrieval',
-    'scientific_analysis',
+    'scientific_reasoning',
+    'tool_utilization',
     'workflow_orchestration',
-    'execution_contract',
-    'data_diagnosis',
-    'batch_processing',
-    'safety_refusal',
-    'input_generation',
+    'data_handling',
+    'structure_manipulation',
+    'scientific_grounding',
+]
+
+TaskTypeLiteral = Literal[
+    'search_and_interpretation',
+    'simulation',
+    'materials_design_and_discovery',
+    'material_characterization',
+    'synthesis_and_experiment_design',
+    'end_to_end_research',
 ]
 
 DomainLiteral = Literal[
@@ -92,6 +96,8 @@ DomainLiteral = Literal[
     'semiconductor',
     'agnostic',
 ]
+
+DifficultyLiteral = Literal['easy', 'medium', 'hard']
 
 GENERIC_PROCESS_TAGS = {
     'workflow',
@@ -174,20 +180,25 @@ class ReferenceAnswer(BaseModel):
 
 
 class ScoringCheckItem(BaseModel):
-    """One verifiable scoring criterion (binary with optional weight)."""
+    """One verifiable scoring criterion (binary with optional weight).
+
+    weight: penalty deducted from 1.0 when this criterion fails (default 0.5).
+    axis: deprecated field kept for YAML backward compatibility; not used in scoring.
+    """
 
     id: str
     criterion: str
-    axis: AxisLiteral = Field(default='correctness')
+    axis: Optional[str] = None
     verify: VerifyLiteral
-    weight: float = Field(default=1.0, ge=0.0)
+    weight: float = Field(default=0.5, ge=0.0)
+    capability: Optional[CapabilityLiteral] = None
 
 
 class CriterionResult(BaseModel):
     """Per-criterion pass/fail result stored inside EvalRunRecord."""
 
     criterion_id: str
-    axis: AxisLiteral
+    capability: Optional[str] = None
     passed: bool
     reason: str = ''
     verify_method: str = ''
@@ -202,11 +213,13 @@ class QuestionItem(BaseModel):
     """Single MATTER v5 question entry."""
 
     id: str
-    capability: CapabilityLiteral
+    task_type: TaskTypeLiteral
+    capabilities: list[CapabilityLiteral] = Field(min_length=1)
     domain: DomainLiteral
+    difficulty: DifficultyLiteral = Field(default='medium')
     intent: str
     human_prompt_seed: str
-    tags: list[QuestionTag] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
     priority: str | None = Field(default=None)
     data_files: list[DataFileRef] = Field(default_factory=list)
     reference_answers: list[ReferenceAnswer] = Field(default_factory=list)
@@ -230,10 +243,6 @@ class QuestionItem(BaseModel):
                 raise ValueError(
                     f'tag {tag!r} is not canonical; use canonical tag {canonical!r}'
                 )
-            if tag in GENERIC_PROCESS_TAGS:
-                raise ValueError(
-                    f'tag {tag!r} is a generic process tag; use a topic/tool/method tag instead'
-                )
             if tag in seen:
                 raise ValueError(f'tags must be unique within a question: {tag!r}')
             seen.add(tag)
@@ -242,10 +251,11 @@ class QuestionItem(BaseModel):
 
     @model_validator(mode='after')
     def _validate_scoring_contract(self) -> 'QuestionItem':
-        tag_values = {t.value for t in self.tags}
-        if self.capability in tag_values:
+        tag_values = set(self.tags)
+        cap_tag_overlap = set(self.capabilities) & tag_values
+        if cap_tag_overlap:
             raise ValueError(
-                f'tag {self.capability!r} must not repeat question capability'
+                f'tags {cap_tag_overlap!r} must not repeat question capabilities'
             )
         if self.domain in tag_values:
             raise ValueError(f'tag {self.domain!r} must not repeat question domain')
@@ -292,8 +302,9 @@ class QuestionItem(BaseModel):
                     f"scoring_checklist item '{item.id}' (verify={item.verify}) "
                     'requires a matching reference_answers entry with the same key'
                 )
-        if self.capability != 'safety_refusal' and not self.reference_answers:
-            raise ValueError('non-safety questions must include reference_answers')
+        needs_ref_items = [i for i in self.scoring_checklist if i.verify in _needs_ref]
+        if needs_ref_items and not self.reference_answers:
+            raise ValueError('questions with reference-requiring checklist items must include reference_answers')
         return self
 
 
@@ -306,34 +317,12 @@ class QuestionBank(BaseModel):
     """Question bank file model (v5 format)."""
 
     version: str = 'v5'
-    capability: CapabilityLiteral | None = None
-    domain: DomainLiteral | None = None
     questions: list[QuestionItem]
 
     @model_validator(mode='after')
     def _validate_questions(self) -> 'QuestionBank':
         if not self.questions:
             raise ValueError('questions cannot be empty')
-        if self.capability is None:
-            raise ValueError('top-level capability is required for every bank')
-        mismatched_capabilities = sorted(
-            q.id for q in self.questions if q.capability != self.capability
-        )
-        if mismatched_capabilities:
-            raise ValueError(
-                'top-level capability must match every question capability; '
-                f'mismatched question ids: {mismatched_capabilities}'
-            )
-        if self.domain is None:
-            raise ValueError('top-level domain is required for every bank')
-        mismatched_domains = sorted(
-            q.id for q in self.questions if q.domain != self.domain
-        )
-        if mismatched_domains:
-            raise ValueError(
-                'top-level domain must match every question domain; '
-                f'mismatched question ids: {mismatched_domains}'
-            )
         return self
 
 
@@ -383,7 +372,8 @@ class EvalRunRecord(BaseModel):
     """Atomic run record: one question, one mode, one repeat."""
 
     question_id: str
-    capability: str = ''
+    capabilities: list[str] = Field(default_factory=list)
+    task_type: str = ''
     domain: str = ''
     mode: ModeLiteral
     repeat_idx: int
@@ -394,16 +384,6 @@ class EvalRunRecord(BaseModel):
     criteria_results: dict[str, CriterionResult] = Field(default_factory=dict)
     passed_count: int = 0
     total_count: int = 0
-    correctness_passed: int = 0
-    correctness_total: int = 0
-    grounding_passed: int = 0
-    grounding_total: int = 0
-    efficiency_passed: int = 0
-    efficiency_total: int = 0
-
-    correctness_weighted_score: float = 0.0
-    grounding_weighted_score: float = 0.0
-    efficiency_weighted_score: float = 0.0
     overall_weighted_score: float = 0.0
 
     model_name: str | None = None
@@ -421,21 +401,16 @@ class EvalRunRecord(BaseModel):
 
 
 class AxisPassRates(BaseModel):
-    """Pass counts for each axis within a group."""
+    """Pass counts for a group (overall only)."""
 
-    correctness: tuple[int, int] = (0, 0)
-    grounding: tuple[int, int] = (0, 0)
-    efficiency: tuple[int, int] = (0, 0)
     overall: tuple[int, int] = (0, 0)
 
-    def pass_rate(self, axis: str = 'overall') -> float:
-        pair = getattr(self, axis, self.overall)
-        passed, total = pair
+    def pass_rate(self) -> float:
+        passed, total = self.overall
         return passed / total if total > 0 else 0.0
 
-    def fmt(self, axis: str = 'overall') -> str:
-        pair = getattr(self, axis, self.overall)
-        passed, total = pair
+    def fmt(self) -> str:
+        passed, total = self.overall
         pct = f'{100 * passed / total:.1f}%' if total > 0 else '—'
         return f'{passed}/{total} ({pct})'
 
@@ -444,13 +419,11 @@ class QuestionPassRate(BaseModel):
     """Per-question pass rate summary."""
 
     question_id: str
-    capability: str
-    domain: str
+    capabilities: list[str] = Field(default_factory=list)
+    task_type: str = ''
+    domain: str = ''
     runs: int = 0
     overall: tuple[int, int] = (0, 0)
-    correctness: tuple[int, int] = (0, 0)
-    grounding: tuple[int, int] = (0, 0)
-    efficiency: tuple[int, int] = (0, 0)
     safety_veto_count: int = 0
 
 
@@ -465,6 +438,7 @@ class EvaluationSummary(BaseModel):
     weighted_pass_rate: float = 0.0
 
     by_capability: dict[str, AxisPassRates] = Field(default_factory=dict)
+    by_task_type: dict[str, AxisPassRates] = Field(default_factory=dict)
     by_domain: dict[str, AxisPassRates] = Field(default_factory=dict)
     by_question: dict[str, QuestionPassRate] = Field(default_factory=dict)
     by_mode: dict[str, AxisPassRates] = Field(default_factory=dict)

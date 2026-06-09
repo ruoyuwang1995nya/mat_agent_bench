@@ -8,8 +8,16 @@ from typing import Any
 from ..schemas import AxisPassRates, EvalRunRecord, EvaluationSummary, QuestionPassRate
 
 
-def build_summary(records: list[EvalRunRecord]) -> EvaluationSummary:
-    """Aggregate a list of EvalRunRecords into an EvaluationSummary."""
+def build_summary(records: list[EvalRunRecord], total_questions: int = 0) -> EvaluationSummary:
+    """Aggregate a list of EvalRunRecords into an EvaluationSummary.
+
+    Args:
+        records: Evaluated run records.
+        total_questions: Total questions in the benchmark bank. When > 0, the
+            weighted_pass_rate is computed as sum(scores) / total_questions so
+            that unanswered questions count as zero. When 0 (default), falls
+            back to dividing by len(records) (average over answered only).
+    """
     if not records:
         return EvaluationSummary(
             total_runs=0,
@@ -25,26 +33,15 @@ def build_summary(records: list[EvalRunRecord]) -> EvaluationSummary:
     total_weighted_score = 0.0
     safety_triggered = 0
 
-    cap_acc: dict[str, list[int]] = defaultdict(lambda: [0, 0, 0, 0, 0, 0])
-    cap_weighted: dict[str, list[float]] = defaultdict(lambda: [0.0, 0.0, 0.0])
-    dom_acc: dict[str, list[int]] = defaultdict(lambda: [0, 0, 0, 0, 0, 0])
-    dom_weighted: dict[str, list[float]] = defaultdict(lambda: [0.0, 0.0, 0.0])
-    mode_acc: dict[str, list[int]] = defaultdict(lambda: [0, 0, 0, 0, 0, 0])
-    mode_weighted: dict[str, list[float]] = defaultdict(lambda: [0.0, 0.0, 0.0])
-    model_acc: dict[str, list[int]] = defaultdict(lambda: [0, 0, 0, 0, 0, 0])
-    model_weighted: dict[str, list[float]] = defaultdict(lambda: [0.0, 0.0, 0.0])
-    q_acc: dict[tuple[str, str], list[int]] = defaultdict(lambda: [0, 0, 0, 0, 0, 0, 0])
-    q_weighted: dict[tuple[str, str], list[float]] = defaultdict(lambda: [0.0, 0.0, 0.0])
+    cap_acc: dict[str, list[int]] = defaultdict(lambda: [0, 0])
+    task_acc: dict[str, list[int]] = defaultdict(lambda: [0, 0])
+    dom_acc: dict[str, list[int]] = defaultdict(lambda: [0, 0])
+    mode_acc: dict[str, list[int]] = defaultdict(lambda: [0, 0])
+    model_acc: dict[str, list[int]] = defaultdict(lambda: [0, 0])
+    q_acc: dict[tuple[str, str], list[int]] = defaultdict(lambda: [0, 0, 0])
     q_meta: dict[tuple[str, str], dict[str, Any]] = {}
 
     for record in records:
-        cp = record.correctness_passed
-        ct = record.correctness_total
-        gp = record.grounding_passed
-        gt = record.grounding_total
-        ep = record.efficiency_passed
-        et = record.efficiency_total
-
         total_criteria += record.total_count
         total_passed += record.passed_count
         if record.total_count > 0 and record.passed_count == record.total_count:
@@ -54,45 +51,39 @@ def build_summary(records: list[EvalRunRecord]) -> EvaluationSummary:
         if record.safety_veto.triggered:
             safety_triggered += 1
 
-        _add6(cap_acc[record.capability], cp, ct, gp, gt, ep, et)
-        cap_weighted[record.capability][0] += record.correctness_weighted_score
-        cap_weighted[record.capability][1] += record.grounding_weighted_score
-        cap_weighted[record.capability][2] += record.efficiency_weighted_score
+        for cap in record.capabilities:
+            _add2(cap_acc[cap], record.passed_count, record.total_count)
 
-        _add6(dom_acc[record.domain], cp, ct, gp, gt, ep, et)
-        dom_weighted[record.domain][0] += record.correctness_weighted_score
-        dom_weighted[record.domain][1] += record.grounding_weighted_score
-        dom_weighted[record.domain][2] += record.efficiency_weighted_score
+        if record.task_type:
+            _add2(task_acc[record.task_type], record.passed_count, record.total_count)
 
-        _add6(mode_acc[record.mode], cp, ct, gp, gt, ep, et)
-        mode_weighted[record.mode][0] += record.correctness_weighted_score
-        mode_weighted[record.mode][1] += record.grounding_weighted_score
-        mode_weighted[record.mode][2] += record.efficiency_weighted_score
+        _add2(dom_acc[record.domain], record.passed_count, record.total_count)
+        _add2(mode_acc[record.mode], record.passed_count, record.total_count)
 
         model_key = record.model_name or 'unknown'
-        _add6(model_acc[model_key], cp, ct, gp, gt, ep, et)
-        model_weighted[model_key][0] += record.correctness_weighted_score
-        model_weighted[model_key][1] += record.grounding_weighted_score
-        model_weighted[model_key][2] += record.efficiency_weighted_score
+        _add2(model_acc[model_key], record.passed_count, record.total_count)
 
         qk = (record.question_id, record.mode)
-        _add7(q_acc[qk], cp, ct, gp, gt, ep, et, 1 if record.safety_veto.triggered else 0)
-        q_weighted[qk][0] += record.correctness_weighted_score
-        q_weighted[qk][1] += record.grounding_weighted_score
-        q_weighted[qk][2] += record.efficiency_weighted_score
+        _add3(q_acc[qk], record.passed_count, record.total_count, 1 if record.safety_veto.triggered else 0)
 
         if qk not in q_meta:
             q_meta[qk] = {
-                'capability': record.capability,
+                'capabilities': list(record.capabilities),
+                'task_type': record.task_type,
                 'domain': record.domain,
             }
 
     pass_rate = total_passed / total_criteria if total_criteria > 0 else 0.0
-    weighted_pass_rate = total_weighted_score / len(records) if records else 0.0
+    n_denom = total_questions if total_questions > 0 else len(records)
+    weighted_pass_rate = total_weighted_score / n_denom if n_denom > 0 else 0.0
 
     by_capability = {
         k: _to_axis_pass_rates(v)
         for k, v in cap_acc.items()
+    }
+    by_task_type = {
+        k: _to_axis_pass_rates(v)
+        for k, v in task_acc.items()
     }
     by_domain = {
         k: _to_axis_pass_rates(v)
@@ -109,23 +100,19 @@ def build_summary(records: list[EvalRunRecord]) -> EvaluationSummary:
 
     by_question: dict[str, QuestionPassRate] = {}
     for (question_id, mode), slots in q_acc.items():
-        cp, ct, gp, gt, ep, et, sv = slots
+        p, t, sv = slots
         meta = q_meta.get((question_id, mode), {})
-        overall_p = cp + gp + ep
-        overall_t = ct + gt + et
         q_record_count = sum(
             1 for r in records if r.question_id == question_id and r.mode == mode
         )
         key = f'{question_id}:{mode}'
         by_question[key] = QuestionPassRate(
             question_id=question_id,
-            capability=meta.get('capability', ''),
+            capabilities=meta.get('capabilities', []),
+            task_type=meta.get('task_type', ''),
             domain=meta.get('domain', ''),
             runs=q_record_count,
-            overall=(overall_p, overall_t),
-            correctness=(cp, ct),
-            grounding=(gp, gt),
-            efficiency=(ep, et),
+            overall=(p, t),
             safety_veto_count=sv,
         )
 
@@ -144,6 +131,7 @@ def build_summary(records: list[EvalRunRecord]) -> EvaluationSummary:
         pass_rate=pass_rate,
         weighted_pass_rate=weighted_pass_rate,
         by_capability=by_capability,
+        by_task_type=by_task_type,
         by_domain=by_domain,
         by_question=by_question,
         by_mode=by_mode,
@@ -152,32 +140,17 @@ def build_summary(records: list[EvalRunRecord]) -> EvaluationSummary:
     )
 
 
-def _add6(slots: list[int], cp: int, ct: int, gp: int, gt: int, ep: int, et: int) -> None:
-    slots[0] += cp
-    slots[1] += ct
-    slots[2] += gp
-    slots[3] += gt
-    slots[4] += ep
-    slots[5] += et
+def _add2(slots: list[int], passed: int, total: int) -> None:
+    slots[0] += passed
+    slots[1] += total
 
 
-def _add7(slots: list[int], cp: int, ct: int, gp: int, gt: int, ep: int, et: int, sv: int) -> None:
-    slots[0] += cp
-    slots[1] += ct
-    slots[2] += gp
-    slots[3] += gt
-    slots[4] += ep
-    slots[5] += et
-    slots[6] += sv
+def _add3(slots: list[int], passed: int, total: int, sv: int) -> None:
+    slots[0] += passed
+    slots[1] += total
+    slots[2] += sv
 
 
 def _to_axis_pass_rates(raw_slots: list[int]) -> AxisPassRates:
-    cp, ct, gp, gt, ep, et = raw_slots[:6]
-    overall_p = cp + gp + ep
-    overall_t = ct + gt + et
-    return AxisPassRates(
-        correctness=(cp, ct),
-        grounding=(gp, gt),
-        efficiency=(ep, et),
-        overall=(overall_p, overall_t),
-    )
+    p, t = raw_slots[:2]
+    return AxisPassRates(overall=(p, t))

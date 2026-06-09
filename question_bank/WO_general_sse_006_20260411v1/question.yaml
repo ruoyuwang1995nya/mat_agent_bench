@@ -1,12 +1,16 @@
 id: WO_general_sse_006_20260411v1
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: battery
-intent: Summarize sulfur-containing solid-electrolyte candidates for Li-metal interfaces
-  by balancing interface stability and ionic conductivity from recent literature.
+difficulty: easy
+intent: Summarize sulfur-containing solid-electrolyte candidates for Li-metal interfaces by balancing interface 
+  stability and ionic conductivity from recent literature.
 human_prompt_seed: '请基于近年文献，推荐可用于锂金属负极界面的含硫固态电解质候选，并强调“界面稳定性 + 高离子电导”两方面的平衡。
 
-  请输出： 1) `sulfur_sse_candidates.json`：至少包含 `material`, `key_property`, `interface_stability_note`,
-  `ionic_conductivity_note`, `reference_hint`； 2) `sulfur_sse_review.md`：说明筛选逻辑、代表性体系与适用边界。
+  请输出： 1) `sulfur_sse_candidates.json`：至少包含 `material`, `key_property`, `interface_stability_note`, `ionic_conductivity_note`,
+  `reference_hint`； 2) `sulfur_sse_review.md`：说明筛选逻辑、代表性体系与适用边界。
 
   最终回答中简要给出你最推荐的 2-3 个候选及理由。'
 tags:
@@ -38,52 +42,29 @@ reference_answers:
     - 离子电导
     - 不确定性
     flags: i
-- key: turn_budget
-  value:
-    max: 10
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 8000
 scoring_checklist:
 - id: candidates_json
   criterion: Agent writes `sulfur_sse_candidates.json` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: review_md
   criterion: Agent writes `sulfur_sse_review.md` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: candidates_required_tokens
   criterion: Candidate JSON includes required per-material fields.
-  axis: correctness
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: review_required_tokens
-  criterion: Review explains the conductivity-stability tradeoff with uncertainty
-    notes.
-  axis: correctness
+  criterion: Review explains the conductivity-stability tradeoff with uncertainty notes.
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: grounding_source
-  criterion: Deliverables are grounded in literature-oriented evidence and avoid unsupported
-    performance claims.
-  axis: grounding
+  criterion: Deliverables are grounded in literature-oriented evidence and avoid unsupported performance claims.
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical tool calls with the same parameter set.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

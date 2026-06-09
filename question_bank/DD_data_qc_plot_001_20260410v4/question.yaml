@@ -1,15 +1,17 @@
 id: DD_data_qc_plot_001_20260410v4
-capability: data_diagnosis
+task_type: material_characterization
+capabilities:
+- data_handling
+- scientific_reasoning
 domain: agnostic
-intent: Build a data-grounded plotting and QC workflow from CSV with machine-checkable
-  artifacts, numeric QC metrics, and chart-priority decisions.
-human_prompt_seed: "工作区中已提供 `experiment_metrics.csv`。\n\n请先读取该文件，再完成以下任务：\n1) 生成 `fig_spec.json`：给出\
-  \ 3 种图（折线、散点、箱线）的绘图规格，每个规格至少包含 `chart_type`、`x`、`y`、`group_by`、`title`、`reason`，且字段名必须来自\
-  \ CSV。\n2) 生成 `qc_metrics.json`：至少包含以下键：\n   - `row_count`\n   - `missing_count_yield_pct`\n\
-  \   - `missing_rate_yield_pct`\n   - `outlier_rule`\n   - `candidate_outliers_yield_pct`\n\
-  \   - `unit_map`\n3) 生成 `data_qc_report.md`：包含缺失值检查、异常值规则（需写明 IQR 思路）、单位一致性检查、以及最终交付格式建议。\n\
-  4) 生成 `chart_priority.md`：给出 3 种图的优先级排序（P1/P2/P3）与使用边界。\n5) 在最终回答中简要说明你为何选择这 3 种图，并指出当前数据的至少\
-  \ 2 个局限。\n\n注意：不要虚构 CSV 中不存在的字段名。请在当前目录写出上述四个文件。\n"
+difficulty: easy
+intent: Build a data-grounded plotting and QC workflow from CSV with machine-checkable artifacts, numeric QC metrics, 
+  and chart-priority decisions.
+human_prompt_seed: "工作区中已提供 `experiment_metrics.csv`。\n\n请先读取该文件，再完成以下任务：\n1) 生成 `fig_spec.json`：给出 3 种图（折线、散点、箱线）的绘图规格，每个规格至少包含
+  `chart_type`、`x`、`y`、`group_by`、`title`、`reason`，且字段名必须来自 CSV。\n2) 生成 `qc_metrics.json`：至少包含以下键：\n   - `row_count`\n   -
+  `missing_count_yield_pct`\n   - `missing_rate_yield_pct`\n   - `outlier_rule`\n   - `candidate_outliers_yield_pct`\n   -
+  `unit_map`\n3) 生成 `data_qc_report.md`：包含缺失值检查、异常值规则（需写明 IQR 思路）、单位一致性检查、以及最终交付格式建议。\n4) 生成 `chart_priority.md`：给出 3 种图的优先级排序（P1/P2/P3）与使用边界。\n\
+  5) 在最终回答中简要说明你为何选择这 3 种图，并指出当前数据的至少 2 个局限。\n\n注意：不要虚构 CSV 中不存在的字段名。请在当前目录写出上述四个文件。\n"
 tags:
 - meta_userlog
 - wf_report
@@ -90,98 +92,75 @@ reference_answers:
     filename: data_qc_report.md
     pattern: (?i)(1\\.5\\s*\\*\\s*IQR|IQR.*Q1.*Q3)
     flags: i
-- key: turn_budget
-  value:
-    max: 7
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 6000
 scoring_checklist:
 - id: fig_spec_artifact
   criterion: Agent writes `fig_spec.json` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: qc_metrics_artifact
   criterion: Agent writes `qc_metrics.json` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: qc_report_artifact
   criterion: Agent writes `data_qc_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: chart_priority_artifact
   criterion: Agent writes `chart_priority.md` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: fig_spec_required_tokens
-  criterion: '`fig_spec.json` contains three chart types and is grounded in provided
-    CSV column names.'
-  axis: correctness
+  criterion: '`fig_spec.json` contains three chart types and is grounded in provided CSV column names.'
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: fig_spec_required_keys_regex
-  criterion: '`fig_spec.json` includes complete chart-spec keys (`chart_type/x/y/group_by/title/reason`)
-    in chart objects.'
-  axis: correctness
+  criterion: '`fig_spec.json` includes complete chart-spec keys (`chart_type/x/y/group_by/title/reason`) in chart objects.'
   verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
 - id: qc_metrics_required_tokens
   criterion: '`qc_metrics.json` includes required QC metric keys.'
-  axis: correctness
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: qc_metrics_row_count_regex
   criterion: '`qc_metrics.json` reports the correct row count (10).'
-  axis: correctness
   verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
 - id: qc_metrics_missing_count_regex
   criterion: '`qc_metrics.json` reports missing count for `yield_pct` as 1.'
-  axis: correctness
   verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
 - id: qc_metrics_missing_rate_regex
-  criterion: '`qc_metrics.json` reports missing rate for `yield_pct` around 0.1 /
-    10 / 10%.'
-  axis: correctness
+  criterion: '`qc_metrics.json` reports missing rate for `yield_pct` around 0.1 / 10 / 10%.'
   verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
 - id: qc_report_required_tokens
-  criterion: '`data_qc_report.md` includes QC essentials (missing values, outliers,
-    unit consistency, and deliverable format).'
-  axis: correctness
+  criterion: '`data_qc_report.md` includes QC essentials (missing values, outliers, unit consistency, and deliverable format).'
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: qc_report_missing_rate_regex
   criterion: '`data_qc_report.md` reports missing-rate style check explicitly.'
-  axis: correctness
   verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
 - id: qc_report_outlier_regex
   criterion: '`data_qc_report.md` explicitly states an IQR-style outlier rule.'
-  axis: correctness
   verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
 - id: grounding_source
-  criterion: Final answer and generated files are grounded in `experiment_metrics.csv`
-    columns and do not invent nonexistent fields.
-  axis: grounding
+  criterion: Final answer and generated files are grounded in `experiment_metrics.csv` columns and do not invent 
+    nonexistent fields.
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical tool calls with the same parameter set.
-  axis: efficiency
-  verify: no_retries
-- id: efficiency_judge
-  criterion: The response converges to required deliverables without redundant exploratory
-    detours.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-  weight: 1.2
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
-  axis: efficiency
-  verify: token_budget
-  weight: 1.2
+  capability: scientific_grounding
+  weight: 0.5

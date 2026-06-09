@@ -1,0 +1,126 @@
+id: SIM_neb_002_20260601
+task_type: simulation
+capabilities:
+- structure_manipulation
+- workflow_orchestration
+- tool_utilization
+- scientific_reasoning
+- data_handling
+- scientific_grounding
+domain: catalysis
+difficulty: medium
+intent: Set up a VASP Nudged Elastic Band (NEB) calculation to compute the water dissociation energy barrier on the 
+  WO₂(01-1) surface, using the paper's reported transition state methodology and DFT parameters.
+human_prompt_seed: Using the provided WO₂ surface slab (WO2_slab.vasp), set up a VASP NEB calculation to compute the 
+  water dissociation energy barrier (H₂O* → H* + OH*) on the WO₂(01-1) surface. Read the NEB and DFT parameters from 
+  neb_parameters.txt. Generate the initial state (POSCAR), final state (POSCAR_final), and all intermediate image 
+  directories (01-05) with their respective INCAR, KPOINTS, and POTCAR files. Also create a NEB-specific INCAR with 
+  climbing-image settings. Write a summary of the NEB setup to neb_setup.txt describing the reaction coordinate, number 
+  of images, and expected barrier magnitude.
+tags:
+- eng_vasp
+- neb
+- water_dissociation
+- activation_barrier
+data_files:
+- key: wo2_slab_poscar
+  path: WO2_slab.vasp
+  description: POSCAR for a WO₂(01-1) surface slab (2×2 supercell) used as the initial state for the NEB calculation of 
+    water dissociation.
+- key: neb_parameters
+  path: neb_parameters.txt
+  description: 'NEB-specific parameters: 5 images, climbing-image NEB method, IOP=3 for quick-min optimizer, plus the standard
+    DFT parameters from the paper.'
+reference_answers:
+- key: artifact_neb_setup
+  value: neb_setup.txt
+- key: artifact_initial
+  value: 00/POSCAR
+- key: artifact_final
+  value: 06/POSCAR
+- key: artifact_image_dirs
+  value: 01,02,03,04,05
+- key: artifact_neb_incar
+  value: INCAR
+- key: text_neb_images
+  value:
+    flags: []
+    tokens:
+    - IMAGES = 5
+    - IMAGES=5
+    filename: INCAR
+- key: text_climbing_image
+  value:
+    flags: []
+    tokens:
+    - LCLIMB = .TRUE.
+    - LCLIMB=True
+    - LCLIMB = True
+    filename: INCAR
+- key: text_iopt
+  value:
+    flags: []
+    tokens:
+    - IOPT = 3
+    - IOPT=3
+    filename: INCAR
+- key: grounding_source
+  value: neb_parameters.txt
+- key: turn_budget
+  value:
+    max: 10
+- key: no_retries
+  value:
+    max: 1
+- key: duration_budget
+  value:
+    max: 300000
+- key: token_budget_total
+  value:
+    max: 100000
+scoring_checklist:
+- id: artifact_neb_setup
+  verify: artifact_exists
+  weight: 0.5
+  criterion: '[Must] neb_setup.txt documents the NEB reaction coordinate and methodology'
+  capability: data_handling
+- id: artifact_initial
+  verify: artifact_exists
+  weight: 0.5
+  criterion: '[Must] Initial state POSCAR (00/POSCAR) exists with adsorbed H₂O'
+  capability: structure_manipulation
+- id: artifact_final
+  verify: artifact_exists
+  weight: 0.5
+  criterion: '[Must] Final state POSCAR (06/POSCAR) exists with dissociated H* + OH*'
+  capability: structure_manipulation
+- id: artifact_image_dirs
+  verify: artifact_exists
+  weight: 0.5
+  criterion: '[Must] All 5 intermediate image directories (01-05) exist'
+  capability: workflow_orchestration
+- id: artifact_neb_incar
+  verify: artifact_exists
+  weight: 0.5
+  criterion: '[Must] NEB INCAR file exists with correct settings'
+  capability: tool_utilization
+- id: text_neb_images
+  verify: text_file_contains_all
+  weight: 0.5
+  criterion: '[Must] INCAR contains IMAGES = 5 as specified in source parameters'
+  capability: tool_utilization
+- id: text_climbing_image
+  verify: text_file_contains_all
+  weight: 0.5
+  criterion: '[Must] INCAR contains LCLIMB = .TRUE. for climbing-image NEB'
+  capability: scientific_reasoning
+- id: text_iopt
+  verify: text_file_contains_all
+  weight: 0.5
+  criterion: '[Must] INCAR contains IOPT = 3 for quick-min optimizer'
+  capability: scientific_reasoning
+- id: grounding_source
+  verify: llm_binary_judge
+  weight: 0.5
+  criterion: '[Must] The NEB setup correctly traces to the paper''s methodology for computing water dissociation barriers'
+  capability: scientific_grounding

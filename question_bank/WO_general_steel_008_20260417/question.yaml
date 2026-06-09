@@ -1,13 +1,16 @@
 id: WO_general_steel_008_20260417
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: alloy
-intent: Orchestrate Ni-content sweeps for duplex stainless-steel compositions, produce
-  machine-checkable tensile predictions, and summarize trend plus uncertainty in a
-  report.
+difficulty: easy
+intent: Orchestrate Ni-content sweeps for duplex stainless-steel compositions, produce machine-checkable tensile 
+  predictions, and summarize trend plus uncertainty in a report.
 human_prompt_seed: '研究 2209/ER2209 近似成分中 Ni 含量变化对抗拉强度预测的影响。
 
-  请输出： 1) `duplex_ni_tensile_predictions.json`：至少包含 `formula`, `ni_content`, `predicted_uts`,
-  `trend_label`； 2) `duplex_ni_tensile_analysis.md`：说明 Ni 含量变化导致强度变化的机理解释与不确定性。
+  请输出： 1) `duplex_ni_tensile_predictions.json`：至少包含 `formula`, `ni_content`, `predicted_uts`, `trend_label`； 2) `duplex_ni_tensile_analysis.md`：说明
+  Ni 含量变化导致强度变化的机理解释与不确定性。
 
   最终回答请给出”Ni 含量变化-强度变化”的总体趋势判断。'
 tags:
@@ -34,51 +37,29 @@ reference_answers:
     - 抗拉强度
     - 相比例
     - 不确定性
-- key: turn_budget
-  value:
-    max: 14
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 8000
 scoring_checklist:
 - id: tensile_json
   criterion: Agent writes `duplex_ni_tensile_predictions.json` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: analysis_md
   criterion: Agent writes `duplex_ni_tensile_analysis.md` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: tensile_tokens
   criterion: Prediction JSON includes required composition-strength fields.
-  axis: correctness
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: analysis_tokens
   criterion: Analysis document explains Ni-strength trend with uncertainty caveats.
-  axis: correctness
   verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
 - id: grounding_source
-  criterion: Deliverables are grounded in generated prediction artifacts and avoid
-    unsupported metallurgy claims.
-  axis: grounding
+  criterion: Deliverables are grounded in generated prediction artifacts and avoid unsupported metallurgy claims.
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical tool calls with the same parameter set.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

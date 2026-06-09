@@ -1,12 +1,16 @@
 id: IG_incar_015_20260508
-capability: input_generation
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
 domain: agnostic
-intent: 'Generate VASP INCAR for defect calculation of I-on-S substitution in BiSI
-  with HSE06+SOC. Heavy element Bi requires SOC.
+difficulty: easy
+intent: 'Generate VASP INCAR for defect calculation of I-on-S substitution in BiSI with HSE06+SOC. Heavy element Bi requires
+  SOC.
 
   '
-human_prompt_seed: 为 BiSI 中 I 替位 S 缺陷体系生成一个 HSE06+SOC 缺陷计算的 VASP INCAR。含重元素 Bi 需要自旋轨道耦合，缺陷计算需要固定晶胞形状，使用
-  HSE06 获取准确缺陷能级。需要离子弛豫。将完整的 INCAR 写入当前目录下的 `INCAR` 文件。
+human_prompt_seed: 为 BiSI 中 I 替位 S 缺陷体系生成一个 HSE06+SOC 缺陷计算的 VASP INCAR。含重元素 Bi 需要自旋轨道耦合，缺陷计算需要固定晶胞形状，使用 HSE06 
+  获取准确缺陷能级。需要离子弛豫。将完整的 INCAR 写入当前目录下的 `INCAR` 文件。
 tags:
 - eng_vasp
 reference_answers:
@@ -58,84 +62,67 @@ reference_answers:
     filename: INCAR
     pattern: ^\s*LNONCOLLINEAR\s*=\s*\.?(?:TRUE|T)\.?
     flags: im
-- key: turn_budget
-  value:
-    max: 8
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 15000
 - key: reasonable_params
   value:
     filename: INCAR
 scoring_checklist:
 - id: incar_artifact
   criterion: INCAR file is generated.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: incar_critical_tokens
   criterion: INCAR contains all critical parameter keywords.
-  axis: correctness
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: critical_HFSCREEN
   criterion: INCAR sets HFSCREEN = 0.2 (critical param).
-  axis: correctness
   verify: text_file_regex
+  capability: tool_utilization
+  weight: 0.5
 - id: critical_IBRION
   criterion: INCAR sets IBRION = 2 (critical param).
-  axis: correctness
   verify: text_file_regex
+  capability: tool_utilization
+  weight: 0.5
 - id: critical_ISIF
   criterion: INCAR sets ISIF = 2 (critical param).
-  axis: correctness
   verify: text_file_regex
+  capability: tool_utilization
+  weight: 0.5
 - id: critical_ISPIN
   criterion: INCAR sets ISPIN = 2 (critical param).
-  axis: correctness
   verify: text_file_regex
+  capability: scientific_reasoning
+  weight: 0.5
 - id: critical_LHFCALC
   criterion: INCAR sets LHFCALC = True (critical param).
-  axis: correctness
   verify: text_file_regex
+  capability: tool_utilization
+  weight: 0.5
 - id: critical_LSORBIT
   criterion: INCAR sets LSORBIT = True (critical param).
-  axis: correctness
   verify: text_file_regex
+  capability: tool_utilization
+  weight: 0.5
 - id: critical_LNONCOLLINEAR
-  criterion: INCAR sets LNONCOLLINEAR = .TRUE. as required for SOC calculations (LSORBIT
-    implies non-collinear magnetism).
-  axis: correctness
+  criterion: INCAR sets LNONCOLLINEAR = .TRUE. as required for SOC calculations (LSORBIT implies non-collinear 
+    magnetism).
   verify: text_file_regex
+  capability: scientific_reasoning
+  weight: 0.5
 - id: reasonable_params
-  criterion: The INCAR uses physically reasonable general settings for a VASP hybrid
-    DFT (HSE06) calculation. ENCUT is present (unless not relevant), EDIFF is present
-    with a reasonable value, PREC is set. Machine-specific params (KPAR, NCORE, NPAR)
-    are optional and should not be penalized if absent or different from reference.
-  axis: correctness
+  criterion: The INCAR uses physically reasonable general settings for a VASP hybrid DFT (HSE06) calculation. ENCUT is 
+    present (unless not relevant), EDIFF is present with a reasonable value, PREC is set. Machine-specific params (KPAR,
+    NCORE, NPAR) are optional and should not be penalized if absent or different from reference.
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: grounding_source
-  criterion: The generated INCAR is grounded in the provided prompt data (material
-    system, calculation type, critical parameters) rather than hallucinated. Judge
-    solely from the final answer and stated file content; do not fail because the
-    tool-call log omits MCP, web_search, or any specific tool.
-  axis: grounding
+  criterion: The generated INCAR is grounded in the provided prompt data (material system, calculation type, critical 
+    parameters) rather than hallucinated. Judge solely from the final answer and stated file content; do not fail 
+    because the tool-call log omits MCP, web_search, or any specific tool.
   verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: efficiency_judge
-  criterion: The agent produced the INCAR efficiently without unnecessary tool calls,
-    redundant queries, or irrelevant exploration.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: duration_budget
-  criterion: Wall-clock run duration does not exceed benchmark ceiling.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

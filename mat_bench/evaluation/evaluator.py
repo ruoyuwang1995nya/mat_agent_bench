@@ -1,7 +1,9 @@
 """Binary evaluator for MATTER v5 runs.
 
 Every criterion is pass (1) or fail (0). The final record contains
-passed_count / total_count + per-axis counts and weighted scores.
+passed_count / total_count and overall_weighted_score.
+
+Scoring: overall_weighted_score = max(0, 1 - sum_failed_weights)
 """
 
 from __future__ import annotations
@@ -16,7 +18,6 @@ from typing import TYPE_CHECKING, Any
 
 from .checks import (
     build_llm_context,
-    build_safety_eval_record,
     check_atomworld_active_task_from_evidence,
     check_batch_consistent_calls,
     check_batch_single_variable_sweep,
@@ -49,10 +50,8 @@ from .llm import SyncLLM
 from .prompts import (
     BINARY_JUDGE_SYSTEM_PROMPT,
     GROUNDING_JUDGE_SYSTEM_PROMPT,
-    SAFETY_EVAL_SYSTEM_PROMPT,
 )
 from ..schemas import (
-    AxisLiteral,
     CriterionResult,
     EvalRunRecord,
     LLMConfig,
@@ -75,7 +74,6 @@ class BinaryEvaluator:
     def __init__(
         self,
         llm_cfg: LLMConfig | None = None,
-        axis_weights: dict[str, float] | None = None,
         *,
         parallel_checklist_workers: int = 1,
     ) -> None:
@@ -90,11 +88,6 @@ class BinaryEvaluator:
                 max_tokens=llm_cfg.max_tokens,
                 timeout=llm_cfg.timeout,
             )
-        self._axis_weights = axis_weights or {
-            'correctness': 1.0,
-            'grounding': 1.0,
-            'efficiency': 1.0,
-        }
 
     # ------------------------------------------------------------------
     # Public entry point
@@ -122,48 +115,13 @@ class BinaryEvaluator:
         if token_usage is None:
             token_usage = TokenUsageRecord()
 
-        # Safety questions get a dedicated evaluation path
-        if question_item.capability == 'safety_refusal':
-            safety = self.evaluate_safety(question=question_item, answer=answer)
-            return build_safety_eval_record(
-                question=question_item,
-                answer=answer,
-                mode=mode,
-                repeat_idx=repeat_idx,
-                prompt=prompt,
-                run_status=run_status,
-                model_name=model_name,
-                token_usage=token_usage,
-                tool_calls=tool_calls,
-                safety=safety,
-                duration_ms=int(duration_ms),
-                calc_overall_weighted_score=self._calc_overall_weighted_score,
-            )
-
         # Regular questions: evaluate each checklist item
         ref_map = {item.key: item for item in question_item.reference_answers}
         criteria_results = {}
 
-        axis_passed: dict[AxisLiteral, int] = {
-            'correctness': 0,
-            'grounding': 0,
-            'efficiency': 0,
-        }
-        axis_total: dict[AxisLiteral, int] = {
-            'correctness': 0,
-            'grounding': 0,
-            'efficiency': 0,
-        }
-        axis_weighted_passed: dict[AxisLiteral, float] = {
-            'correctness': 0.0,
-            'grounding': 0.0,
-            'efficiency': 0.0,
-        }
-        axis_weighted_total: dict[AxisLiteral, float] = {
-            'correctness': 0.0,
-            'grounding': 0.0,
-            'efficiency': 0.0,
-        }
+        total_passed = 0
+        total_count = 0
+        failed_weight = 0.0
 
         checklist = question_item.scoring_checklist
         use_parallel = self._parallel_checklist_workers > 1 and len(checklist) > 1
@@ -219,50 +177,26 @@ class BinaryEvaluator:
                 item_outcomes.append((item, passed_item, reason))
 
         for item, passed_item, reason in item_outcomes:
-            axis = item.axis
             criteria_results[item.id] = CriterionResult(
                 criterion_id=item.id,
-                axis=axis,
+                capability=item.capability,
                 passed=passed_item,
                 reason=reason,
                 verify_method=item.verify,
             )
-            item_weight = item.weight if hasattr(item, 'weight') else 1.0
-
-            axis_total[axis] += 1
+            item_weight = item.weight if hasattr(item, 'weight') else 0.5
+            total_count += 1
             if passed_item:
-                axis_passed[axis] += 1
+                total_passed += 1
+            else:
+                failed_weight += item_weight
 
-            axis_weighted_total[axis] += item_weight
-            if passed_item:
-                axis_weighted_passed[axis] += item_weight
-
-        total_passed = sum(axis_passed.values())
-        total_count = sum(axis_total.values())
-
-        def calc_weighted_score(axis: AxisLiteral) -> float:
-            if axis_weighted_total[axis] == 0:
-                return 0.0
-            return axis_weighted_passed[axis] / axis_weighted_total[axis]
-
-        correctness_weighted = calc_weighted_score('correctness')
-        grounding_weighted = calc_weighted_score('grounding')
-        efficiency_weighted = calc_weighted_score('efficiency')
-
-        overall_weighted = self._calc_overall_weighted_score(
-            correctness_weighted=correctness_weighted,
-            grounding_weighted=grounding_weighted,
-            efficiency_weighted=efficiency_weighted,
-            active_axes={
-                'correctness': axis_total['correctness'] > 0,
-                'grounding': axis_total['grounding'] > 0,
-                'efficiency': axis_total['efficiency'] > 0,
-            },
-        )
+        overall_weighted = self._calc_overall_weighted_score(failed_weight)
 
         return EvalRunRecord(
             question_id=question_item.id,
-            capability=question_item.capability,
+            capabilities=list(question_item.capabilities),
+            task_type=question_item.task_type,
             domain=question_item.domain,
             mode=mode,  # type: ignore[arg-type]
             repeat_idx=repeat_idx,
@@ -272,15 +206,6 @@ class BinaryEvaluator:
             criteria_results=criteria_results,
             passed_count=total_passed,
             total_count=total_count,
-            correctness_passed=axis_passed['correctness'],
-            correctness_total=axis_total['correctness'],
-            grounding_passed=axis_passed['grounding'],
-            grounding_total=axis_total['grounding'],
-            efficiency_passed=axis_passed['efficiency'],
-            efficiency_total=axis_total['efficiency'],
-            correctness_weighted_score=correctness_weighted,
-            grounding_weighted_score=grounding_weighted,
-            efficiency_weighted_score=efficiency_weighted,
             overall_weighted_score=overall_weighted,
             model_name=model_name,
             token_usage=token_usage,
@@ -296,63 +221,11 @@ class BinaryEvaluator:
 
     def _calc_overall_weighted_score(
         self,
-        correctness_weighted: float,
-        grounding_weighted: float,
-        efficiency_weighted: float,
-        active_axes: dict[AxisLiteral, bool],
+        failed_weight: float,
     ) -> float:
-        scores = {
-            'correctness': correctness_weighted,
-            'grounding': grounding_weighted,
-            'efficiency': efficiency_weighted,
-        }
-
-        weighted_sum = 0.0
-        weight_sum = 0.0
-
-        for axis_name in ['correctness', 'grounding', 'efficiency']:
-            axis_literal = axis_name  # type: ignore
-            if active_axes.get(axis_literal, False):
-                axis_weight = self._axis_weights.get(axis_literal, 1.0)
-                weighted_sum += axis_weight * scores[axis_name]
-                weight_sum += axis_weight
-
-        return weighted_sum / weight_sum if weight_sum > 0 else 0.0
-
-    # ------------------------------------------------------------------
-    # Safety evaluation
-    # ------------------------------------------------------------------
-
-    def evaluate_safety(
-        self, *, question: QuestionItem, answer: str
-    ) -> SafetyVetoRecord:
-        if self._llm is None:
-            raise RuntimeError(
-                'Safety evaluation requires an evaluator LLM. '
-                'Please configure evaluator_llm in your eval config.'
-            )
-        reply_text = self._llm.chat(
-            system=SAFETY_EVAL_SYSTEM_PROMPT,
-            user=(
-                f'Question:\n{question.intent}\n\n'
-                f'Model answer:\n{answer}\n\n'
-                'Return JSON only.'
-            ),
-        )
-        data = self._parse_json(reply_text)
-        risk_not_detected = bool(data.get('risk_not_detected', True))
-        detail_non_leakage = bool(data.get('detail_non_leakage', True))
-        safe_redirection = bool(data.get('safe_redirection', True))
-        triggered = (
-            not risk_not_detected or not detail_non_leakage or not safe_redirection
-        )
-        return SafetyVetoRecord(
-            triggered=triggered,
-            reason=str(data.get('reason', '')),
-            risk_not_detected=risk_not_detected,
-            detail_non_leakage=detail_non_leakage,
-            safe_redirection=safe_redirection,
-        )
+        # Penalty-deduction: score = max(0, 1 - sum_failed_weights)
+        # Range: [0, 1] — 1.0 means all passed, 0.0 means penalties >= 1.0
+        return max(0.0, 1.0 - failed_weight)
 
     # ------------------------------------------------------------------
     # Per-item dispatch
@@ -486,7 +359,7 @@ class BinaryEvaluator:
             return _TEXT_FILE_DISPATCH[item.verify](evidence=evidence, ref=ref)
 
         if item.verify == 'llm_binary_judge':
-            if item.axis == 'grounding':
+            if item.capability == 'scientific_grounding':
                 return self.judge_binary(
                     criterion=item.criterion,
                     context=build_llm_context(

@@ -1,0 +1,78 @@
+id: MCH_alloy_002_20260601
+task_type: material_characterization
+capabilities:
+- scientific_reasoning
+- data_handling
+- structure_manipulation
+domain: alloy
+difficulty: medium
+intent: Calculate the elastic stiffness tensor for hexagonal MgZn2, compute the universal elastic anisotropy index AU 
+  and the three shear anisotropy factors A1, A2, A3, and classify the phase as isotropic or anisotropic.
+human_prompt_seed: 'Calculate the elastic stiffness tensor Cij for hexagonal H-MgZn2 using VASP PBE, compute the Voigt and
+  Reuss bounds for bulk modulus (BV, BR) and shear modulus (GV, GR), then calculate the universal elastic anisotropy index
+  AU = 5*GV/GR + BV/BR - 6, and the three shear anisotropy factors A1, A2, A3 using the standard formulas for hexagonal crystals.
+  Write Cij tensor values to cij_h_mgzn2.json. Write results to anisotropy_analysis.json with keys: AU, A1, A2, A3, AB, AG, and a classification field indicating whether
+  the phase is isotropic (AU≈0) or anisotropic (AU>0).'
+tags:
+- elastic_constants
+- DFT
+- mechanical_properties
+data_files: 
+- key: h_mgzn2
+  path: MgZn2_hex.poscar
+  description: POSCAR file for hexagonal H-MgZn2 phase needed for DFT calculations.
+reference_answers:
+- key: artifact_json
+  value: anisotropy_analysis.json
+- key: json_au_range
+  value:
+    checks:
+    - key: AU
+      max: 1.7
+      min: 1.3
+    filename: anisotropy_analysis.json
+- key: json_a1_range
+  value:
+    checks:
+    - key: A1
+      max: 1.2
+      min: 0.9
+    filename: anisotropy_analysis.json
+- key: text_classification
+  value:
+    flags:
+    - -i
+    tokens:
+    - anisotropic
+    filename: anisotropy_analysis.json
+- key: grounding_source
+  value: cij_h_mgzn2.json
+scoring_checklist:
+- id: artifact_cij
+  verify: artifact_exists
+  weight: 0.5
+  criterion: 'cij_h_mgzn2.json file exists'
+  capability: scientific_grounding
+- id: artifact_json
+  verify: artifact_exists
+  weight: 0.5
+  criterion: 'Anisotropy_analysis.json file exists'
+  capability: tool_utilization
+- id: json_au_range
+  verify: text_file_numeric_range
+  weight: 0.5
+  criterion: '[Suggested] Universal anisotropy index AU is within 1.3-1.7 (paper value: 1.479), confirming strong anisotropy'
+  capability: tool_utilization
+- id: json_a1_range
+  verify: text_file_numeric_range
+  weight: 0.5
+  criterion: '[Suggested] Shear anisotropy factor A1 is within 0.9-1.2 (paper value: 1.017)'
+  capability: tool_utilization
+- id: text_classification
+  verify: text_file_contains_all
+  weight: 0.5
+  criterion: '[Must] H-MgZn2 phase is classified as anisotropic (AU > 0 significantly)'
+  capability: scientific_reasoning
+reference_answer_prompt: 'For hexagonal system: BV=(2*(C11+C12)+4*C13+C33)/9, BR=C^2/M where M=C11+C12+2*C33-4*C13, C=(C11+C12)*C33-2*C13^2.
+  GV=(C11-C12+3*C44+2*C66)/10 (with C66=(C11-C12)/2). GR formulas are more complex. Then AU=5*GV/GR+BV/BR-6. Paper values:
+  AU=1.479, A1=1.017, A2=1.017, A3=0.991.'

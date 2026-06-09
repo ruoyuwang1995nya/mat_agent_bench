@@ -57,7 +57,6 @@ def grade_question(
     tool_calls: list[dict[str, Any]] | None = None,
     evidence: EvidenceBundle | None = None,
     llm_cfg: LLMConfig | None = None,
-    axis_weights: dict[str, float] | None = None,
     mode: str = 'direct',
     repeat_idx: int = 0,
     prompt: str = '',
@@ -70,7 +69,6 @@ def grade_question(
     """Grade a single question and return a QuestionReport."""
     evaluator = BinaryEvaluator(
         llm_cfg=llm_cfg,
-        axis_weights=axis_weights,
         parallel_checklist_workers=parallel_checklist_workers,
     )
     record = evaluator.evaluate(
@@ -104,13 +102,23 @@ def grade_run(
     raw_runs_path: Path,
     output_dir: Path | None = None,
     prefix: str = '',
+    total_questions: int = 0,
 ) -> RunReport:
-    """Load records from a JSONL file, aggregate, and write reports."""
+    """Load records from a JSONL file, aggregate, and write reports.
+
+    Args:
+        raw_runs_path: Path to the raw_runs.jsonl file.
+        output_dir: Where to write report files (defaults to same dir).
+        prefix: Optional filename prefix for report files.
+        total_questions: Total questions in the benchmark bank. When > 0,
+            weighted_pass_rate = sum(scores) / total_questions so unanswered
+            questions are penalized. Defaults to averaging over answered only.
+    """
     records = load_records_from_jsonl(raw_runs_path)
     if not records:
         raise ValueError(f'no valid records found in {raw_runs_path}')
 
-    summary = build_summary(records)
+    summary = build_summary(records, total_questions)
     target_dir = output_dir or raw_runs_path.parent
 
     report_paths = write_reports(

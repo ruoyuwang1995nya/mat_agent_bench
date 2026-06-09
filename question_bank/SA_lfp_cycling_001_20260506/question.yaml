@@ -1,6 +1,10 @@
 id: SA_lfp_cycling_001_20260506
-capability: scientific_analysis
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
 domain: battery
+difficulty: easy
 intent: Analyze LiFePO4 half-cell cycling data from a Neware workbook.
 human_prompt_seed: '请下载并分析以下通过 OSS URL 提供的 Neware 工作簿：
 
@@ -10,22 +14,23 @@ human_prompt_seed: '请下载并分析以下通过 OSS URL 提供的 Neware 工�
 
   请完成以下分析：
 
-  1. 读取循环汇总数据，整理前若干圈的充放电容量、比容量和库伦效率； 2. 报告首圈放电比容量和首圈库伦效率； 3. 报告第 10 圈放电比容量，并以第 2 圈为较稳定的早期参考计算容量保持情况；
-  4. 判断该数据是否表现出明显首圈不可逆损失或早期活化/衰减特征； 5. 简要说明你如何处理工作簿中的多张表。
+  1. 读取循环汇总数据，整理前若干圈的充放电容量、比容量和库伦效率； 2. 报告首圈放电比容量和首圈库伦效率； 3. 报告第 10 圈放电比容量，并以第 2 圈为较稳定的早期参考计算容量保持情况； 4. 判断该数据是否表现出明显首圈不可逆损失或早期活化/衰减特征；
+  5. 简要说明你如何处理工作簿中的多张表。
 
-  最终回答末尾请追加 `<eval_results>...</eval_results>` JSON，至少包含： `cycle1.discharge_capacity_mAh_g`,
-  `cycle1.coulombic_efficiency_pct`, `cycle10.discharge_capacity_mAh_g`, `cycle10.retention_vs_cycle2_pct`。
+  最终回答末尾请追加 `<eval_results>...</eval_results>` JSON，至少包含： `cycle1.discharge_capacity_mAh_g`, `cycle1.coulombic_efficiency_pct`,
+  `cycle10.discharge_capacity_mAh_g`, `cycle10.retention_vs_cycle2_pct`。
 
   JSON 中字段名形如 `a.b` 表示嵌套对象（顶层 `a` 下的子键 `b`），请使用嵌套结构而不要写成扁平字符串键。结构示例（数值仅占位）：
 
-  ```json {"cycle1": {"discharge_capacity_mAh_g": 0, "coulombic_efficiency_pct": 0},
-  "cycle10": {"discharge_capacity_mAh_g": 0, "retention_vs_cycle2_pct": 0}} ```'
+  ```json {"cycle1": {"discharge_capacity_mAh_g": 0, "coulombic_efficiency_pct": 0}, "cycle10": {"discharge_capacity_mAh_g":
+  0, "retention_vs_cycle2_pct": 0}} ```'
 tags:
 - char_battery_cycling
 data_files:
 - key: cycling_workbook
   path: lfp_cycling.xlsx
-  oss_url: https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_lfp_cycling_001/1778083319_002_6(--).xlsx
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_lfp_cycling_001/1778083319_002_6(--).xlsx
   description: Neware LiFePO4 half-cell cycling workbook.
 reference_answers:
 - key: cycle1_capacity
@@ -52,57 +57,40 @@ reference_answers:
     target: 93.39356469609517
     tolerance: 8.0
   unit: percent
-- key: turn_budget
-  value:
-    max: 30
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 20000
 scoring_checklist:
 - id: cycle1_capacity
-  criterion: The first-cycle discharge specific capacity reported in eval_results
-    is consistent with the uploaded cycling workbook.
-  axis: correctness
+  criterion: The first-cycle discharge specific capacity reported in eval_results is consistent with the uploaded 
+    cycling workbook.
   verify: answer_json_numeric
-  weight: 1.5
+  weight: 0.5
+  capability: data_handling
 - id: cycle1_ce
-  criterion: The first-cycle coulombic efficiency reported in eval_results is consistent
-    with the uploaded cycling workbook.
-  axis: correctness
+  criterion: The first-cycle coulombic efficiency reported in eval_results is consistent with the uploaded cycling 
+    workbook.
   verify: answer_json_numeric
-  weight: 1.5
+  weight: 0.5
+  capability: data_handling
 - id: cycle10_capacity
-  criterion: The cycle-10 discharge specific capacity reported in eval_results is
-    consistent with the uploaded cycling workbook.
-  axis: correctness
+  criterion: The cycle-10 discharge specific capacity reported in eval_results is consistent with the uploaded cycling 
+    workbook.
   verify: answer_json_numeric
+  capability: data_handling
+  weight: 0.5
 - id: cycle10_retention
-  criterion: The cycle-10 retention value reported in eval_results is consistent with
-    using an early stable cycle as reference.
-  axis: correctness
+  criterion: The cycle-10 retention value reported in eval_results is consistent with using an early stable cycle as 
+    reference.
   verify: answer_json_numeric
+  capability: data_handling
+  weight: 0.5
 - id: cycling_interpretation
-  criterion: The final answer identifies the low first-cycle efficiency and summarizes
-    early cycling behavior without inventing cycles not present in the workbook.
-  axis: correctness
+  criterion: The final answer identifies the low first-cycle efficiency and summarizes early cycling behavior without 
+    inventing cycles not present in the workbook.
   verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5
 - id: grounding_source
-  criterion: The reported metrics are derived from the uploaded Neware workbook and
-    distinguish summary sheets from raw record sheets.
-  axis: grounding
+  criterion: The reported metrics are derived from the uploaded Neware workbook and distinguish summary sheets from raw 
+    record sheets.
   verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration does not exceed ceiling.
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

@@ -45,6 +45,9 @@ def write_reports(
                 'by_capability': {
                     k: v.model_dump() for k, v in summary.by_capability.items()
                 },
+                'by_task_type': {
+                    k: v.model_dump() for k, v in summary.by_task_type.items()
+                },
                 'by_domain': {k: v.model_dump() for k, v in summary.by_domain.items()},
                 'by_mode': {k: v.model_dump() for k, v in summary.by_mode.items()},
                 'overall': {
@@ -151,16 +154,13 @@ def _fmt_pair(pair: tuple[int, int]) -> str:
 def _axis_row(label: str, rates: AxisPassRates) -> str:
     return (
         f'| `{label}` '
-        f'| {_fmt_pair(rates.correctness)} '
-        f'| {_fmt_pair(rates.grounding)} '
-        f'| {_fmt_pair(rates.efficiency)} '
         f'| {_fmt_pair(rates.overall)} |'
     )
 
 
 _AXIS_TABLE_HEADER = (
-    '| Group | Correctness | Grounding | Efficiency | Overall |',
-    '|-------|-------------|-----------|------------|---------|',
+    '| Group | Overall |',
+    '|-------|---------|',
 )
 
 
@@ -183,6 +183,12 @@ def _render_markdown(summary: EvaluationSummary) -> str:
         lines += ['### By Capability', _AXIS_TABLE_HEADER[0], _AXIS_TABLE_HEADER[1]]
         for cap in sorted(summary.by_capability):
             lines.append(_axis_row(cap, summary.by_capability[cap]))
+        lines.append('')
+
+    if summary.by_task_type:
+        lines += ['### By Task Type', _AXIS_TABLE_HEADER[0], _AXIS_TABLE_HEADER[1]]
+        for tt in sorted(summary.by_task_type):
+            lines.append(_axis_row(tt, summary.by_task_type[tt]))
         lines.append('')
 
     if summary.by_domain:
@@ -217,18 +223,17 @@ def _render_markdown(summary: EvaluationSummary) -> str:
 
     lines += [
         '## Per Question (mode split)',
-        '| Question:Mode | Capability | Domain | Correctness | Grounding | Efficiency | Overall | Safety Veto |',
-        '|---------------|------------|--------|-------------|-----------|------------|---------|-------------|',
+        '| Question:Mode | Capabilities | Task Type | Domain | Overall | Safety Veto |',
+        '|---------------|--------------|-----------|--------|---------|-------------|',
     ]
     for key in sorted(summary.by_question):
         row = summary.by_question[key]
+        caps_str = ', '.join(row.capabilities) if row.capabilities else '—'
         lines.append(
             f'| `{key}` '
-            f'| {row.capability} '
+            f'| {caps_str} '
+            f'| {row.task_type or "—"} '
             f'| {row.domain} '
-            f'| {_fmt_pair(row.correctness)} '
-            f'| {_fmt_pair(row.grounding)} '
-            f'| {_fmt_pair(row.efficiency)} '
             f'| {_fmt_pair(row.overall)} '
             f'| {row.safety_veto_count} |'
         )

@@ -1,7 +1,7 @@
-"""Standalone client CLI for mat-bench serve-all servers.
+"""Standalone client CLI for mat-bench servers.
 
 The API is always mounted at {server}/bench. Pass the bare server URL
-(e.g. http://host:5000) and all requests go to /bench/... automatically.
+(e.g. http://host:8080) and all requests go to /bench/... automatically.
 
 Usage:
     mat-bench-client setup        Save token and create a session
@@ -34,7 +34,7 @@ import yaml
 # Config  (~/.mat-bench-client/config.yaml)
 # ---------------------------------------------------------------------------
 
-_DEFAULT_SERVER = 'http://localhost:8765'
+_DEFAULT_SERVER = 'http://localhost:8080'
 
 
 def _config_path() -> Path:
@@ -307,7 +307,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog='mat-bench-client',
         description=(
-            'CLI client for a mat-bench serve-all server. '
+            'CLI client for a mat-bench server. '
             'API is always at {server}/bench.'
         ),
     )
@@ -437,7 +437,8 @@ def _cmd_questions(args: argparse.Namespace) -> None:
         intent = q.get('intent', '')
         if len(intent) > 60:
             intent = intent[:57] + '...'
-        print(f"  {q['id']:<34s} {q.get('capability', ''):<25s} {q.get('domain', ''):<15s} {intent}")
+        cap = ', '.join(q.get('capability', []) or [])
+        print(f"  {q['id']:<34s} {cap:<25s} {q.get('domain', ''):<15s} {intent}")
 
 
 def _cmd_question(args: argparse.Namespace) -> None:
@@ -445,7 +446,8 @@ def _cmd_question(args: argparse.Namespace) -> None:
     token, session_id = _require_credentials(server)
     q = api_get_question(_api(server), token, args.question_id, session_id)
     print(f"Question:   {q['id']}")
-    print(f"Capability: {q.get('capability', '')}")
+    cap = ', '.join(q.get('capability', []) or [])
+    print(f"Capability: {cap}")
     print(f"Domain:     {q.get('domain', '')}")
     print()
     print('--- Prompt ---')
@@ -514,12 +516,11 @@ def _cmd_result(args: argparse.Namespace) -> None:
         sys.exit(1)
     results = data if isinstance(data, list) else [data]
     for r in results:
-        p_count = r.get('passed_count', 0)
-        t_count = r.get('total_count', 0)
-        print(f"Question: {r.get('question_id', args.question_id)}")
-        print(f"Status:   {r.get('run_status', 'unknown')}")
-        print(f"Score:    {p_count}/{t_count} checkpoints passed")
-        print(f"Weighted: {r.get('overall_weighted_score', 0.0):.3f}")
+        score = r.get('overall_weighted_score', 0.0)
+        print(f"Question:     {r.get('question_id', args.question_id)}")
+        print(f"Status:       {r.get('run_status', 'unknown')}")
+        print(f"Criteria:     {r.get('passed_count', 0)}/{r.get('total_count', 0)} passed")
+        print(f"Score:        {score:.3f}")
 
 
 def _cmd_results(args: argparse.Namespace) -> None:
@@ -543,9 +544,10 @@ def _cmd_results(args: argparse.Namespace) -> None:
             p = r.get('passed_count', 0)
             t = r.get('total_count', 0)
             w = r.get('overall_weighted_score', 0.0)
+            cap = ', '.join(r.get('capability', []) or [])
             print(
                 f"  {r.get('question_id', ''):<34s}"
-                f"{r.get('capability', ''):<25s}"
+                f"{cap:<25s}"
                 f"{r.get('domain', ''):<15s}"
                 f"{r.get('run_status', ''):<12s}"
                 f"{p}/{t}  ({w:.2f})"

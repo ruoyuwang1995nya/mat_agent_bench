@@ -1,8 +1,12 @@
 id: WO_mech_003_20260501
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
-intent: Compute vacancy formation energies for Fe-X doped supercells from mock BSSE-corrected
-  energies; compare to QE references and rank trends.
+difficulty: easy
+intent: Compute vacancy formation energies for Fe-X doped supercells from mock BSSE-corrected energies; compare to QE 
+  references and rank trends.
 human_prompt_seed: '掺杂 Fe 合金单空位形成能（mock 数据，不跑真实 DFT）。对下列 7 个体系使用同一公式：
 
 
@@ -29,8 +33,7 @@ human_prompt_seed: '掺杂 Fe 合金单空位形成能（mock 数据，不跑真
   - Fe53B:  E_novac=-955.40, E_vac=-939.54, μ_A=-13.93；QE 参考 E_f=1.97
 
 
-  要求：逐个计算 E_f,vac；给出 ABACUS(mock) 与 QE 的对比表；按 E_f 从低到高排序并简要讨论哪种掺杂趋势上更利于空位形成。说明为何 E_vac
-  需要 BSSE 校正。
+  要求：逐个计算 E_f,vac；给出 ABACUS(mock) 与 QE 的对比表；按 E_f 从低到高排序并简要讨论哪种掺杂趋势上更利于空位形成。说明为何 E_vac 需要 BSSE 校正。
 
   '
 tags:
@@ -53,66 +56,40 @@ reference_answers:
   - ranking
   - bsse_note
   - qe_compare
-- key: turn_budget
-  value:
-    max: 14
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 10000
 scoring_checklist:
 - id: ef_Fe53Cr_eV
-  criterion: Fe53Cr vacancy formation energy from mock data is within tolerance (~2.08
-    eV).
-  axis: correctness
+  criterion: Fe53Cr vacancy formation energy from mock data is within tolerance (~2.08 eV).
   verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
 - id: ef_Fe53Al_eV
-  criterion: Fe53Al vacancy formation energy from mock data is within tolerance (~1.87
-    eV).
-  axis: correctness
+  criterion: Fe53Al vacancy formation energy from mock data is within tolerance (~1.87 eV).
   verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
 - id: ef_Fe53Co_eV
-  criterion: Fe53Co vacancy formation energy from mock data is within tolerance (~2.19
-    eV).
-  axis: correctness
+  criterion: Fe53Co vacancy formation energy from mock data is within tolerance (~2.19 eV).
   verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
 - id: required_fields
-  criterion: Report includes a table for all seven systems, ABACUS vs QE comparison,
-    sorted ranking by E_f, and BSSE note for E_vac.
-  axis: correctness
+  criterion: Report includes a table for all seven systems, ABACUS vs QE comparison, sorted ranking by E_f, and BSSE 
+    note for E_vac.
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: bsse_vacancy_note
-  criterion: Explains that NAO basis at the vacancy is incomplete and BSSE-corrected
-    E_vac is needed for meaningful E_f,vac.
-  axis: correctness
+  criterion: Explains that NAO basis at the vacancy is incomplete and BSSE-corrected E_vac is needed for meaningful 
+    E_f,vac.
   verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
 - id: grounding_source
-  criterion: 'All E_f values must be derived from these mock energies via E_f = E_vac
-    + μ_A − E_novac: Fe53Cr(-963.52, -946.21, -15.23), Fe53Al(-958.73, -942.88, -13.98),
-    Fe53Ti(-961.45, -944.82, -14.70), Fe53Co(-968.91, -951.02, -15.70), Fe53Mo(-967.23,
-    -949.91, -15.30), Fe53Nb(-964.85, -948.32, -14.68), Fe53B(-955.40, -939.54, -13.93).
-    Expected E_f: ~2.08, ~1.87, ~1.93, ~2.19, ~2.02, ~1.85, ~1.93 eV respectively.
-    Do not fail because the tool-call log omits MCP, web_search, or any specific tool.'
-  axis: grounding
+  criterion: 'All E_f values must be derived from these mock energies via E_f = E_vac + μ_A − E_novac: Fe53Cr(-963.52, -946.21,
+    -15.23), Fe53Al(-958.73, -942.88, -13.98), Fe53Ti(-961.45, -944.82, -14.70), Fe53Co(-968.91, -951.02, -15.70), Fe53Mo(-967.23,
+    -949.91, -15.30), Fe53Nb(-964.85, -948.32, -14.68), Fe53B(-955.40, -939.54, -13.93). Expected E_f: ~2.08, ~1.87, ~1.93,
+    ~2.19, ~2.02, ~1.85, ~1.93 eV respectively. Do not fail because the tool-call log omits MCP, web_search, or any specific
+    tool.'
   verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: efficiency_judge
-  criterion: Completes seven-system table and discussion without unnecessary exploratory
-    steps.
-  axis: efficiency
-  verify: llm_binary_judge
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage is recorded and stays within a generous benchmark ceiling
-    (tunable per task after calibration).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

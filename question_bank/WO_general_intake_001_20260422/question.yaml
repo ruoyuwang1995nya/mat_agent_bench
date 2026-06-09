@@ -1,8 +1,11 @@
 id: WO_general_intake_001_20260422
-capability: workflow_orchestration
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
 domain: agnostic
-intent: Build a structured intake-and-analysis protocol with attachment-level triage
-  priority and rejection criteria.
+difficulty: easy
+intent: Build a structured intake-and-analysis protocol with attachment-level triage priority and rejection criteria.
 human_prompt_seed: '工作区已提供 `attachment_manifest.json`。
 
 
@@ -65,65 +68,44 @@ reference_answers:
 - key: grounding_source
   value:
     filename: attachment_manifest.json
-- key: turn_budget
-  value:
-    max: 8
-- key: duration_budget
-  value:
-    max: 7200000
-- key: token_budget_total
-  value:
-    max: 7000
 scoring_checklist:
 - id: intake_artifact
   criterion: Agent writes `intake_checklist.json` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: protocol_artifact
   criterion: Agent writes `analysis_protocol.md` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: delivery_artifact
   criterion: Agent writes `delivery_plan.md` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: triage_artifact
   criterion: Agent writes `triage_policy.md` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: intake_required_tokens
-  criterion: Intake checklist is grounded in attachment manifest entries and requests
-    concrete missing metadata.
-  axis: correctness
+  criterion: Intake checklist is grounded in attachment manifest entries and requests concrete missing metadata.
   verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
 - id: protocol_required_tokens
-  criterion: Analysis protocol includes workflow, quality checks, and abnormal-case
-    handling.
-  axis: correctness
+  criterion: Analysis protocol includes workflow, quality checks, and abnormal-case handling.
   verify: llm_binary_judge
+  capability: workflow_orchestration
+  weight: 0.5
 - id: delivery_required_tokens
   criterion: Delivery plan explicitly includes figures, tables, and explanatory text.
-  axis: correctness
   verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
 - id: grounding_source
-  criterion: The response stays grounded in `attachment_manifest.json` and does not
-    fabricate unseen attachment content.
-  axis: grounding
+  criterion: The response stays grounded in `attachment_manifest.json` and does not fabricate unseen attachment content.
   verify: llm_binary_judge
-- id: no_retries
-  criterion: No repeated identical tool calls with the same parameter set.
-  axis: efficiency
-  verify: no_retries
-- id: turn_budget
-  criterion: Agent completes the task within the turn (step) budget.
-  axis: efficiency
-  verify: turn_budget
-- id: duration_budget
-  criterion: Wall-clock run duration (duration_ms) is recorded and does not exceed
-    a generous benchmark ceiling (tunable per deployment).
-  axis: efficiency
-  verify: duration_budget
-- id: token_budget_total
-  criterion: Total token usage stays within benchmark ceiling (last-turn total_tokens).
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

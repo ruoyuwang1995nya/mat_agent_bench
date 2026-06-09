@@ -1,10 +1,13 @@
 id: SC_struct_build_001_20260508v2
-capability: structure_construction
+task_type: simulation
+capabilities:
+- structure_manipulation
 domain: agnostic
-intent: Build FCC copper conventional cell using ASE bulk prototype and verify lattice
-  constant, atom count, and space group.
-human_prompt_seed: '构建 FCC 铜 (Cu) 的惯用晶胞结构，使用实验晶格常数 a = 3.615 Å。 导出为 `cu_fcc.cif`。在最终回答中明确报告：(1)
-  晶格常数；(2) 空间群编号 #225 / Fm-3m；(3) 惯用晶胞中的原子数 4。'
+difficulty: easy
+intent: Build FCC copper conventional cell using ASE bulk prototype and verify lattice constant, atom count, and space 
+  group.
+human_prompt_seed: '构建 FCC 铜 (Cu) 的惯用晶胞结构，使用实验晶格常数 a = 3.615 Å。 导出为 `cu_fcc.cif`。在最终回答中明确报告：(1) 晶格常数；(2) 空间群编号 #225 / Fm-3m；(3)
+  惯用晶胞中的原子数 4。'
 tags:
 - struct_build
 data_files: []
@@ -35,48 +38,40 @@ reference_answers:
   value:
   - '225'
   - Fm-3m
-- key: turn_budget
-  value:
-    max: 10
-- key: token_budget_total
-  value:
-    max: 20000
 scoring_checklist:
 - id: file_exists
   criterion: Agent writes `cu_fcc.cif` to workspace.
-  axis: correctness
   verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
 - id: formula
   criterion: Structure formula is Cu.
-  axis: correctness
   verify: struct_file_formula
+  capability: structure_manipulation
+  weight: 0.5
 - id: cell_a
   criterion: Lattice constant a is approximately 3.615 Å.
-  axis: correctness
   verify: struct_file_cell_param
+  capability: structure_manipulation
+  weight: 0.5
 - id: atom_count
   criterion: Conventional FCC cell contains 4 atoms.
-  axis: correctness
   verify: struct_file_atom_count
+  capability: structure_manipulation
+  weight: 0.5
 - id: space_group_number
   criterion: The file `cu_fcc.cif` is identified as space group
-  axis: correctness
   verify: struct_file_space_group
+  capability: structure_manipulation
+  weight: 0.5
 - id: space_group_tokens
-  criterion: Final answer explicitly reports both space group number 225 and symbol
-    Fm-3m.
-  axis: correctness
+  criterion: Final answer explicitly reports both space group number 225 and symbol Fm-3m.
   verify: contains_all
+  capability: data_handling
+  weight: 0.5
 - id: grounding_source
-  criterion: Final answer explicitly states the lattice constant, space group number,
-    and atom count from the built structure.
-  axis: grounding
+  criterion: Final answer explicitly states the lattice constant, space group number, and atom count from the built 
+    structure.
   verify: llm_binary_judge
-- id: turn_budget
-  criterion: Agent completes the task within the turn budget.
-  axis: efficiency
-  verify: turn_budget
-- id: token_budget_total
-  criterion: Total token usage stays within budget.
-  axis: efficiency
-  verify: token_budget
+  capability: scientific_grounding
+  weight: 0.5

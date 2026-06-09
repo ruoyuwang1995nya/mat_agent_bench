@@ -1,0 +1,1 @@
+{"bulk_total_energy_ev": -518.32, "bulk_energy_per_atom_ev": -6.55, "elemental_energies_ev": {"Zn": -1.63, "O": -4.93}, "band_gap_hybrid_ev": 3.44, "vbm_ev": 0.0, "cbm_ev": 3.44, "supercell_formula": "Zn72O72", "defects_to_analyze": [{"type": "vacancy", "site": "O", "label": "V_O"}, {"type": "vacancy", "site": "Zn", "label": "V_Zn"}]}
