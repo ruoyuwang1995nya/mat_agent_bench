@@ -1,6 +1,40 @@
 # CHANGELOG
 
 
+## v0.6.0 (2026-06-09)
+
+### Bug Fixes
+
+- Add difficulty field to question metadata
+  ([`6445b98`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/6445b98225f28a3cc6a469b58d84c5a883a98dc4))
+
+- Issues with final scoring
+  ([`e2f2823`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/e2f2823839e10a7f083f2b6a4339e34bea24836d))
+
+- Minor fix
+  ([`f433708`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/f433708aaa399684f184ed3c9b47b4aa73931115))
+
+- Update docs for agent port
+  ([`bb61ecb`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/bb61ecb6ca4c687404f07969e15a2a75472acfe2))
+
+- Update server port
+  ([`ae006f7`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/ae006f7947d6ada47324ab98015133f94ba05887))
+
+- Update the scoring mechanism
+  ([`9f0370d`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/9f0370d242962893e1ae5372ea94e85fb8cba5ab))
+
+### Features
+
+- Refactor question capabilities tag
+  ([`11c29b6`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/11c29b675e49ea1c92fee49e2cb2a7c499999713))
+
+- Reformulate question tasks and capability
+  ([`29ae394`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/29ae394ad3fddb5fe75fc11c099a369066a5ec19))
+
+- Update question format and add new hard ones
+  ([`87add07`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/87add0794e689b5e4d3fa90fa046b8191d4277ff))
+
+
 ## v0.5.0 (2026-05-21)
 
 ### Bug Fixes
