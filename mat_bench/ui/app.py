@@ -172,7 +172,8 @@ def create_app(
         _total_questions = len(_all_qs)
         _cap_question_counts: dict[str, int] = {}
         for _q in _all_qs:
-            _cap_question_counts[_q.capability] = _cap_question_counts.get(_q.capability, 0) + 1
+            for cap in _q.capability:
+                _cap_question_counts[cap] = _cap_question_counts.get(cap, 0) + 1
     except Exception:
         _total_questions = 0
         _cap_question_counts = {}
