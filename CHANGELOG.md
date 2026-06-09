@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.6.1 (2026-06-09)
+
+### Bug Fixes
+
+- Issues with leaderboard display
+  ([`e3d0a0c`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/e3d0a0cdd8792b84cf0007541edd29d2a61fe92a))
+
+
 ## v0.6.0 (2026-06-09)
 
 ### Bug Fixes
