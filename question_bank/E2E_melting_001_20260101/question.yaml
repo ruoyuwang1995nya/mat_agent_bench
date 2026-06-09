@@ -81,11 +81,6 @@ scoring_checklist:
   weight: 0.5
   criterion: '[Must] Results reference the transition metal equation (coefficient 0.0346)'
   capability: data_handling
-- id: contains_cn_analysis
-  verify: text_file_numeric_range
-  weight: 0.5
-  criterion: '[Must] Coordination number factor is applied (bcc CN=8 gives lower error than fcc/hcp)'
-  capability: scientific_reasoning
 - id: workflow_chain
   verify: llm_binary_judge
   weight: 0.5

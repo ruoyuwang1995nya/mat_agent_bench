@@ -156,11 +156,6 @@ scoring_checklist:
   weight: 0.5
   criterion: '[Must] All reported values and conclusions trace back to the TiO2/FeS2 heterojunction DFT study'
   capability: scientific_grounding
-- id: duration_budget
-  verify: duration_budget
-  weight: 0.0
-  criterion: '[Variable] Agent completes task within duration budget'
-  capability: tool_utilization
 reference_answer_prompt: 'Phase 1 (Bulk): Relax bulk FeS2 (Pa3, a=5.409 Å) and TiO2 (I41/amd, a=3.803 Å, c=9.517 Å) with PBE+U
   (U_Fe=2.0, U_Ti=7.3 eV), DFT-D3, ENCUT=600 eV. Verify band gaps: FeS2=0.96 eV, TiO2=3.21 eV. Phase 2 (Surfaces): Cleave
   FeS2(100) and TiO2(001) surfaces, add 20 Å vacuum, relax. Compute work functions: Φ(FeS2)=5.03 eV, Φ(TiO2)=5.22 eV. Phase

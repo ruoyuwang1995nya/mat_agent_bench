@@ -16,7 +16,6 @@ tags:
 - md_analysis
 - ionic_conductivity
 - nernst_einstein
-- battery
 data_files:
 - key: msd_data
   path: msd_vs_time.csv

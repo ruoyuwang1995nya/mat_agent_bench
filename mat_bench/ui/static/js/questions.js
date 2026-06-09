@@ -181,7 +181,9 @@ async function loadQuestions() {
 
 function renderTable() {
   const query = document.getElementById('search').value.toLowerCase();
+  const diff  = document.getElementById('filter-diff').value;
   const rows = allQuestions.filter(q => {
+    if (diff && q.difficulty !== diff) return false;
     if (!query) return true;
     return q.id.toLowerCase().includes(query) ||
            q.intent.toLowerCase().includes(query) ||
@@ -192,14 +194,16 @@ function renderTable() {
 
   if (!rows.length) {
     document.getElementById('q-body').innerHTML =
-      `<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:3rem">No questions found.</td></tr>`;
+      `<tr><td colspan="8" style="text-align:center;color:var(--text-dim);padding:3rem">No questions found.</td></tr>`;
     return;
   }
 
+  const diffColor = { easy: 'var(--green)', medium: 'var(--yellow,#f0c040)', hard: 'var(--red)' };
   document.getElementById('q-body').innerHTML = rows.map(q => `
     <tr data-id="${esc(q.id)}">
       <td><code style="font-size:.8rem;color:var(--cyan)">${esc(q.id)}</code></td>
       <td><span class="badge badge-dom">${esc(q.domain)}</span></td>
+      <td style="text-align:center"><span style="font-size:.75rem;font-weight:600;color:${diffColor[q.difficulty]||'var(--text-dim)'}">${esc(q.difficulty||'—')}</span></td>
       <td style="max-width:160px;white-space:normal"><span class="badge" style="background:var(--bg3);color:var(--text-dim);font-size:.72rem;white-space:normal">${esc(q.task_type.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()))}</span></td>
       <td style="max-width:180px;white-space:normal">${(Array.isArray(q.capability) ? q.capability : [q.capability]).map(c => `<span class="badge badge-cap">${esc(c)}</span>`).join(' ')}</td>
       <td style="font-size:.78rem;color:var(--text-dim);max-width:220px;white-space:normal">
@@ -273,6 +277,7 @@ document.getElementById('search').addEventListener('input', renderTable);
 document.getElementById('filter-cap').addEventListener('change', loadQuestions);
 document.getElementById('filter-type').addEventListener('change', loadQuestions);
 document.getElementById('filter-dom').addEventListener('change', loadQuestions);
+document.getElementById('filter-diff').addEventListener('change', renderTable);
 
 loadTemplates();
 loadQuestions();

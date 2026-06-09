@@ -112,23 +112,3 @@ scoring_checklist:
     Broberg et al. (2023), with formation energies following Eq. (1), transition levels following Eq. (2), and Fermi level
     following Eqs. (3)-(4).'
   capability: scientific_grounding
-- id: turn_budget
-  verify: turn_budget
-  weight: 0
-  criterion: '[Variable] Agent completes within turn budget.'
-  capability: tool_utilization
-- id: no_retries
-  verify: no_retries
-  weight: 0
-  criterion: '[Variable] Agent does not retry unnecessarily.'
-  capability: tool_utilization
-- id: duration_budget
-  verify: duration_budget
-  weight: 0
-  criterion: '[Variable] Agent completes within duration budget.'
-  capability: tool_utilization
-- id: token_budget_total
-  verify: token_budget
-  weight: 0
-  criterion: '[Variable] Agent stays within token budget.'
-  capability: tool_utilization

@@ -88,23 +88,3 @@ scoring_checklist:
   criterion: '[Must] The site selection is physically reasonable for Li⁺ in the β-MnO₂ [1×1] tunnel structure, consistent
     with the coordination-compatibility principles described by Kitchaev et al. 2017'
   capability: scientific_grounding
-- id: turn_budget
-  verify: turn_budget
-  weight: 0
-  criterion: '[Variable] Agent completes within turn budget'
-  capability: tool_utilization
-- id: no_retries
-  verify: no_retries
-  weight: 0
-  criterion: '[Variable] Agent does not retry failed operations more than once'
-  capability: workflow_orchestration
-- id: duration_budget
-  verify: duration_budget
-  weight: 0
-  criterion: '[Variable] Agent completes within duration budget (seconds)'
-  capability: tool_utilization
-- id: token_budget_total
-  verify: token_budget
-  weight: 0
-  criterion: '[Variable] Agent completes within token budget'
-  capability: tool_utilization

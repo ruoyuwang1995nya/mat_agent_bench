@@ -282,6 +282,7 @@ def create_app(
                 "intent": q.intent,
                 "tags": q.tags,
                 "tag_count": len(q.tags),
+                "difficulty": q.item.difficulty,
                 "checklist_count": len(q.item.scoring_checklist),
             }
             for q in questions

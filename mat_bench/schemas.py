@@ -219,7 +219,7 @@ class QuestionItem(BaseModel):
     difficulty: DifficultyLiteral = Field(default='medium')
     intent: str
     human_prompt_seed: str
-    tags: list[QuestionTag] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
     priority: str | None = Field(default=None)
     data_files: list[DataFileRef] = Field(default_factory=list)
     reference_answers: list[ReferenceAnswer] = Field(default_factory=list)
@@ -243,10 +243,6 @@ class QuestionItem(BaseModel):
                 raise ValueError(
                     f'tag {tag!r} is not canonical; use canonical tag {canonical!r}'
                 )
-            if tag in GENERIC_PROCESS_TAGS:
-                raise ValueError(
-                    f'tag {tag!r} is a generic process tag; use a topic/tool/method tag instead'
-                )
             if tag in seen:
                 raise ValueError(f'tags must be unique within a question: {tag!r}')
             seen.add(tag)
@@ -255,7 +251,7 @@ class QuestionItem(BaseModel):
 
     @model_validator(mode='after')
     def _validate_scoring_contract(self) -> 'QuestionItem':
-        tag_values = {t.value for t in self.tags}
+        tag_values = set(self.tags)
         cap_tag_overlap = set(self.capabilities) & tag_values
         if cap_tag_overlap:
             raise ValueError(

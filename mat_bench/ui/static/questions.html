@@ -59,6 +59,12 @@
         <option value="structure_manipulation">structure_manipulation</option>
         <option value="scientific_grounding">scientific_grounding</option>
       </select>
+      <select id="filter-diff" class="filter-select">
+        <option value="">All difficulties</option>
+        <option value="easy">easy</option>
+        <option value="medium">medium</option>
+        <option value="hard">hard</option>
+      </select>
       <span id="count-label" style="font-size:0.85rem;color:var(--text-dim);align-self:center;margin-left:auto;"></span>
     </div>
 
@@ -68,6 +74,7 @@
           <tr>
             <th style="width:220px">ID</th>
             <th>Domain</th>
+            <th style="width:80px;text-align:center">Difficulty</th>
             <th style="width:160px">Task Type</th>
             <th style="width:180px">Capability</th>
             <th>Tags</th>
@@ -76,7 +83,7 @@
           </tr>
         </thead>
         <tbody id="q-body">
-          <tr><td colspan="7" style="text-align:center;padding:3rem"><div class="spinner" style="margin:auto"></div></td></tr>
+          <tr><td colspan="8" style="text-align:center;padding:3rem"><div class="spinner" style="margin:auto"></div></td></tr>
         </tbody>
       </table>
     </div>
