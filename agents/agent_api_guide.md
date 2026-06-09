@@ -95,7 +95,7 @@ curl -s "$API/questions/$QUESTION_ID?session_id=$SESSION" | jq .
 ```json
 {
   "id": "BP_elec_001_20260428",
-  "capability": "batch_processing",
+  "capability": "<capability>",
   "domain": "catalysis",
   "prompt": "<full task description>",
   "data_files": [
@@ -220,27 +220,38 @@ echo "$STATUS" | jq '.[0] | {run_status, correctness_weighted_score, grounding_w
 [
   {
     "question_id": "BP_elec_001_20260428",
+    "capability": ["bandstructure"],
+    "domain": "electronic_structure",
     "run_status": "completed",
-    "correctness_passed": 7,
-    "correctness_total": 10,
-    "correctness_weighted_score": 0.7,
-    "grounding_passed": 3,
-    "grounding_total": 3,
-    "grounding_weighted_score": 1.0,
-    "grounding_veto": false,
-    "efficiency_passed": 1,
-    "efficiency_total": 1,
-    "efficiency_weighted_score": 1.0,
+    "passed": false,
     "passed_count": 11,
-    "total_count": 14
+    "total_count": 14,
+    "overall_weighted_score": 0.78,
+    "criteria_results": {
+      "band_gap_value": {
+        "criterion_id": "band_gap_value",
+        "capability": "correctness",
+        "passed": true,
+        "reason": "Reported gap 1.12 eV matches reference within tolerance."
+      },
+      "grounding_citation": {
+        "criterion_id": "grounding_citation",
+        "capability": "scientific_grounding",
+        "passed": false,
+        "reason": "No DOI or data source cited for the band gap value."
+      }
+    }
   }
 ]
 ```
 
-**202 response** means grading is still in progress — retry after a few seconds.
+`criteria_results` is a dict keyed by criterion ID. Each entry contains:
+- `criterion_id` — the rubric item identifier
+- `capability` — rubric category (e.g. `correctness`, `scientific_grounding`, `efficiency`)
+- `passed` — `true` / `false`
+- `reason` — the grader's explanation for the verdict
 
-**Scoring formula:** `final = correctness_score × grounding_factor × efficiency_score`
-- `grounding_factor` = 0.0 if `grounding_veto` is true, else 1.0
+**202 response** means grading is still in progress — retry after a few seconds.
 
 ---
 
@@ -261,85 +272,6 @@ curl -s "$API/results?session_id=$SESSION" \
   "results": [...]
 }
 ```
-
----
-
-## Full Python Workflow
-
-```python
-import json, time, requests
-
-API     = "http://localhost:8080/bench"
-TOKEN   = "<your-token>"
-MODEL   = "my-agent-v1"
-WORKDIR = "/tmp/mat_bench_work"
-
-headers = {"X-API-Token": TOKEN}
-
-# 1. Create session
-r = requests.post(f"{API}/sessions", headers=headers,
-                  json={"model_name": MODEL})
-SESSION = r.json()["session_id"]
-
-# 2. List questions
-questions = requests.get(f"{API}/questions", headers=headers).json()
-
-for q in questions:
-    qid = q["id"]
-
-    # 3. Fetch question (starts timer)
-    details = requests.get(f"{API}/questions/{qid}",
-                           headers=headers,
-                           params={"session_id": SESSION}).json()
-    prompt = details["prompt"]
-    data_files = details.get("data_files", [])
-
-    # 4. Download data files
-    import os; os.makedirs(f"{WORKDIR}/{qid}", exist_ok=True)
-    for f in data_files:
-        fname = f["filename"]
-        raw = requests.get(f"{API}/questions/{qid}/data/{fname}").content
-        with open(f"{WORKDIR}/{qid}/{fname}", "wb") as fh:
-            fh.write(raw)
-
-    # 5. Execute task — your agent logic here
-    answer = "..."          # your computed answer
-    output_files = []       # paths to generated files
-
-    # 6. Submit
-    meta = json.dumps({
-        "answer": answer,
-        "num_turns": 1,
-        "is_error": False,
-        "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
-        "tool_calls": [],
-    })
-    files_payload = [("meta", (None, meta))]
-    for i, path in enumerate(output_files, start=1):
-        with open(path, "rb") as fh:
-            files_payload.append((f"file{i}", (os.path.basename(path), fh.read())))
-    requests.post(f"{API}/submit/{qid}?session_id={SESSION}",
-                  headers=headers, files=files_payload)
-
-    # 7. Poll for result
-    for _ in range(40):
-        res = requests.get(f"{API}/results/{qid}",
-                           headers=headers,
-                           params={"session_id": SESSION})
-        if res.status_code == 200:
-            data = res.json()
-            if data and data[0].get("run_status") == "completed":
-                print(f"{qid}: score={data[0].get('correctness_weighted_score')}")
-                break
-        time.sleep(3)
-
-# 8. Summary
-summary = requests.get(f"{API}/results", headers=headers,
-                       params={"session_id": SESSION}).json()
-print(f"Pass rate: {summary['pass_rate']:.1%}  Weighted: {summary['weighted_pass_rate']:.3f}")
-```
-
----
 
 ## Common Errors
 

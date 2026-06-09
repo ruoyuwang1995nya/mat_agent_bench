@@ -624,6 +624,15 @@ try:
                 "passed_count": r.passed_count,
                 "total_count": r.total_count,
                 "overall_weighted_score": r.overall_weighted_score,
+                "criteria_results": {
+                    cid: {
+                        "criterion_id": cr.criterion_id,
+                        "capability": cr.capability,
+                        "passed": cr.passed,
+                        "reason": cr.reason,
+                    }
+                    for cid, cr in r.criteria_results.items()
+                },
             }
             for r in matches
         ]
