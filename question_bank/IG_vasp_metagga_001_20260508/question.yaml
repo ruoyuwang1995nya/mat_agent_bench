@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: Generate VASP INCAR for r2SCAN meta-GGA calculation with required LASPH setting.
 human_prompt_seed: '工作区中有 TiO2_rutile.vasp（金红石结构 TiO2，6 个原子）。
 
@@ -52,38 +53,32 @@ reference_answers:
 scoring_checklist:
 - id: incar_r2scan_artifact
   criterion: INCAR_r2scan file exists in workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: must_metagga
   criterion: METAGGA = R2SCAN is set for r2SCAN functional.
-  axis: correctness
   verify: text_file_contains_all
   capability: tool_utilization
   weight: 0.5
 - id: must_lasph
   criterion: LASPH = .TRUE. is set (required for meta-GGA calculations).
-  axis: correctness
   verify: text_file_contains_all
   capability: scientific_reasoning
   weight: 0.5
 - id: must_isif3
   criterion: ISIF = 3 for full cell+ion relaxation.
-  axis: correctness
   verify: text_file_regex
   capability: scientific_reasoning
   weight: 0.5
 - id: must_ediffg
   criterion: EDIFFG = -0.01 for force convergence criterion.
-  axis: correctness
   verify: text_file_regex
   capability: tool_utilization
   weight: 0.5
 - id: grounding_lasph
   criterion: Agent explains that LASPH=.TRUE. is mandatory for meta-GGA functionals (non-spherical contributions to 
     PAW).
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

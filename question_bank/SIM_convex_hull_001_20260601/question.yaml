@@ -1,0 +1,121 @@
+id: SIM_convex_hull_001_20260601
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- tool_utilization
+- data_handling
+domain: agnostic
+difficulty: medium
+intent: Construct a convex hull of formation energies for the Fe-O binary system, identify stable vs metastable phases, 
+  and compute energy above hull for metastable compounds.
+human_prompt_seed: 'Given the formation energy data for compounds in the Fe-O system in formation_energies_fe_o.csv, construct
+  the convex hull of phase stability. Determine which compounds lie on the convex hull (stable) and which are above it (metastable).
+  For each metastable compound, compute its energy above the hull in meV/atom. Write the results to convex_hull_results.json
+  with keys: compound, formation_energy_eV_per_atom, energy_above_hull_meV_per_atom, is_stable, decomposition_products (for
+  metastable phases, list the stable phases it would decompose into). Also write a brief summary to hull_summary.txt explaining
+  which phases are stable and the metastability range observed.'
+tags:
+- convex_hull
+- phase_stability
+- pymatgen
+- thermodynamics
+data_files:
+- key: formation_energies
+  path: formation_energies_fe_o.csv
+  description: Formation energies for compounds in the Fe-O system at 0 K, referenced to elemental Fe and O2 standard 
+    states
+- key: reference_hull
+  path: reference_hull_data.json
+  description: Reference data for expected convex hull results in the Fe-O binary system
+reference_answers:
+- key: artifact_convex_hull_results
+  value: convex_hull_results.json
+- key: artifact_hull_summary
+  value: hull_summary.txt
+- key: contains_stable_phases
+  value:
+    flags:
+    - case_sensitive
+    tokens:
+    - FeO
+    - Fe3O4
+    - Fe2O3
+    filename: convex_hull_results.json
+- key: contains_metastable_phases
+  value:
+    flags:
+    - case_sensitive
+    tokens:
+    - FeO2
+    - Fe2O
+    filename: convex_hull_results.json
+- key: numeric_range_metastability
+  value:
+    checks:
+    - key: energy_above_hull_meV_per_atom
+      max: 120
+      min: 50
+      expected: 85
+      tolerance: 30
+    filename: convex_hull_results.json
+- key: grounding_source
+  value: formation_energies_fe_o.csv
+- key: duration_budget
+  value:
+    max: 300000
+- key: no_retries
+  value:
+    max: 0
+- key: token_budget_total
+  value:
+    max: 50000
+- key: turn_budget
+  value:
+    max: 10
+scoring_checklist:
+- id: artifact_convex_hull_results
+  verify: artifact_exists
+  weight: 0.5
+  criterion: '[Must] Output file convex_hull_results.json exists and is valid JSON.'
+  capability: tool_utilization
+- id: contains_stable_phases
+  verify: text_file_contains_all
+  weight: 0.5
+  criterion: '[Must] Output correctly identifies FeO, Fe3O4, and Fe2O3 as stable phases on the convex hull.'
+  capability: data_handling
+- id: contains_metastable_phases
+  verify: text_file_contains_all
+  weight: 0.5
+  criterion: '[Must] Output correctly identifies FeO2 and Fe2O as metastable phases with energy above hull > 0.'
+  capability: scientific_reasoning
+- id: numeric_range_metastability
+  verify: text_file_numeric_range
+  weight: 0.5
+  criterion: '[Suggested] Energy above hull for FeO2 is in the range 50-120 meV/atom (expected ~85 meV/atom).'
+  capability: scientific_reasoning
+- id: grounding_source
+  verify: llm_binary_judge
+  weight: 0.5
+  criterion: '[Must] The convex hull construction is consistent with the input formation energy data and the phase stability
+    analysis framework described in the paper.'
+  capability: scientific_grounding
+- id: turn_budget
+  verify: turn_budget
+  weight: 0.0
+  criterion: '[Must] Agent completed the task within 10 turns.'
+  capability: tool_utilization
+- id: no_retries
+  verify: no_retries
+  weight: 0.0
+  criterion: '[Must] Agent did not retry any failed tool calls.'
+  capability: tool_utilization
+- id: duration_budget
+  verify: duration_budget
+  weight: 0.0
+  criterion: '[Must] Agent completed the task within 300 seconds.'
+  capability: tool_utilization
+- id: token_budget_total
+  verify: token_budget
+  weight: 0.0
+  criterion: '[Must] Agent used fewer than 50000 tokens total.'
+  capability: tool_utilization

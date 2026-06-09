@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
+difficulty: easy
 intent: Fine-tune a DPA3 potential for a fixed step budget and summarize key hyperparameters and outcomes.
 human_prompt_seed: "执行 DPA3 微调流程评估（Mock版）：\n1. 先 query/检索并整理训练所需输入文件（数据集、模型配置、训练参数）；\n2. 明确目标训练步数与学习率策略；\n3. 不做真实训练，使用以下 mock
   结果：\n   - train_steps = 3000\n   - lr_type = cosine\n   - start_lr = 1.0e-2\n   - stop_lr = 1.0e-5\n   - valid_ratio = 0.2\n\
@@ -41,37 +42,31 @@ reference_answers:
 scoring_checklist:
 - id: finetune_config
   criterion: Agent writes `dpa3_finetune_config.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: finetune_report
   criterion: Agent writes `dpa3_finetune_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: config_required_tokens
   criterion: Config JSON includes required training-control fields.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: report_required_tokens
   criterion: Report summarizes training outcome with uncertainty notes.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: best_valid_loss_mock
   criterion: Final answer includes a mock best validation loss near 0.021.
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: grounding_source
   criterion: Deliverables are grounded in generated finetune artifacts and avoid unsupported benchmark claims.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

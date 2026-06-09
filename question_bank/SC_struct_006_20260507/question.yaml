@@ -3,6 +3,7 @@ task_type: simulation
 capabilities:
 - structure_manipulation
 domain: agnostic
+difficulty: easy
 intent: Add missing hydrogens to the diacetylmorphine (DACMOR) molecular crystal CIF and validate the formula, local 
   molecular environment, and tetrahedral geometry using MolCrysKit.
 human_prompt_seed: '对以下通过 OSS URL 提供的 CIF 结构进行补氢处理：
@@ -69,20 +70,17 @@ reference_answers:
 scoring_checklist:
 - id: file_exists
   criterion: The output file `dacmor_hydrogenated.cif` exists.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: target_formula
   criterion: The reduced chemical formula read from dacmor_hydrogenated.cif matches C21H23NO5.
-  axis: correctness
   verify: struct_file_formula
   capability: structure_manipulation
   weight: 0.5
 - id: hch_angle_deg
   criterion: The mean H-C-H angle computed from dacmor_hydrogenated.cif is close to tetrahedral 109.48 degrees within a 
     reasonable tolerance.
-  axis: correctness
   verify: struct_file_bond_angle
   capability: structure_manipulation
   weight: 0.5
@@ -90,14 +88,12 @@ scoring_checklist:
   criterion: MolCrysKit validates that the hydrogenated output has correct molecular connectivity (no fragmented or 
     over-bonded molecules), each molecule matches the expected formula, and ChemicalEnvironment analysis confirms 
     H-bearing atoms have chemically consistent local geometry (hybridisation, coordination).
-  axis: correctness
   verify: molcrys_local_env
   capability: structure_manipulation
   weight: 0.5
 - id: explicit_report_tokens
   criterion: Final answer explicitly reports formula C21H23NO5, a representative H-C-H angle near 109 degrees, and the 
     `dacmor_hydrogenated.cif` output basename.
-  axis: correctness
   verify: contains_all
   capability: data_handling
   weight: 0.5
@@ -106,7 +102,6 @@ scoring_checklist:
     carbonyl/ester O should not be hydrogenated) and ties checks to `dacmor_hydrogenated.cif` and the input CIF, not 
     only procedural wording disconnected from those files. Judge solely from the final answer and named deliverables; do
     not fail because the tool-call log omits MCP, web_search, or any specific tool.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

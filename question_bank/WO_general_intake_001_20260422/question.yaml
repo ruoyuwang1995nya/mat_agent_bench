@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
+difficulty: easy
 intent: Build a structured intake-and-analysis protocol with attachment-level triage priority and rejection criteria.
 human_prompt_seed: '工作区已提供 `attachment_manifest.json`。
 
@@ -70,49 +71,41 @@ reference_answers:
 scoring_checklist:
 - id: intake_artifact
   criterion: Agent writes `intake_checklist.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: protocol_artifact
   criterion: Agent writes `analysis_protocol.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: delivery_artifact
   criterion: Agent writes `delivery_plan.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: triage_artifact
   criterion: Agent writes `triage_policy.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: intake_required_tokens
   criterion: Intake checklist is grounded in attachment manifest entries and requests concrete missing metadata.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: protocol_required_tokens
   criterion: Analysis protocol includes workflow, quality checks, and abnormal-case handling.
-  axis: correctness
   verify: llm_binary_judge
   capability: workflow_orchestration
   weight: 0.5
 - id: delivery_required_tokens
   criterion: Delivery plan explicitly includes figures, tables, and explanatory text.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: grounding_source
   criterion: The response stays grounded in `attachment_manifest.json` and does not fabricate unseen attachment content.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

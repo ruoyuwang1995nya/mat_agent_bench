@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: 'Generate VASP INCAR for spin-orbit coupling calculation of heavy-element halide Br6H6Pb2S2. Pb SOC is significant.
 
   '
@@ -66,56 +67,47 @@ reference_answers:
 scoring_checklist:
 - id: incar_artifact
   criterion: INCAR file is generated.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: incar_critical_tokens
   criterion: INCAR contains all critical parameter keywords.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: critical_ENCUT
   criterion: INCAR sets ENCUT in the 300-700 eV range (critical param).
-  axis: correctness
   verify: text_file_regex
   capability: data_handling
   weight: 0.5
 - id: critical_ISPIN
   criterion: INCAR sets ISPIN = 2 (critical param).
-  axis: correctness
   verify: text_file_regex
   capability: scientific_reasoning
   weight: 0.5
 - id: critical_ISYM
   criterion: INCAR sets ISYM = 0 (critical param).
-  axis: correctness
   verify: text_file_regex
   capability: scientific_reasoning
   weight: 0.5
 - id: critical_LMAXMIX
   criterion: INCAR sets LMAXMIX = 4 (critical param).
-  axis: correctness
   verify: text_file_regex
   capability: scientific_reasoning
   weight: 0.5
 - id: critical_LSORBIT
   criterion: INCAR sets LSORBIT = .TRUE. (critical param).
-  axis: correctness
   verify: text_file_regex
   capability: tool_utilization
   weight: 0.5
 - id: critical_PREC
   criterion: INCAR sets PREC = Accurate (critical param).
-  axis: correctness
   verify: text_file_regex
   capability: data_handling
   weight: 0.5
 - id: critical_LNONCOLLINEAR
-  criterion: INCAR sets LNONCOLLINEAR = .TRUE. as required for SOC calculations (LSORBIT implies non-collinear
+  criterion: INCAR sets LNONCOLLINEAR = .TRUE. as required for SOC calculations (LSORBIT implies non-collinear 
     magnetism).
-  axis: correctness
   verify: text_file_regex
   capability: scientific_reasoning
   weight: 0.5
@@ -123,7 +115,6 @@ scoring_checklist:
   criterion: The INCAR uses physically reasonable general settings for a VASP SOC calculation. ENCUT is present (unless 
     not relevant), EDIFF is present with a reasonable value, PREC is set. Machine-specific params (KPAR, NCORE, NPAR) 
     are optional and should not be penalized if absent or different from reference.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
@@ -131,7 +122,6 @@ scoring_checklist:
   criterion: The generated INCAR is grounded in the provided prompt data (material system, calculation type, critical 
     parameters) rather than hallucinated. Judge solely from the final answer and stated file content; do not fail 
     because the tool-call log omits MCP, web_search, or any specific tool.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

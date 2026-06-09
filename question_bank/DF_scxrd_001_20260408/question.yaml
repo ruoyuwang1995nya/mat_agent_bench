@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: agnostic
+difficulty: easy
 intent: Determine the crystal structure of an ordered molecular crystal (1-RTP, 293 K) from raw single-crystal X-ray 
   diffraction data. Starting from the reduced reflection file (.hkl) and the data-collection summary (.p4p), the agent 
   must determine the space group, solve the structure, refine it, and generate a validated CIF with no A-level checkCIF 
@@ -62,48 +63,41 @@ reference_answers:
     max_a_alerts: 0
 scoring_checklist:
 - id: r1_factor
-  criterion: Final R1 factor (on F, I>2sigma) is within tolerance of 0.0418 (human baseline). A value ≤ 0.05 is
+  criterion: Final R1 factor (on F, I>2sigma) is within tolerance of 0.0418 (human baseline). A value ≤ 0.05 is 
     acceptable for a well-refined ordered structure.
-  axis: correctness
   verify: numerical_range
   weight: 0.5
   capability: tool_utilization
 - id: wr2_factor
-  criterion: Final wR2 factor (on F², all data) is within tolerance of 0.0981 (human baseline). A value ≤ 0.12 is
+  criterion: Final wR2 factor (on F², all data) is within tolerance of 0.0981 (human baseline). A value ≤ 0.12 is 
     acceptable.
-  axis: correctness
   verify: numerical_range
   weight: 0.5
   capability: tool_utilization
 - id: goof
-  criterion: Goodness-of-fit (GooF, S) is within tolerance of 1.048. A value between 0.9 and 1.2 indicates a
+  criterion: Goodness-of-fit (GooF, S) is within tolerance of 1.048. A value between 0.9 and 1.2 indicates a 
     well-refined structure.
-  axis: correctness
   verify: numerical_range
   weight: 0.5
   capability: tool_utilization
 - id: space_group_number
   criterion: The agent correctly identifies the space group number as 4 (P2₁, monoclinic). The answer or CIF must report
     space group No. 4.
-  axis: correctness
   verify: numerical_range
   weight: 0.5
   capability: scientific_reasoning
 - id: cell_volume
   criterion: Refined unit cell volume is within tolerance of 1001.05 Å³.
-  axis: correctness
   verify: numerical_range
   weight: 0.5
   capability: tool_utilization
 - id: checkcif_validation
   criterion: The generated CIF passes IUCr checkCIF with zero A-level alerts.
-  axis: correctness
   verify: checkcif_no_a_alerts
   weight: 0.5
   capability: structure_manipulation
 - id: cif_generated
   criterion: The agent produces a valid CIF file as output of the refinement.
-  axis: correctness
   verify: llm_binary_judge
   weight: 0.5
   capability: data_handling

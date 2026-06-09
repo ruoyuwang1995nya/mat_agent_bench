@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: catalysis
+difficulty: easy
 intent: Compare bulk and exfoliated MoS2 HER electrochemical performance from uploaded LSV and CV traces.
 human_prompt_seed: '请下载并分析以下通过 OSS URL 提供的两组 MoS2 析氢电催化数据（bulk MoS2 与 exfoliated MoS2，含各自 50 mV/s 的 LSV 极化曲线，以及 20/40/60/80/100
   mV/s 的 CV 扫描序列）：
@@ -152,52 +153,44 @@ reference_answers:
 scoring_checklist:
 - id: mos2_potential_5ma
   criterion: Bulk MoS2 potential at the selected activity benchmark is consistent with the uploaded LSV trace.
-  axis: correctness
   verify: answer_json_numeric
   capability: data_handling
   weight: 0.5
 - id: exmos2_potential_5ma
   criterion: Exfoliated MoS2 potential at the selected activity benchmark is consistent with the uploaded LSV trace.
-  axis: correctness
   verify: answer_json_numeric
   capability: data_handling
   weight: 0.5
 - id: mos2_tafel
   criterion: Bulk MoS2 Tafel descriptor reported in eval_results is consistent with the uploaded LSV trace.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: data_handling
 - id: exmos2_tafel
   criterion: Exfoliated MoS2 Tafel descriptor reported in eval_results is consistent with the uploaded LSV trace.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: data_handling
 - id: mos2_cdl
   criterion: Bulk MoS2 double-layer descriptor reported in eval_results is consistent with the scan-rate CV series.
-  axis: correctness
   verify: answer_json_numeric
   capability: data_handling
   weight: 0.5
 - id: exmos2_cdl
-  criterion: Exfoliated MoS2 double-layer descriptor reported in eval_results is consistent with the scan-rate CV
+  criterion: Exfoliated MoS2 double-layer descriptor reported in eval_results is consistent with the scan-rate CV 
     series.
-  axis: correctness
   verify: answer_json_numeric
   capability: data_handling
   weight: 0.5
 - id: comparison_conclusion
   criterion: The final answer identifies exfoliated MoS2 as having better HER kinetics based on the LSV/Tafel evidence, 
     while discussing uncertainty in capacitance comparison.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: grounding_source
   criterion: The analysis is grounded in the uploaded LSV and CV files and states how the metrics were obtained from 
     those files.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

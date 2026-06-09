@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: battery
+difficulty: easy
 intent: Analyze Li+ hopping in PEO-LiTFSI by comparing PMF barriers and diffusion evidence for two salt-ratio 
   conditions.
 human_prompt_seed: '文件 `free_energy_hopping_bundle.json` 给出了 PEO-LiTFSI 在两个盐浓度条件下的局域结构、PMF 和扩散关联数据。
@@ -47,34 +48,29 @@ reference_answers:
 scoring_checklist:
 - id: barrier_eo_li_20_eV
   criterion: PMF main barrier for EO/Li = 20 is reported within tolerance of the curated value (~0.18 eV).
-  axis: correctness
   verify: numerical_range
   capability: data_handling
   weight: 0.5
 - id: barrier_eo_li_10_eV
   criterion: PMF main barrier for EO/Li = 10 is reported within tolerance of the curated value (~0.33 eV).
-  axis: correctness
   verify: numerical_range
   capability: data_handling
   weight: 0.5
 - id: lower_barrier_condition_correctness
   criterion: Final mechanism analysis identifies EO/Li = 20 as the condition with the lower hopping barrier and the more
     favorable Li+ migration pathway.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: required_fields
-  criterion: Report includes PMF profile discussion, barrier table, reaction-coordinate note, hopping-mechanism
+  criterion: Report includes PMF profile discussion, barrier table, reaction-coordinate note, hopping-mechanism 
     interpretation, and a validation suggestion.
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
 - id: grounding_source
   criterion: The PMF interpretation is explicitly tied to the provided free-energy and MD descriptors from 
     free_energy_hopping_bundle.json rather than generic statements about ion transport.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

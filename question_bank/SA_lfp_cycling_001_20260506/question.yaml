@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: battery
+difficulty: easy
 intent: Analyze LiFePO4 half-cell cycling data from a Neware workbook.
 human_prompt_seed: '请下载并分析以下通过 OSS URL 提供的 Neware 工作簿：
 
@@ -58,44 +59,38 @@ reference_answers:
   unit: percent
 scoring_checklist:
 - id: cycle1_capacity
-  criterion: The first-cycle discharge specific capacity reported in eval_results is consistent with the uploaded
+  criterion: The first-cycle discharge specific capacity reported in eval_results is consistent with the uploaded 
     cycling workbook.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: data_handling
 - id: cycle1_ce
-  criterion: The first-cycle coulombic efficiency reported in eval_results is consistent with the uploaded cycling
+  criterion: The first-cycle coulombic efficiency reported in eval_results is consistent with the uploaded cycling 
     workbook.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: data_handling
 - id: cycle10_capacity
-  criterion: The cycle-10 discharge specific capacity reported in eval_results is consistent with the uploaded cycling
+  criterion: The cycle-10 discharge specific capacity reported in eval_results is consistent with the uploaded cycling 
     workbook.
-  axis: correctness
   verify: answer_json_numeric
   capability: data_handling
   weight: 0.5
 - id: cycle10_retention
-  criterion: The cycle-10 retention value reported in eval_results is consistent with using an early stable cycle as
+  criterion: The cycle-10 retention value reported in eval_results is consistent with using an early stable cycle as 
     reference.
-  axis: correctness
   verify: answer_json_numeric
   capability: data_handling
   weight: 0.5
 - id: cycling_interpretation
   criterion: The final answer identifies the low first-cycle efficiency and summarizes early cycling behavior without 
     inventing cycles not present in the workbook.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5
 - id: grounding_source
   criterion: The reported metrics are derived from the uploaded Neware workbook and distinguish summary sheets from raw 
     record sheets.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

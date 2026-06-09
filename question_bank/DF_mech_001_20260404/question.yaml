@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: agnostic
+difficulty: easy
 intent: Fit equation of state from provided E-V data and report V0 and B0.
 human_prompt_seed: 使用 `ev_curve.json` 中的 E-V 数据拟合 Birch-Murnaghan 状态方程，输出 V0(A3) 与 B0(GPa)。
 tags:
@@ -28,19 +29,16 @@ reference_answers:
 scoring_checklist:
 - id: v0_A3
   criterion: V0 is within tolerance.
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: b0_GPa
   criterion: B0 is within tolerance.
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: required_fields
   criterion: Reports V0, B0, and some measure of fit quality (R-squared, residuals, or similar).
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
@@ -48,7 +46,6 @@ scoring_checklist:
   criterion: EOS fitting uses the data from ev_curve.json; fit parameters are derived from the provided E-V points, not 
     hallucinated. Judge solely from the final answer; do not fail because the tool-call log omits MCP, web_search, or 
     any specific tool.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: agnostic
+difficulty: easy
 intent: Analyze a UV-Vis plate-reader export for MAF-4 enzyme-cascade glucose sensing.
 human_prompt_seed: '请下载并分析以下通过 OSS URL 提供的酶级联比色葡萄糖检测实验酶标仪导出文件：
 
@@ -68,52 +69,44 @@ reference_answers:
 scoring_checklist:
 - id: endpoint_wavelength
   criterion: The endpoint wavelength reported in eval_results is consistent with the assay export.
-  axis: correctness
   verify: answer_json_numeric
   capability: data_handling
   weight: 0.5
 - id: calibration_slope
   criterion: The calibration slope reported in eval_results is consistent with the valid standard wells.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: data_handling
 - id: calibration_intercept
   criterion: The calibration intercept reported in eval_results is consistent with the valid standard wells.
-  axis: correctness
   verify: answer_json_numeric
   capability: data_handling
   weight: 0.5
 - id: calibration_r2
   criterion: The calibration quality reported in eval_results is consistent with the valid standard wells.
-  axis: correctness
   verify: answer_json_numeric
   capability: data_handling
   weight: 0.5
 - id: diluted_glucose
-  criterion: The diluted sample 1 glucose concentration reported in eval_results is consistent with the uploaded
+  criterion: The diluted sample 1 glucose concentration reported in eval_results is consistent with the uploaded 
     plate-reader data.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: data_handling
 - id: serum_glucose
-  criterion: The back-corrected serum sample 1 glucose concentration reported in eval_results is consistent with the
+  criterion: The back-corrected serum sample 1 glucose concentration reported in eval_results is consistent with the 
     stated dilution.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: data_handling
 - id: interpretation
   criterion: The final answer correctly states that sample 1 is within a typical fasting blood-glucose reference range.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: grounding_source
   criterion: The analysis is grounded in the uploaded plate-reader export and identifies invalid or out-of-range wells 
     as data quality issues.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

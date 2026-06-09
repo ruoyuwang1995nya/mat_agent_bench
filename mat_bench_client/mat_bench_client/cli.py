@@ -437,7 +437,8 @@ def _cmd_questions(args: argparse.Namespace) -> None:
         intent = q.get('intent', '')
         if len(intent) > 60:
             intent = intent[:57] + '...'
-        print(f"  {q['id']:<34s} {q.get('capability', ''):<25s} {q.get('domain', ''):<15s} {intent}")
+        cap = ', '.join(q.get('capability', []) or [])
+        print(f"  {q['id']:<34s} {cap:<25s} {q.get('domain', ''):<15s} {intent}")
 
 
 def _cmd_question(args: argparse.Namespace) -> None:
@@ -445,7 +446,8 @@ def _cmd_question(args: argparse.Namespace) -> None:
     token, session_id = _require_credentials(server)
     q = api_get_question(_api(server), token, args.question_id, session_id)
     print(f"Question:   {q['id']}")
-    print(f"Capability: {q.get('capability', '')}")
+    cap = ', '.join(q.get('capability', []) or [])
+    print(f"Capability: {cap}")
     print(f"Domain:     {q.get('domain', '')}")
     print()
     print('--- Prompt ---')
@@ -514,29 +516,11 @@ def _cmd_result(args: argparse.Namespace) -> None:
         sys.exit(1)
     results = data if isinstance(data, list) else [data]
     for r in results:
-        c_p = r.get('correctness_passed', 0)
-        c_t = r.get('correctness_total', 0)
-        g_p = r.get('grounding_passed', 0)
-        g_t = r.get('grounding_total', 0)
-        e_p = r.get('efficiency_passed', 0)
-        e_t = r.get('efficiency_total', 0)
-        veto = r.get('grounding_veto', False)
-        c_score = r.get('correctness_weighted_score', 0.0)
-        g_score = r.get('grounding_weighted_score', 0.0)
-        e_score = r.get('efficiency_weighted_score', 0.0)
-        # Recompute final score using the canonical formula: S_correct × S_ground × S_efficiency
-        s_correct = c_score if c_t > 0 else 0.0
-        s_ground = 1.0 if g_t == 0 else (0.0 if veto else 1.0)
-        s_efficiency = min(1.0, e_score) if e_t > 0 else 1.0
-        final_score = s_correct * s_ground * s_efficiency
+        score = r.get('overall_weighted_score', 0.0)
         print(f"Question:     {r.get('question_id', args.question_id)}")
         print(f"Status:       {r.get('run_status', 'unknown')}")
-        print(f"Correctness:  {c_p}/{c_t}  score={c_score:.3f}")
-        g_note = '  [VETO — overall zeroed]' if veto else ''
-        print(f"Grounding:    {g_p}/{g_t}  score={g_score:.3f}{g_note}")
-        print(f"Efficiency:   {e_p}/{e_t}  score={e_score:.3f}")
-        print(f"Overall:      {r.get('passed_count', 0)}/{r.get('total_count', 0)}  "
-              f"weighted={final_score:.3f}")
+        print(f"Criteria:     {r.get('passed_count', 0)}/{r.get('total_count', 0)} passed")
+        print(f"Score:        {score:.3f}")
 
 
 def _cmd_results(args: argparse.Namespace) -> None:
@@ -560,9 +544,10 @@ def _cmd_results(args: argparse.Namespace) -> None:
             p = r.get('passed_count', 0)
             t = r.get('total_count', 0)
             w = r.get('overall_weighted_score', 0.0)
+            cap = ', '.join(r.get('capability', []) or [])
             print(
                 f"  {r.get('question_id', ''):<34s}"
-                f"{r.get('capability', ''):<25s}"
+                f"{cap:<25s}"
                 f"{r.get('domain', ''):<15s}"
                 f"{r.get('run_status', ''):<12s}"
                 f"{p}/{t}  ({w:.2f})"

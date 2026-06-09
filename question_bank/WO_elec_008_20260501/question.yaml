@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
+difficulty: easy
 intent: Perform ABACUS Bader charge analysis for Al2O3 and summarize per-atom charge transfer evidence.
 human_prompt_seed: "对 Al2O3 执行 Bader 电荷分析（Mock版）：\n1. 先 query/检索并整理 Bader 分析所需输入文件（结构、电子密度、分割相关输入）；\n2. 明确分析目标：比较 Al 与 O 的电荷转移方向与幅度；\n\
   3. 不做真实计算，使用以下 mock 统计值：\n   - Al 平均 Bader 电荷 = +2.31 e\n   - O 平均 Bader 电荷 = -1.54 e\n   - 净电荷守恒误差 < 0.01 e\n4. 基于 mock
@@ -44,38 +45,32 @@ reference_answers:
 scoring_checklist:
 - id: bader_json_artifact
   criterion: Agent writes `al2o3_bader_summary.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: bader_report_artifact
   criterion: Agent writes `al2o3_bader_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: bader_required_tokens
   criterion: Bader summary JSON includes per-atom charge-transfer fields and element labels.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: report_required_tokens
   criterion: Report summarizes charge-transfer trend and uncertainty caveats.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: al_bader_charge_mock
   criterion: Final answer includes a mock Al average Bader charge near +2.31 e.
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: grounding_source
   criterion: Final answer values match the provided mock data (Al avg Bader charge +2.31 e, O avg Bader charge -1.54 e) 
     and are presented in the generated artifact files (JSON + report), not hallucinated from other sources.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

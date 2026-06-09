@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - scientific_reasoning
 domain: agnostic
+difficulty: easy
 intent: Retrieve up to five CoREMOF-2019 entries satisfying atom-count, surface-area, and element constraints.
 human_prompt_seed: '从 CoREMOF 2019 数据库检索并返回不超过 5 个 MOF，约束如下：
 
@@ -57,38 +58,32 @@ reference_answers:
 scoring_checklist:
 - id: candidates_json
   criterion: Agent writes `coremof_filtered_candidates.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: retrieval_report
   criterion: Agent writes `coremof_filter_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: candidates_required_tokens
   criterion: Candidate JSON includes required MOF metadata and source/context fields.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: threshold_regex
   criterion: Candidate JSON explicitly reflects atom-count and surface-area thresholds.
-  axis: correctness
   verify: text_file_regex
   capability: data_handling
   weight: 0.5
 - id: report_required_tokens
   criterion: Report explains filter constraints and uncertainty handling.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: grounding_source
   criterion: The final answer is grounded in filtered retrieval outputs and does not fabricate candidates outside stated
     constraints.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

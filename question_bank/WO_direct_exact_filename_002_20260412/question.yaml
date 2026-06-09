@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
+difficulty: easy
 priority: P0
 intent: Deliverable must use exact filename summary.md without unauthorized suffix variants (direct.toml workspace 
   naming).
@@ -29,13 +30,11 @@ reference_answers:
 scoring_checklist:
 - id: summary_md
   criterion: Agent writes summary.md to workspace root.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: no_v2_filename
   criterion: No deliverable filename uses an unauthorized `_v2` suffix (e.g. summary_v2.md).
-  axis: correctness
   verify: struct_file_count
   capability: structure_manipulation
   weight: 0.5

@@ -3,6 +3,7 @@ task_type: simulation
 capabilities:
 - structure_manipulation
 domain: catalysis
+difficulty: easy
 intent: Cut ZnPd (011) slab from Materials Project bulk (mp-1103252) with 3 layers and 2x2x1 supercell per doc 3.1.1.
 human_prompt_seed: '使用体相结构 mp-1103252（ZnPd）切出 (011) 表面 slab：3 层厚度、2×2×1 扩胞，真空 ≥15 Å，z 向居中。 输出 POSCAR/CIF，并注明与 mp-1103252 的对应关系及切面/扩胞参数。
 
@@ -16,13 +17,11 @@ reference_answers: []
 scoring_checklist:
 - id: mp_and_miller
   criterion: 答案明确使用 mp-1103252 为体相来源，(011) 切面，3 层、2×2×1 扩胞，并提供结构文件。
-  axis: correctness
   verify: llm_binary_judge
   capability: structure_manipulation
   weight: 0.5
 - id: grounding_source
   criterion: 结构来源与切面参数可核对（体相 ID、切面、层数、扩胞），非脱离文件的口头描述。
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

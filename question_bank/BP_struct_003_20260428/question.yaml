@@ -4,6 +4,7 @@ capabilities:
 - data_handling
 - scientific_reasoning
 domain: alloy
+difficulty: easy
 intent: Generate 5 VASP INCAR input files for Al ENCUT convergence test (280, 300, 320, 340, 360 eV). All other 
   parameters (k-mesh, ISMEAR, SIGMA, NSW) must remain strictly constant across the 5 files. Focus is on correct input 
   preparation and variable control, not on submitting or running calculations.
@@ -46,7 +47,6 @@ reference_answers:
 scoring_checklist:
 - id: incar_files_count
   criterion: Exactly 5 INCAR files are generated, one per ENCUT value.
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
@@ -54,20 +54,17 @@ scoring_checklist:
   criterion: The 5 INCAR files contain ENCUT values 280, 300, 320, 340, 360 eV respectively, and ENCUT is the only 
     computational parameter that differs across files. Cosmetic fields such as SYSTEM tags, comment lines, or filename 
     references may also vary and should not be counted as violations.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: kpoint_mesh_constant
   criterion: K-point mesh (8×8×8 Gamma-centered) is consistently applied to all 5 calculations—either via a companion 
     KPOINTS file or via KSPACING/KGAMMA tags in INCAR.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: electronic_params_frozen
   criterion: ISMEAR=1, SIGMA=0.1, NSW=0 are identical across all 5 INCAR files.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
@@ -75,7 +72,6 @@ scoring_checklist:
   criterion: Comparing any two of the 5 INCAR files, ENCUT is the only computational parameter that differs. All other 
     computational parameters (ISMEAR, SIGMA, NSW, EDIFF, PREC, etc.) are identical. Cosmetic differences in SYSTEM tags,
     comment lines, or first-line labels are acceptable.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5
@@ -83,7 +79,6 @@ scoring_checklist:
   criterion: 'Parameter values in the generated INCAR files match the convergence_encut.json config exactly: k-mesh 8×8×8,
     ISMEAR=1, SIGMA=0.1, NSW=0, IBRION=-1, ALGO=Fast, ENCUT sweep [280, 300, 320, 340, 360] eV. The answer or files must show
     these values were derived from reading the JSON file, not invented independently.'
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

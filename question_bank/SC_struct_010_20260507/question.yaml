@@ -3,6 +3,7 @@ task_type: simulation
 capabilities:
 - structure_manipulation
 domain: agnostic
+difficulty: easy
 intent: Build a seven-layer Ag(111) slab with explicit water and potassium ions for an electrochemical interface initial
   model.
 human_prompt_seed: '构建一个 Ag(111) 界面初始结构并导出为 `ag111_k_water_interface.cif`。
@@ -90,63 +91,53 @@ reference_answers:
 scoring_checklist:
 - id: file_exists
   criterion: The output file `ag111_k_water_interface.cif` exists.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: ag_count
   criterion: The output CIF contains exactly 42 Ag atoms, consistent with a 7-layer (2 × 3) Ag(111) slab.
-  axis: correctness
   verify: struct_file_atom_count
   capability: structure_manipulation
   weight: 0.5
 - id: water_count
   criterion: Under the neutral-water-only assumption, the output CIF contains exactly 43 oxygen atoms, equivalent to 43 
     H2O molecules.
-  axis: correctness
   verify: struct_file_atom_count
   capability: structure_manipulation
   weight: 0.5
 - id: k_count
   criterion: The output CIF contains exactly 2 K atoms, confirming the potassium-ion count.
-  axis: correctness
   verify: struct_file_atom_count
   capability: structure_manipulation
   weight: 0.5
 - id: formula_check
   criterion: The output CIF formula is Ag42K2H86O43, confirming 43 H2O molecules and 2 K ions were included.
-  axis: correctness
   verify: struct_file_formula
   capability: structure_manipulation
   weight: 0.5
 - id: slab_layers
   criterion: The Ag atoms form exactly 7 distinct z-layers in the slab.
-  axis: correctness
   verify: struct_file_layer_count
   capability: structure_manipulation
   weight: 0.5
 - id: vacuum_angstrom
   criterion: The `<eval_results>` JSON reports a vacuum thickness near 12 Å.
-  axis: correctness
   verify: answer_json_numeric
   capability: tool_utilization
   weight: 0.5
 - id: supercell_a
   criterion: The `<eval_results>` JSON reports the Ag(111) slab as a 2x supercell along a.
-  axis: correctness
   verify: answer_json_numeric
   capability: tool_utilization
   weight: 0.5
 - id: supercell_b
   criterion: The `<eval_results>` JSON reports the Ag(111) slab as a 3x supercell along b.
-  axis: correctness
   verify: answer_json_numeric
   capability: tool_utilization
   weight: 0.5
 - id: eval_result_keys
   criterion: The final answer includes machine-readable keys for vacuum, supercell_a, supercell_b, and adsorbate_side so
     the same-side placement is explicit.
-  axis: correctness
   verify: contains_all
   capability: data_handling
   weight: 0.5
@@ -154,7 +145,6 @@ scoring_checklist:
   criterion: The answer explicitly reports the output structure file, Ag atom count, H2O molecule count, K ion count, 
     slab layer count, vacuum thickness near 12 Å, confirms neutral-water-only composition (no OH-/H3O+), and states that
     solvent/ions are placed above one side of the slab rather than embedded into the metal.
-  axis: correctness
   verify: llm_binary_judge
   capability: structure_manipulation
   weight: 0.5
@@ -163,7 +153,6 @@ scoring_checklist:
     spacing to `ag111_k_water_interface.cif`, not generic interface-building claims disconnected from that file. Judge 
     solely from the final answer and named deliverables; do not fail because the tool-call log omits MCP, web_search, or
     any specific tool.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

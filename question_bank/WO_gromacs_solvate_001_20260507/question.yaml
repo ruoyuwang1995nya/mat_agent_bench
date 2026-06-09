@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
+difficulty: easy
 intent: Build a solvated, ion-neutralized GROMACS system from a PDB file and run energy minimization, all in a single 
   Bohrium submission.
 human_prompt_seed: '提供了一个丙氨酸二肽 (ACE-ALA-NME) 的 PDB 文件 `ala_dipeptide.pdb`。
@@ -55,62 +56,52 @@ scoring_checklist:
 - id: single_submission
   criterion: All steps (pdb2gmx, solvate, genion, mdrun) are chained in a single run.sh script submitted once to 
     Bohrium.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: gmx_mpi_used
   criterion: The run.sh script uses `gmx_mpi` for GROMACS commands.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: no_local_gmx
   criterion: Agent does NOT attempt to run any gmx/gmx_mpi command locally (outside of the Bohrium submission).
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
 - id: genion_pipe
   criterion: The genion command uses echo/pipe (e.g. `echo "SOL" | gmx_mpi genion ...`) to provide interactive group 
     selection.
-  axis: correctness
   verify: text_file_regex
   capability: data_handling
   weight: 0.5
 - id: maxwarn_used
   criterion: grompp invocations include `-maxwarn` flag.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: topology_before_solvate
   criterion: The topology file exists (via pdb2gmx) before `solvate -p` is called.
-  axis: correctness
   verify: llm_binary_judge
   capability: workflow_orchestration
   weight: 0.5
 - id: genion_has_tpr
   criterion: A grompp step produces a .tpr before genion is called (genion requires a .tpr input).
-  axis: correctness
   verify: llm_binary_judge
   capability: workflow_orchestration
   weight: 0.5
 - id: set_e_in_script
   criterion: The run.sh script includes `set -e` so that it aborts on first error.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: em_convergence
   criterion: Final answer reports EM convergence (step count and potential energy).
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
 - id: water_count
   criterion: Final answer reports the number of water molecules in the solvated system.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5

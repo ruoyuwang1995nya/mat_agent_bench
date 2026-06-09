@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: agnostic
+difficulty: easy
 intent: Produce structured mechanical-pressure estimation with sensitivity analysis and go/no-go recommendation.
 human_prompt_seed: '工作区已提供 `implant_params.json`。
 
@@ -66,43 +67,36 @@ reference_answers:
 scoring_checklist:
 - id: calc_sheet_artifact
   criterion: Agent writes `calc_sheet.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: estimation_report_artifact
   criterion: Agent writes `estimation_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: sensitivity_artifact
   criterion: Agent writes `sensitivity_note.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: calc_sheet_required_tokens
   criterion: Calculation sheet JSON includes required keys.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: pressure_value_regex
   criterion: Calculation sheet reports pressure around 3 MPa from provided parameters.
-  axis: correctness
   verify: text_file_regex
   capability: data_handling
   weight: 0.5
 - id: estimation_report_required_tokens
   criterion: Report includes formula, units, uncertainty discussion, and validation suggestions.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: grounding_source
   criterion: The estimate is grounded in `implant_params.json` and avoids fabricated non-provided parameters.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

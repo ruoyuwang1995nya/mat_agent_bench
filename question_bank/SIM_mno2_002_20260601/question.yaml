@@ -1,0 +1,110 @@
+id: SIM_mno2_002_20260601
+task_type: simulation
+capabilities:
+- structure_manipulation
+- scientific_reasoning
+- tool_utilization
+domain: semiconductor
+difficulty: medium
+intent: Analyze the interstitial sites in a β-MnO₂ (pyrolusite, rutile-type) structure and determine which sites are 
+  geometrically compatible with Li⁺ intercalation based on ionic radius and coordination environment. Generate a 
+  structure with Li inserted at the identified sites.
+human_prompt_seed: Given the β-MnO₂ (pyrolusite) structure in beta_mno2.cif, analyze the available interstitial sites 
+  for Li⁺ intercalation. Li⁺ has an ionic radius of 0.76 Å (6-coordinate). Identify the Wyckoff positions of the 
+  interstitial sites in the [1×1] tunnel structure, determine which sites provide reasonable octahedral or tetrahedral 
+  coordination for Li⁺, and generate a new structure file beta_mno2_li.cif with Li inserted at the identified sites at a
+  concentration of Li₀.₂₅MnO₂. Write a brief analysis of the site choices to site_analysis.txt.
+tags:
+- intercalation
+- site_analysis
+- ionic_radius
+- pymatgen
+data_files:
+- key: beta_mno2
+  path: beta_mno2.poscar
+  description: CIF file for β-MnO₂ (pyrolusite, rutile-type structure, space group P4₂/mnm).
+reference_answers:
+- key: artifact_structure
+  value: beta_mno2_li.cif
+- key: artifact_analysis
+  value: site_analysis.txt
+- key: contains_li
+  value:
+    flags: ''
+    tokens:
+    - Li
+    filename: beta_mno2_li.cif
+- key: formula_check
+  value:
+    flags: ''
+    tokens:
+    - Mn
+    - O
+    filename: beta_mno2_li.cif
+- key: analysis_content
+  value:
+    flags: re.IGNORECASE
+    tokens:
+    - interstitial
+    - coordination
+    - Li
+    filename: site_analysis.txt
+- key: grounding_check
+  value:
+    grounding_source: 'Kitchaev et al. 2017 Discussion: cation-interstitial site compatibility in MnO₂ tunnel structures;
+      Li⁺ prefers small tetrahedral/octahedral sites'
+- key: duration_budget
+  value:
+    max: 600000
+scoring_checklist:
+- id: artifact_structure
+  verify: artifact_exists
+  weight: 0.5
+  criterion: '[Must] beta_mno2_li.cif exists with Li inserted into the β-MnO₂ structure'
+  capability: tool_utilization
+- id: artifact_analysis
+  verify: artifact_exists
+  weight: 0.5
+  criterion: '[Must] site_analysis.txt exists with interstitial site analysis'
+  capability: data_handling
+- id: contains_li
+  verify: text_file_contains_all
+  weight: 0.5
+  criterion: '[Must] The output structure contains Li atoms'
+  capability: structure_manipulation
+- id: formula_check
+  verify: text_file_contains_all
+  weight: 0.5
+  criterion: '[Must] The output structure retains Mn and O from the parent β-MnO₂'
+  capability: structure_manipulation
+- id: analysis_content
+  verify: text_file_contains_all
+  weight: 0.5
+  criterion: '[Must] The analysis discusses interstitial sites, coordination, and Li⁺ placement'
+  capability: scientific_reasoning
+- id: grounding_check
+  verify: llm_binary_judge
+  weight: 0.5
+  criterion: '[Must] The site selection is physically reasonable for Li⁺ in the β-MnO₂ [1×1] tunnel structure, consistent
+    with the coordination-compatibility principles described by Kitchaev et al. 2017'
+  capability: scientific_grounding
+- id: turn_budget
+  verify: turn_budget
+  weight: 0
+  criterion: '[Variable] Agent completes within turn budget'
+  capability: tool_utilization
+- id: no_retries
+  verify: no_retries
+  weight: 0
+  criterion: '[Variable] Agent does not retry failed operations more than once'
+  capability: workflow_orchestration
+- id: duration_budget
+  verify: duration_budget
+  weight: 0
+  criterion: '[Variable] Agent completes within duration budget (seconds)'
+  capability: tool_utilization
+- id: token_budget_total
+  verify: token_budget
+  weight: 0
+  criterion: '[Variable] Agent completes within token budget'
+  capability: tool_utilization

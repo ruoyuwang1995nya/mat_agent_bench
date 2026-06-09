@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: battery
+difficulty: easy
 intent: Summarize sulfur-containing solid-electrolyte candidates for Li-metal interfaces by balancing interface 
   stability and ionic conductivity from recent literature.
 human_prompt_seed: '请基于近年文献，推荐可用于锂金属负极界面的含硫固态电解质候选，并强调“界面稳定性 + 高离子电导”两方面的平衡。
@@ -44,31 +45,26 @@ reference_answers:
 scoring_checklist:
 - id: candidates_json
   criterion: Agent writes `sulfur_sse_candidates.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: review_md
   criterion: Agent writes `sulfur_sse_review.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: candidates_required_tokens
   criterion: Candidate JSON includes required per-material fields.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: review_required_tokens
   criterion: Review explains the conductivity-stability tradeoff with uncertainty notes.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: grounding_source
   criterion: Deliverables are grounded in literature-oriented evidence and avoid unsupported performance claims.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

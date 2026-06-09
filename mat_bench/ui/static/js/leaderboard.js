@@ -155,9 +155,6 @@ function renderDetailTable(questions) {
       <td style="text-align:center;font-family:var(--font-data);font-size:.8rem">${q.runs}</td>
       <td style="text-align:center;font-family:var(--font-data);font-size:.8rem">${q.passed}/${q.total}</td>
       <td style="text-align:center;font-family:var(--font-data);font-size:.8rem">${pct}</td>
-      <td style="font-size:.78rem;text-align:center">${esc(q.correctness)}</td>
-      <td style="font-size:.78rem;text-align:center">${esc(q.grounding)}</td>
-      <td style="font-size:.78rem;text-align:center">${esc(q.efficiency)}</td>
       <td style="text-align:center">${statusBadge} ${safety}</td>
     </tr>`;
   }).join('');
@@ -173,9 +170,6 @@ function renderDetailTable(questions) {
           <th style="text-align:center;padding:.4rem .5rem">Runs</th>
           <th style="text-align:center;padding:.4rem .5rem">Passed</th>
           <th style="text-align:center;padding:.4rem .5rem">Rate</th>
-          <th style="text-align:center;padding:.4rem .5rem">Correctness</th>
-          <th style="text-align:center;padding:.4rem .5rem">Grounding</th>
-          <th style="text-align:center;padding:.4rem .5rem">Efficiency</th>
           <th style="text-align:center;padding:.4rem .5rem">Status</th>
         </tr>
       </thead>
@@ -257,13 +251,13 @@ function closeRadarOnBg(event) {
 
 function downloadCSV() {
   if (!_detailData.length) return;
-  const headers = ['question_id','capability','domain','mode','runs','passed','total','pass_rate','correctness','grounding','efficiency','safety_vetoed','criteria_detail'];
+  const headers = ['question_id','capability','domain','mode','runs','passed','total','pass_rate','overall','safety_vetoed','criteria_detail'];
   const lines = [headers.join(',')];
   for (const q of _detailData) {
     const detail = (q.criteria_detail || []).map(c => {
       const verdict = c.passed === c.total ? 'PASS' : (c.passed === 0 ? 'FAIL' : `${c.passed}/${c.total}`);
       const reason = (c.reasons || []).join('; ');
-      return reason ? `${c.criterion_id}(${c.axis}):${verdict}:${reason}` : `${c.criterion_id}(${c.axis}):${verdict}`;
+      return reason ? `${c.criterion_id}(${c.capability || ''}):${verdict}:${reason}` : `${c.criterion_id}(${c.capability || ''}):${verdict}`;
     }).join(' | ');
     const row = { ...q, criteria_detail: detail };
     lines.push(headers.map(h => {

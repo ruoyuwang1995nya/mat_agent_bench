@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - scientific_reasoning
 domain: agnostic
+difficulty: easy
 intent: Recommend soluble acrylate NTD photoresist monomers and provide verified SMILES from databases.
 human_prompt_seed: 'Recommend acrylate-type monomers suitable for NTD photoresist formulations with relatively high solubility.
 
@@ -24,13 +25,11 @@ reference_answers:
 scoring_checklist:
 - id: grounding_source
   criterion: Outputs are grounded in provided inputs and do not fabricate.
-  axis: grounding
   verify: llm_binary_judge
   weight: 0.5
   capability: scientific_grounding
 - id: recommendation_hit_rate
   criterion: Recommendation hit rate >= 0.6 against provided reference list.
-  axis: correctness
   verify: text_file_contains_all
   weight: 0.5
   capability: data_handling

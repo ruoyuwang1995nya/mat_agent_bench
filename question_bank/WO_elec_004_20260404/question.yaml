@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: battery
+difficulty: easy
 intent: Compute average Na intercalation voltage of NFPP using mock energies.
 human_prompt_seed: "计算NFPP的平均嵌钠电压：\n1. 获取NFPP（Na₄Fe₃(PO₄)₂P₂O₇）结构（空间群Pna2₁，Z=4），使用单胞（104原子）；\n2. 含钠态：Na₁₆Fe₁₂P₁₆O₆₀（单胞满Na，104原子）；\n\
   \   脱钠态：Na₄Fe₁₂P₁₆O₆₀（按Na3→Na1→Na4顺序脱出12个Na，92原子）；\n3. 使用以下mock能量值（模拟DPA弛豫结果）：\n   - E_sodiated = -689.60 eV\n   - E_desodiated
@@ -26,25 +27,21 @@ reference_answers:
 scoring_checklist:
 - id: avg_voltage_V
   criterion: Average voltage is computed correctly from mock energies (~3.4 V).
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: sodiated_state
   criterion: Sodiated state is the full unit cell Na₁₆Fe₁₂P₁₆O₆₀ with 104 atoms and all 16 Na sites occupied.
-  axis: correctness
   verify: llm_binary_judge
   capability: structure_manipulation
   weight: 0.5
 - id: desodiated_state
   criterion: Desodiated state Na₄Fe₁₂P₁₆O₆₀ has 92 atoms with exactly 12 Na removed following Na3→Na1→Na4 site order.
-  axis: correctness
   verify: llm_binary_judge
   capability: structure_manipulation
   weight: 0.5
 - id: required_fields
   criterion: Report includes sodiated/desodiated energies, Na chemical potential, voltage formula, and computed voltage.
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
@@ -52,7 +49,6 @@ scoring_checklist:
   criterion: NFPP structure uses correct Pna2₁ lattice parameters; mock energies and μ_Na used exactly as specified; 
     voltage formula applied correctly. Judge solely from the final answer; do not fail because the tool-call log omits 
     MCP, web_search, or any specific tool.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

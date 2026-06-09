@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: semiconductor
+difficulty: easy
 intent: Compute Si phonon dispersion with ABACUS (including relaxation step) and summarize key spectrum outcomes.
 human_prompt_seed: "计算 Si 的声子特征（Mock版）：\n1. 先 query/检索并梳理本任务所需输入文件（结构文件、参数文件、声子相关输入）；\n2. 给出你会采用的声子设置（k 路径/采样、超胞或最小长度、位移步长）；\n\
   3. 不做真实 ABACUS 计算，使用以下 mock 结果进行后处理：\n   - supercell_or_min_length = \"3x3x3\"\n   - displacement_step = 0.01\n   - gamma_optical_frequency_THz
@@ -42,38 +43,32 @@ reference_answers:
 scoring_checklist:
 - id: phonon_json
   criterion: Agent writes `si_phonon_abacus.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: phonon_report
   criterion: Agent writes `si_phonon_abacus_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: json_required_tokens
   criterion: JSON contains key phonon workflow and imaginary-mode-check fields.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: report_required_tokens
   criterion: Report explains relax→phonon workflow and uncertainty caveats.
-  axis: correctness
   verify: llm_binary_judge
   capability: workflow_orchestration
   weight: 0.5
 - id: gamma_freq_mock
   criterion: Final answer includes a mock gamma optical frequency value near 15.6 THz.
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: grounding_source
   criterion: Final answer is grounded in generated phonon artifacts and does not fabricate unsupported dispersion 
     conclusions.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

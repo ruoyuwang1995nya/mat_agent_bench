@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: catalysis
+difficulty: easy
 intent: Compute Pd(111) work function with ABACUS under a z-direction vacuum setup and summarize key computational 
   settings and output.
 human_prompt_seed: "计算 Pd(111) 表面功函数（Mock版）：\n1. 先 query/检索 Pd 体相与 Pd(111) slab 建模所需输入文件，并确认真空方向约束；\n2. 列出关键设置（exchange-correlation
@@ -44,38 +45,32 @@ reference_answers:
 scoring_checklist:
 - id: wf_json_artifact
   criterion: Agent writes `pd111_work_function.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: wf_report_artifact
   criterion: Agent writes `pd111_work_function_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: wf_required_tokens
   criterion: JSON output includes work-function value and explicit z-direction vacuum setting.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: report_required_tokens
   criterion: Report explains setup rationale and output interpretation with uncertainty caveats.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: wf_value_mock
   criterion: Final answer includes a mock work-function value near 5.43 eV.
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: grounding_source
   criterion: The final answer is grounded in generated work-function artifacts and does not fabricate unsupported setup 
     or result details.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

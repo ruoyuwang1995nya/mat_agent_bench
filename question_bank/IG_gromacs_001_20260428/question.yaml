@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: Generate GROMACS simulation parameter file for energy minimization.
 human_prompt_seed: '请为一个蛋白质体系生成 GROMACS 能量最小化的参数文件，要求：
 
@@ -37,26 +38,22 @@ reference_answers:
 scoring_checklist:
 - id: input_artifact
   criterion: Agent writes `em.mdp` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: required_keywords
   criterion: The MDP file contains essential energy minimization parameters (integrator, steep, nsteps, emtol, emstep).
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: physical_params
-  criterion: The MDP file uses correct values matching the request (steep integrator, 50000 steps, emtol=1000,
+  criterion: The MDP file uses correct values matching the request (steep integrator, 50000 steps, emtol=1000, 
     emstep=0.01, cutoff 1.0 nm, Verlet scheme).
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
 - id: grounding_source
   criterion: All parameter values are directly traceable to the user request, not arbitrary defaults.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

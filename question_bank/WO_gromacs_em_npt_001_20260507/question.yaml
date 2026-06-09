@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
+difficulty: easy
 intent: Submit GROMACS energy minimization and NPT equilibration on Bohrium, verify convergence and output structure.
 human_prompt_seed: '对提供的 SPC 水盒子体系执行 GROMACS 能量最小化 + NPT 平衡模拟。
 
@@ -35,25 +36,21 @@ reference_answers:
 scoring_checklist:
 - id: npt_output
   criterion: Agent produces `npt_final.gro` in the workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: em_convergence
   criterion: Final answer reports EM convergence (steps and Fmax < 1000).
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
 - id: npt_density
   criterion: Final answer reports NPT equilibrium density close to 1.0 g/cm³ (within ±0.1 for SPC water at 298K).
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
 - id: grounding_source
   criterion: The reported density and convergence values come from actual GROMACS output logs, not textbook recall.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

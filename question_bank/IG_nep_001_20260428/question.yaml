@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: Draft a practical nep.in from provided training structures.
 human_prompt_seed: '目录里有一份 NEP 训练数据 `train.xyz`。
 
@@ -91,63 +92,53 @@ reference_answers:
 scoring_checklist:
 - id: must_nep_in_artifact
   criterion: '[Must] `nep.in` is generated.'
-  axis: correctness
   verify: artifact_exists
   weight: 0.5
   capability: tool_utilization
 - id: must_nep_note_artifact
   criterion: '[Must] `nep_input_note.md` is generated.'
-  axis: correctness
   verify: artifact_exists
   weight: 0.5
   capability: tool_utilization
 - id: must_nep_core_tokens
   criterion: '[Must] `nep.in` includes core NEP training keywords.'
-  axis: correctness
   verify: text_file_contains_all
   weight: 0.5
   capability: tool_utilization
 - id: must_type_statement
   criterion: '[Must] `type` line is syntactically valid and species tokens are well-formed.'
-  axis: correctness
   verify: text_file_regex
   weight: 0.5
   capability: data_handling
 - id: must_cutoff_range
   criterion: '[Must] cutoff values stay in documented valid range.'
-  axis: correctness
   verify: text_file_regex
   weight: 0.5
   capability: tool_utilization
 - id: variable_cutoff_consistency
   criterion: '[Variable] Angular/radial cutoff relation follows documented constraints (including reasonable angular <= radial
     setup).'
-  axis: correctness
   verify: llm_binary_judge
   weight: 0.5
   capability: scientific_reasoning
 - id: variable_dataset_reading_quality
   criterion: '[Variable] `type` and parameter choices reflect actual reading of train.xyz (species/composition/scale), not
     a generic boilerplate file.'
-  axis: correctness
   verify: llm_binary_judge
   weight: 0.5
   capability: data_handling
 - id: suggested_hparam_ranges
   criterion: '[Suggested] major hyperparameters are within recommended NEP boundaries.'
-  axis: correctness
   verify: text_file_numeric_range
   weight: 0.5
   capability: scientific_reasoning
 - id: variable_scale_aware_setup
   criterion: '[Variable] Hyperparameter choices are adapted to observed data scale/composition (not copied as fixed template).'
-  axis: correctness
   verify: llm_binary_judge
   weight: 0.5
   capability: workflow_orchestration
 - id: grounding_source
   criterion: Type ordering and setup must be grounded in provided train/test inputs, without fabricating unseen species.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

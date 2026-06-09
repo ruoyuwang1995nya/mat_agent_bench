@@ -1,0 +1,170 @@
+id: E2E_semiconductor_001_20260601
+task_type: end_to_end_research
+capabilities:
+- scientific_reasoning
+- tool_utilization
+- workflow_orchestration
+- data_handling
+- structure_manipulation
+- scientific_grounding
+domain: semiconductor
+difficulty: hard
+intent: Starting from bulk crystal structures of pyrite FeS2 and anatase TiO2, build the TiO2(001)/FeS2(100) 
+  heterojunction, compute electronic properties, determine band alignment and work functions, and predict charge carrier
+  separation behavior for photocatalytic applications.
+human_prompt_seed: 'Starting from the provided bulk crystal structures of pyrite FeS2 (mp-226) and anatase TiO2 (mp-390),
+  design and analyze a TiO2(001)/FeS2(100) heterojunction for photocatalytic applications. Construct the interface model,
+  compute the relevant electronic properties, and determine whether the heterojunction enables efficient charge carrier separation.
+  Report your findings in results.json with keys: adhesion_energy_ev_per_A2, work_function_fes2_ev, work_function_tio2_ev,
+  work_function_hetero_ev, vbo_ev, cbo_ev, band_alignment_type, charge_transfer_direction, and provide a detailed methodology
+  report in analysis_report.txt.'
+tags:
+- eng_vasp
+- end_to_end
+- heterojunction
+- photocatalysis
+- charge_separation
+data_files:
+- key: poscar_fes2_bulk
+  path: FeS2.poscar
+  description: Bulk pyrite FeS2 POSCAR (cubic Pa3, a=5.397 Å)
+- key: poscar_tio2_bulk
+  path: TiO2.poscar
+  description: Bulk anatase TiO2 POSCAR (tetragonal I41/amd, a=3.784 Å, c=9.515 Å)
+reference_answers:
+- key: artifact_results
+  value:
+    flags:
+    - required
+    filename: results.json
+- key: artifact_report
+  value:
+    flags:
+    - required
+    filename: analysis_report.txt
+- key: json_adhesion
+  value:
+    checks:
+    - key: adhesion_energy_ev_per_A2
+      max: -0.21
+      min: -0.31
+    filename: results.json
+- key: json_work_functions
+  value:
+    checks:
+    - key: work_function_fes2_ev
+      max: 5.08
+      min: 4.98
+    - key: work_function_tio2_ev
+      max: 5.27
+      min: 5.17
+    - key: work_function_hetero_ev
+      max: 4.14
+      min: 4.04
+    filename: results.json
+- key: json_offsets
+  value:
+    checks:
+    - key: vbo_ev
+      max: 2.67
+      min: 2.57
+    - key: cbo_ev
+      max: 0.42
+      min: 0.32
+    filename: results.json
+- key: json_alignment
+  value:
+    flags:
+    - case_insensitive
+    - any_match
+    tokens:
+    - type-II
+    - type II
+    - staggered
+    filename: results.json
+- key: json_charge_direction
+  value:
+    flags:
+    - case_insensitive
+    tokens:
+    - FeS2
+    - to
+    - TiO2
+    - from FeS2 to TiO2
+    filename: results.json
+- key: report_content
+  value:
+    flags:
+    - case_insensitive
+    tokens:
+    - supercell
+    - DFT+U
+    - potential line-up
+    - type-II
+    - charge separation
+    filename: analysis_report.txt
+scoring_checklist:
+- id: artifact_results
+  verify: artifact_exists
+  weight: 0.5
+  criterion: '[Must] results.json exists with all required keys'
+  capability: data_handling
+- id: artifact_report
+  verify: artifact_exists
+  weight: 0.5
+  criterion: '[Must] analysis_report.txt exists with detailed methodology'
+  capability: scientific_reasoning
+- id: json_adhesion
+  verify: answer_json_numeric
+  weight: 0.5
+  criterion: '[Must] Adhesion energy ≈ -0.26 ± 0.05 eV/Å² indicating thermodynamically stable interface'
+  capability: data_handling
+- id: json_work_functions
+  verify: answer_json_numeric
+  weight: 0.5
+  criterion: '[Must] Work functions: FeS2(100) ≈ 5.03 eV, TiO2(001) ≈ 5.22 eV, heterojunction ≈ 4.09 eV'
+  capability: data_handling
+- id: json_offsets
+  verify: answer_json_numeric
+  weight: 0.5
+  criterion: '[Must] VBO ≈ 2.62 ± 0.05 eV and CBO ≈ 0.37 ± 0.05 eV'
+  capability: data_handling
+- id: json_alignment
+  verify: text_file_contains_all
+  weight: 0.5
+  criterion: '[Must] Band alignment correctly identified as type-II (staggered)'
+  capability: scientific_reasoning
+- id: json_charge_direction
+  verify: text_file_contains_all
+  weight: 0.5
+  criterion: '[Must] Charge transfer direction: electrons flow from FeS2 to TiO2 under illumination'
+  capability: scientific_reasoning
+- id: report_content
+  verify: text_file_contains_all
+  weight: 0.5
+  criterion: '[Must] Report covers supercell construction, DFT+U methodology, potential line-up for band alignment, and type-II
+    charge separation mechanism'
+  capability: scientific_reasoning
+- id: workflow_orchestration
+  verify: llm_binary_judge
+  weight: 0.5
+  criterion: '[Must] Agent follows correct multi-step workflow: bulk relaxation → surface slab creation → heterojunction construction
+    → electronic structure calculation → band alignment analysis'
+  capability: workflow_orchestration
+- id: llm_grounding
+  verify: llm_binary_judge
+  weight: 0.5
+  criterion: '[Must] All reported values and conclusions trace back to the TiO2/FeS2 heterojunction DFT study'
+  capability: scientific_grounding
+- id: duration_budget
+  verify: duration_budget
+  weight: 0.0
+  criterion: '[Variable] Agent completes task within duration budget'
+  capability: tool_utilization
+reference_answer_prompt: 'Phase 1 (Bulk): Relax bulk FeS2 (Pa3, a=5.409 Å) and TiO2 (I41/amd, a=3.803 Å, c=9.517 Å) with PBE+U
+  (U_Fe=2.0, U_Ti=7.3 eV), DFT-D3, ENCUT=600 eV. Verify band gaps: FeS2=0.96 eV, TiO2=3.21 eV. Phase 2 (Surfaces): Cleave
+  FeS2(100) and TiO2(001) surfaces, add 20 Å vacuum, relax. Compute work functions: Φ(FeS2)=5.03 eV, Φ(TiO2)=5.22 eV. Phase
+  3 (Heterojunction): Build (2×2)FeS2/(3×3)TiO2 supercell (6.73% mismatch), stack with interface, relax. Compute adhesion
+  energy E_ad=-0.26 eV/Å². Phase 4 (Band alignment): Use potential line-up method. ΔV(z)=4.05 eV, (V-V)_TiO2=1.24 eV, (V-V)_FeS2=7.91
+  eV. ΔE_VBO=2.62 eV, ΔE_CBO=0.37 eV. Type-II alignment. Heterojunction work function Φ=4.09 eV. Electrons transfer from FeS2
+  to TiO2 under illumination.'

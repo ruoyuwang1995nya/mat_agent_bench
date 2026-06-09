@@ -3,6 +3,7 @@ task_type: simulation
 capabilities:
 - structure_manipulation
 domain: catalysis
+difficulty: easy
 intent: Build Ag(001) surface slab and place CO molecule at ontop site for adsorption calculation.
 human_prompt_seed: '构建CO在Ag(001)表面的吸附结构：
 
@@ -62,56 +63,47 @@ reference_answers:
 scoring_checklist:
 - id: bare_slab_file
   criterion: Agent writes `bare_slab.vasp` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: molecule_file
   criterion: Agent writes `CO_molecule.vasp` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: adsorbed_system_file
   criterion: Agent writes `adsorbed_system.vasp` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: slab_layers
   criterion: The file `bare_slab.vasp` has exactly 4 Ag atomic layers along z.
-  axis: correctness
   verify: struct_file_layer_count
   capability: structure_manipulation
   weight: 0.5
 - id: slab_ag_count
   criterion: The file `bare_slab.vasp` contains exactly 36 Ag atoms for the 3x3 four-layer slab.
-  axis: correctness
   verify: struct_file_atom_count
   capability: structure_manipulation
   weight: 0.5
 - id: co_c_count
   criterion: The file `CO_molecule.vasp` contains exactly one C atom.
-  axis: correctness
   verify: struct_file_atom_count
   capability: structure_manipulation
   weight: 0.5
 - id: co_o_count
   criterion: The file `CO_molecule.vasp` contains exactly one O atom.
-  axis: correctness
   verify: struct_file_atom_count
   capability: structure_manipulation
   weight: 0.5
 - id: required_fields
   criterion: Output includes three structure files, layer count, vacuum thickness, and adsorption site description.
-  axis: correctness
   verify: llm_binary_judge
   capability: structure_manipulation
   weight: 0.5
 - id: structure_validity
   criterion: Slab has 4 atomic layers (4 z-distinct planes, 36 Ag atoms), vacuum ≥ 15 Å, CO is placed at ontop site with
     C-down orientation.
-  axis: correctness
   verify: llm_binary_judge
   capability: structure_manipulation
   weight: 0.5
@@ -119,7 +111,6 @@ scoring_checklist:
   criterion: Ag bulk structure uses correct FCC lattice constant; slab is built with proper crystallographic orientation
     and parameters; CO placement uses physically motivated coordinates, tied to named deliverables. Judge solely from 
     the final answer; do not fail because the tool-call log omits MCP, web_search, or any specific tool.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

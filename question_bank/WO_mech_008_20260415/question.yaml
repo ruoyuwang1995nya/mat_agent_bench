@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
+difficulty: easy
 intent: Calculate SrTiO3 elastic constants with APEX and report full C11/C12/C44 outputs.
 human_prompt_seed: "计算 SrTiO3 弹性常数（Mock版）：\n1. 先 query/检索并整理 APEX 弹性流程所需输入文件；\n2. 说明采用的弹性方法与形变设置；\n3. 不做真实计算，使用以下 mock 结果：\n\
   \   - C11 = 316.8 GPa\n   - C12 = 101.5 GPa\n   - C44 = 125.7 GPa\n   - elastic_method = finite_strain\n4. 基于 mock 结果完成后处理与物理意义讨论。\n\
@@ -42,37 +43,31 @@ reference_answers:
 scoring_checklist:
 - id: elastic_json
   criterion: Agent writes `srtio3_elastic_apex.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: elastic_report
   criterion: Agent writes `srtio3_elastic_apex_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: json_required_tokens
   criterion: JSON includes required elastic tensor fields and setup metadata.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: report_required_tokens
   criterion: Report explains workflow and uncertainty caveats for APEX elastic results.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: srtio3_c11_mock
   criterion: Final answer includes a mock C11 value near 316.8 GPa.
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: grounding_source
   criterion: Final answer is grounded in generated APEX elastic outputs and does not invent unsupported tensor values.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: polymer
+difficulty: easy
 intent: Identify a processing window for PEO-LiTFSI by balancing zero-shear viscosity, shear-thinning onset, and 
   ionic-conductivity proxies across temperature and salt concentration.
 human_prompt_seed: '文件 `rheology_window_bundle.json` 提供了 PEO-LiTFSI 在不同盐浓度和温度下的流变、扩散和电导 proxy 数据。
@@ -46,33 +47,28 @@ reference_answers:
 scoring_checklist:
 - id: viscosity_20wt_353K_Pa_s
   criterion: Zero-shear viscosity at 20 wt% LiTFSI and 353 K is reported within tolerance (~38 Pa·s).
-  axis: correctness
   verify: numerical_range
   capability: data_handling
   weight: 0.5
 - id: conductivity_20wt_353K_mScm
   criterion: Conductivity proxy at 20 wt% LiTFSI and 353 K is reported within tolerance (~0.62 mS/cm).
-  axis: correctness
   verify: numerical_range
   capability: data_handling
   weight: 0.5
 - id: best_window_correctness
   criterion: Final recommendation identifies 20 wt% LiTFSI at 353 K as the best-balanced processing window.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: required_fields
-  criterion: Report includes a rheology window, viscosity-conductivity trade-off discussion, mechanism note, process
+  criterion: Report includes a rheology window, viscosity-conductivity trade-off discussion, mechanism note, process 
     recommendation, and at least one risk note.
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
 - id: grounding_source
   criterion: Conclusions are explicitly grounded in the provided rheology and transport metrics from 
     rheology_window_bundle.json rather than generic electrolyte-processing statements.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

@@ -4,6 +4,7 @@ capabilities:
 - data_handling
 - scientific_reasoning
 domain: agnostic
+difficulty: easy
 intent: Evaluate a proposal excerpt and produce structured scorecard, rationale, and risk-mitigation artifacts.
 human_prompt_seed: '工作区已提供 `proposal_excerpt.md`。
 
@@ -72,43 +73,36 @@ reference_answers:
 scoring_checklist:
 - id: scorecard_artifact
   criterion: Agent writes `review_scorecard.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: rationale_artifact
   criterion: Agent writes `review_rationale.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: risk_artifact
   criterion: Agent writes `risk_mitigation.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: scorecard_required_tokens
   criterion: Scorecard JSON includes required score and recommendation keys.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: score_bounds_regex
   criterion: Score fields stay within required numeric ranges.
-  axis: correctness
   verify: text_file_regex
   capability: data_handling
   weight: 0.5
 - id: rationale_required_tokens
   criterion: Rationale includes all required dimensions, risks, suggestions, and recommendation statement.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: grounding_source
   criterion: Judgments are grounded in `proposal_excerpt.md` rather than generic boilerplate.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

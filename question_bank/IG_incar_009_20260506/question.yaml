@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: 'Generate VASP INCAR for DFPT dielectric constant calculation of C8H12HfO4. Compute dielectric tensor and Born effective
   charges.
 
@@ -44,31 +45,26 @@ reference_answers:
 scoring_checklist:
 - id: incar_artifact
   criterion: INCAR file is generated.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: incar_critical_tokens
   criterion: INCAR contains all critical parameter keywords.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: critical_EDIFF
   criterion: INCAR sets EDIFF = 0.0001 (critical param).
-  axis: correctness
   verify: text_file_regex
   capability: data_handling
   weight: 0.5
 - id: critical_IBRION
   criterion: INCAR sets IBRION = 8 (critical param).
-  axis: correctness
   verify: text_file_regex
   capability: scientific_reasoning
   weight: 0.5
 - id: critical_LEPSILON
   criterion: INCAR sets LEPSILON = .TRUE. (critical param).
-  axis: correctness
   verify: text_file_regex
   capability: tool_utilization
   weight: 0.5
@@ -76,7 +72,6 @@ scoring_checklist:
   criterion: The INCAR uses physically reasonable general settings for a VASP DFPT/phonon calculation. ENCUT is present 
     (unless not relevant), EDIFF is present with a reasonable value, PREC is set. Machine-specific params (KPAR, NCORE, 
     NPAR) are optional and should not be penalized if absent or different from reference.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
@@ -84,7 +79,6 @@ scoring_checklist:
   criterion: The generated INCAR is grounded in the provided prompt data (material system, calculation type, critical 
     parameters) rather than hallucinated. Judge solely from the final answer and stated file content; do not fail 
     because the tool-call log omits MCP, web_search, or any specific tool.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

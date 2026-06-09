@@ -3,6 +3,7 @@ task_type: simulation
 capabilities:
 - structure_manipulation
 domain: agnostic
+difficulty: easy
 intent: >-
   Remove an adsorbed molecule from a bulk crystal and return the clean host structure
   (mp-id: mp-1195860, molecule formula: H10C12Br1N3O2F2).
@@ -34,13 +35,11 @@ reference_answers:
 scoring_checklist:
 - id: clean_slab_artifact
   criterion: Agent writes `clean_slab.cif` to the workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: atomworld_match
   criterion: Output CIF matches the hidden clean-structure target under AtomWorld active-task evaluation.
-  axis: correctness
   verify: atomworld_active_task
   capability: structure_manipulation
   weight: 0.5

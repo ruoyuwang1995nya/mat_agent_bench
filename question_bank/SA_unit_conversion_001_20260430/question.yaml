@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: agnostic
+difficulty: easy
 intent: Correctly convert energy values between Rydberg and eV units.
 human_prompt_seed: '以下是一组 Quantum ESPRESSO 计算得到的能量数据（单位 Ry）：
 
@@ -44,25 +45,21 @@ reference_answers:
 scoring_checklist:
 - id: output_artifact
   criterion: Agent writes `energy_ev.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: total_energy_check
   criterion: Total energy conversion is correct (≈ -2159.3 eV ± 1.0).
-  axis: correctness
   verify: text_file_numeric_range
   capability: tool_utilization
   weight: 0.5
 - id: fermi_energy_check
   criterion: Fermi energy conversion is correct (≈ 6.15 eV ± 0.1).
-  axis: correctness
   verify: text_file_numeric_range
   capability: tool_utilization
   weight: 0.5
 - id: band_gap_check
   criterion: Band gap conversion is correct (≈ 1.135 eV ± 0.05).
-  axis: correctness
   verify: text_file_numeric_range
   capability: tool_utilization
   weight: 0.5

@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: 'Generate VASP INCAR for elastic constants calculation of perovskite BaZrO3. Finite-difference method (IBRION=6),
   displacement 0.015 A.
 
@@ -49,37 +50,31 @@ reference_answers:
 scoring_checklist:
 - id: incar_artifact
   criterion: INCAR file is generated.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: incar_critical_tokens
   criterion: INCAR contains all critical parameter keywords.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: critical_IBRION
   criterion: INCAR sets IBRION = 6 (critical param).
-  axis: correctness
   verify: text_file_regex
   capability: scientific_reasoning
   weight: 0.5
 - id: critical_ISIF
   criterion: INCAR sets ISIF = 3 (critical param).
-  axis: correctness
   verify: text_file_regex
   capability: scientific_reasoning
   weight: 0.5
 - id: critical_NFREE
   criterion: INCAR sets NFREE = 2 (critical param).
-  axis: correctness
   verify: text_file_regex
   capability: scientific_reasoning
   weight: 0.5
 - id: critical_POTIM
   criterion: INCAR sets POTIM = 0.015 (critical param).
-  axis: correctness
   verify: text_file_regex
   capability: tool_utilization
   weight: 0.5
@@ -87,7 +82,6 @@ scoring_checklist:
   criterion: The INCAR uses physically reasonable general settings for a VASP elastic constants calculation. ENCUT is 
     present (unless not relevant), EDIFF is present with a reasonable value, PREC is set. Machine-specific params (KPAR,
     NCORE, NPAR) are optional and should not be penalized if absent or different from reference.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
@@ -95,7 +89,6 @@ scoring_checklist:
   criterion: The generated INCAR is grounded in the provided prompt data (material system, calculation type, critical 
     parameters) rather than hallucinated. Judge solely from the final answer and stated file content; do not fail 
     because the tool-call log omits MCP, web_search, or any specific tool.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

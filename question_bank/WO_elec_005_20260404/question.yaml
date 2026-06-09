@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: catalysis
+difficulty: easy
 intent: 'Compute CO adsorption energy on Ag(001): build slab, place molecule, use mock energies, calculate E_ads.'
 human_prompt_seed: "计算CO在Ag(001)表面的吸附能：\n1. 获取Ag FCC体相结构（a=4.085 Å），切出(001)表面slab（4层，15 Å真空，3×3扩胞）；\n2. 构建气相CO分子（键长约1.128
   Å）；\n3. 在slab顶层ontop位点放置CO分子（C端朝下，初始距离~2.0 Å）构建吸附结构；\n4. 使用以下mock能量值（模拟DPA弛豫结果）：\n   - E_slab = -108.45 eV\n   - E_CO =
@@ -26,13 +27,11 @@ reference_answers:
 scoring_checklist:
 - id: adsorption_energy_eV
   criterion: Adsorption energy is computed correctly from mock energies (~-0.2 eV).
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: required_fields
   criterion: Report includes bare slab energy, isolated molecule energy, adsorbed system energy, and adsorption energy.
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
@@ -40,7 +39,6 @@ scoring_checklist:
   criterion: Adsorption energy computed with specified mock energies; structures built with physically correct 
     parameters (lattice constant, bond length, slab geometry). Judge solely from the final answer; do not fail because 
     the tool-call log omits MCP, web_search, or any specific tool.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: semiconductor
+difficulty: easy
 intent: 'Run band-structure workflow for Si: locate structure, compute bands along high-symmetry path, report gap.'
 human_prompt_seed: '计算 Si 的能带结构：从数据库获取金刚石结构 Si，先做 SCF 计算， 然后沿高对称 k 路径 (G-X-L-G) 计算能带，判断带隙类型（直接/间接）并输出带隙值 (eV)。 注意 DFT 带隙与实验值的偏差，给出不确定性说明。
 
@@ -27,19 +28,16 @@ reference_answers:
 scoring_checklist:
 - id: gap_type
   criterion: Band-gap type is correctly identified as indirect (not direct).
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: gap_value_eV
   criterion: Gap value is in expected DFT range.
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: required_fields
   criterion: Report includes high-symmetry k-path, gap type classification, gap value, and DFT uncertainty note.
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
@@ -47,7 +45,6 @@ scoring_checklist:
   criterion: Stated band gap values are tied to band-structure or calculation outcomes described in the final answer, 
     not only generic training recall. Judge from the answer and named outputs; do not fail because the tool-call log 
     omits MCP, web_search, or any specific tool.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

@@ -154,16 +154,13 @@ def _fmt_pair(pair: tuple[int, int]) -> str:
 def _axis_row(label: str, rates: AxisPassRates) -> str:
     return (
         f'| `{label}` '
-        f'| {_fmt_pair(rates.correctness)} '
-        f'| {_fmt_pair(rates.grounding)} '
-        f'| {_fmt_pair(rates.efficiency)} '
         f'| {_fmt_pair(rates.overall)} |'
     )
 
 
 _AXIS_TABLE_HEADER = (
-    '| Group | Correctness | Grounding | Efficiency | Overall |',
-    '|-------|-------------|-----------|------------|---------|',
+    '| Group | Overall |',
+    '|-------|---------|',
 )
 
 
@@ -226,8 +223,8 @@ def _render_markdown(summary: EvaluationSummary) -> str:
 
     lines += [
         '## Per Question (mode split)',
-        '| Question:Mode | Capabilities | Task Type | Domain | Correctness | Grounding | Efficiency | Overall | Safety Veto |',
-        '|---------------|--------------|-----------|--------|-------------|-----------|------------|---------|-------------|',
+        '| Question:Mode | Capabilities | Task Type | Domain | Overall | Safety Veto |',
+        '|---------------|--------------|-----------|--------|---------|-------------|',
     ]
     for key in sorted(summary.by_question):
         row = summary.by_question[key]
@@ -237,9 +234,6 @@ def _render_markdown(summary: EvaluationSummary) -> str:
             f'| {caps_str} '
             f'| {row.task_type or "—"} '
             f'| {row.domain} '
-            f'| {_fmt_pair(row.correctness)} '
-            f'| {_fmt_pair(row.grounding)} '
-            f'| {_fmt_pair(row.efficiency)} '
             f'| {_fmt_pair(row.overall)} '
             f'| {row.safety_veto_count} |'
         )

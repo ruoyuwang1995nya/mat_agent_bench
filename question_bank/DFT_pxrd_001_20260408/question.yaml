@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: agnostic
+difficulty: easy
 intent: Perform Pawley refinement on variable-temperature PXRD patterns to extract lattice parameters at each 
   temperature, identify two structural phases (low-temperature RTP and high-temperature HTP), and fit linear thermal 
   expansion equations for each phase.
@@ -74,76 +75,64 @@ reference_answers:
 scoring_checklist:
 - id: rtp_V_303K
   criterion: Refined unit cell volume at 303 K (RTP phase) is within tolerance of 999.81 Å³.
-  axis: correctness
   verify: numerical_range
   weight: 0.5
   capability: tool_utilization
 - id: rtp_V_363K
   criterion: Refined unit cell volume at 363 K (RTP phase) is within tolerance of 1011.67 Å³.
-  axis: correctness
   verify: numerical_range
   weight: 0.5
   capability: tool_utilization
 - id: htp_V_383K
   criterion: Refined unit cell volume at 383 K (HTP phase) is within tolerance of 1022.73 Å³.
-  axis: correctness
   verify: numerical_range
   weight: 0.5
   capability: tool_utilization
 - id: htp_V_413K
   criterion: Refined unit cell volume at 413 K (HTP phase) is within tolerance of 1026.10 Å³.
-  axis: correctness
   verify: numerical_range
   weight: 0.5
   capability: tool_utilization
 - id: rtp_a_303K
   criterion: Refined lattice parameter a at 303 K (RTP phase) is within tolerance of 10.828 Å.
-  axis: correctness
   verify: numerical_range
   weight: 0.5
   capability: tool_utilization
 - id: htp_a_383K
   criterion: Refined lattice parameter a at 383 K (HTP phase) is within tolerance of 11.0506 Å.
-  axis: correctness
   verify: numerical_range
   weight: 0.5
   capability: tool_utilization
 - id: rtp_V_slope
   criterion: Linear fit slope of V vs T for RTP phase (303–363 K) is within tolerance of 0.2013 Å³/K.
-  axis: correctness
   verify: numerical_range
   weight: 0.5
   capability: tool_utilization
 - id: htp_V_slope
   criterion: Linear fit slope of V vs T for HTP phase (383–413 K) is within tolerance of 0.1154 Å³/K.
-  axis: correctness
   verify: numerical_range
   weight: 0.5
   capability: tool_utilization
 - id: rtp_a_slope
   criterion: Linear fit slope of a vs T for RTP phase is within tolerance of 0.00129 Å/K.
-  axis: correctness
   verify: numerical_range
   weight: 0.5
   capability: tool_utilization
 - id: htp_c_slope
-  criterion: Linear fit slope of c vs T for HTP phase is within tolerance of -0.00053 Å/K (negative thermal expansion
+  criterion: Linear fit slope of c vs T for HTP phase is within tolerance of -0.00053 Å/K (negative thermal expansion 
     along c axis in HTP phase).
-  axis: correctness
   verify: numerical_range
   weight: 0.5
   capability: tool_utilization
 - id: required_fields
-  criterion: Answer reports both RTP and HTP phases with linear fit equations including slope, intercept, and R² for at
+  criterion: Answer reports both RTP and HTP phases with linear fit equations including slope, intercept, and R² for at 
     least V vs T in each phase.
-  axis: correctness
   verify: llm_binary_judge
   weight: 0.5
   capability: tool_utilization
 - id: phase_transition_identified
   criterion: Answer identifies a structural phase transition between 363 K and 383 K, with distinct lattice parameters 
     for the two phases (notably a jump in a and β at the transition).
-  axis: correctness
   verify: llm_binary_judge
   weight: 0.5
   capability: scientific_reasoning
@@ -151,7 +140,6 @@ scoring_checklist:
   criterion: Lattice parameters and fit results are derived from Pawley refinement of the provided PXRD data file, not 
     from literature values or hallucination. Judge from the final answer and stated methodology; do not fail because the
     tool-call log omits specific tools.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

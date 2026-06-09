@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: polymer
+difficulty: easy
 intent: Compare polyimide adhesion on hydroxyl-rich, epoxy-rich, and carboxyl-rich graphene-oxide surfaces using curated
   adsorption, MD, and adhesion-work evidence.
 human_prompt_seed: '文件 `interface_adhesion_bundle.json` 汇总了聚酰亚胺短链与三类氧化石墨烯表面的界面项目数据。
@@ -45,34 +46,29 @@ reference_answers:
 scoring_checklist:
 - id: cooh_adhesion_work_J_m2
   criterion: GO-COOH-rich adhesion work is reported within tolerance of the curated value (~0.81 J/m^2).
-  axis: correctness
   verify: numerical_range
   capability: data_handling
   weight: 0.5
 - id: cooh_adsorption_eV
   criterion: GO-COOH-rich adsorption energy is reported within tolerance of the curated value (~-1.48 eV).
-  axis: correctness
   verify: numerical_range
   capability: data_handling
   weight: 0.5
 - id: recommendation_correctness
   criterion: Final recommendation identifies GO-COOH-rich as the strongest adhesion surface and ranks GO-OH-rich ahead 
     of GO-epoxy-rich overall.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: required_fields
   criterion: Report includes an adhesion table, orientation discussion, surface-chemistry mechanism, recommendation, and
     at least one scale-up risk.
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
 - id: grounding_source
   criterion: The answer grounds interface conclusions in the provided adsorption, contact-area, orientation, and 
     adhesion-work evidence from interface_adhesion_bundle.json.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

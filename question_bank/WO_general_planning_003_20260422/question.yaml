@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
+difficulty: easy
 intent: Produce phased execution and resource-control artifacts with explicit branch conditions and stop-loss policy.
 human_prompt_seed: '工作区已提供 `mission_constraints.json`。
 
@@ -67,49 +68,41 @@ reference_answers:
 scoring_checklist:
 - id: execution_plan_artifact
   criterion: Agent writes `execution_plan.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: resource_budget_artifact
   criterion: Agent writes `resource_budget.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: stage_gate_artifact
   criterion: Agent writes `stage_gate.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: stop_loss_artifact
   criterion: Agent writes `stop_loss.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: execution_required_tokens
   criterion: Execution plan includes staged flow, IO mapping, parallel hints, and decision gates.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: budget_required_tokens
   criterion: Resource budget includes expensive steps, estimated hours, and simplification strategies.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: stage_gate_required_tokens
   criterion: Stage gate document explicitly states screen-before-deep rule and report-structure guidance.
-  axis: correctness
   verify: llm_binary_judge
   capability: workflow_orchestration
   weight: 0.5
 - id: grounding_source
   criterion: Planning artifacts are grounded in `mission_constraints.json` and avoid fabricated calculation outcomes.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

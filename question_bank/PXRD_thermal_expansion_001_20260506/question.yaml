@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: agnostic
+difficulty: easy
 intent: Perform Pawley refinement on variable-temperature PXRD patterns to extract lattice parameters at each 
   temperature, identify two structural phases (low-temperature RTP and high-temperature HTP), and fit linear thermal 
   expansion equations for each phase.
@@ -120,88 +121,76 @@ reference_answers:
     filename: _td-pxrd_test.txt
 scoring_checklist:
 - id: rtp_V_303K
-  criterion: Refined unit cell volume V at the RTP phase / T=303 K is within tolerance (target 999.81 ± 20.0 Å³). Read
+  criterion: Refined unit cell volume V at the RTP phase / T=303 K is within tolerance (target 999.81 ± 20.0 Å³). Read 
     from the eval_results JSON path rtp.303K.V.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: tool_utilization
 - id: rtp_V_363K
-  criterion: Refined unit cell volume V at RTP / T=363 K is within tolerance (target 1011.67 ± 20.0 Å³). Read from
+  criterion: Refined unit cell volume V at RTP / T=363 K is within tolerance (target 1011.67 ± 20.0 Å³). Read from 
     eval_results path rtp.363K.V.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: tool_utilization
 - id: htp_V_383K
-  criterion: Refined unit cell volume V at HTP / T=383 K is within tolerance (target 1022.73 ± 20.0 Å³). Read from
+  criterion: Refined unit cell volume V at HTP / T=383 K is within tolerance (target 1022.73 ± 20.0 Å³). Read from 
     eval_results path htp.383K.V.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: tool_utilization
 - id: htp_V_413K
-  criterion: Refined unit cell volume V at HTP / T=413 K is within tolerance (target 1026.10 ± 20.0 Å³). Read from
+  criterion: Refined unit cell volume V at HTP / T=413 K is within tolerance (target 1026.10 ± 20.0 Å³). Read from 
     eval_results path htp.413K.V.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: tool_utilization
 - id: rtp_a_303K
-  criterion: Refined lattice parameter a at RTP / T=303 K is within tolerance (target 10.828 ± 0.05 Å). Read from
+  criterion: Refined lattice parameter a at RTP / T=303 K is within tolerance (target 10.828 ± 0.05 Å). Read from 
     eval_results path rtp.303K.a.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: tool_utilization
 - id: htp_a_383K
-  criterion: Refined lattice parameter a at HTP / T=383 K is within tolerance (target 11.0506 ± 0.05 Å). Read from
+  criterion: Refined lattice parameter a at HTP / T=383 K is within tolerance (target 11.0506 ± 0.05 Å). Read from 
     eval_results path htp.383K.a.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: tool_utilization
 - id: rtp_V_slope
-  criterion: Linear-fit slope of V vs T over the four RTP temperatures (303/323/343/363 K) is within tolerance (target
-    0.2013 ± 0.15 Å³/K; widened to absorb the rare ``--multi-start 1`` wrong-basin case at one interior RTP temperature
-    when ``--self-heal-chain`` does not successfully replace it — the slope is the most sensitive of the four-point
+  criterion: Linear-fit slope of V vs T over the four RTP temperatures (303/323/343/363 K) is within tolerance (target 
+    0.2013 ± 0.15 Å³/K; widened to absorb the rare ``--multi-start 1`` wrong-basin case at one interior RTP temperature 
+    when ``--self-heal-chain`` does not successfully replace it — the slope is the most sensitive of the four-point 
     fits). Read from eval_results path rtp.fits.V.slope.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: tool_utilization
 - id: htp_V_slope
-  criterion: Linear-fit slope of V vs T over the four HTP temperatures (383/393/403/413 K) is within tolerance (target
+  criterion: Linear-fit slope of V vs T over the four HTP temperatures (383/393/403/413 K) is within tolerance (target 
     0.1154 ± 0.06 Å³/K). Read from eval_results path htp.fits.V.slope.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: tool_utilization
 - id: rtp_a_slope
-  criterion: Linear-fit slope of a vs T over the four RTP temperatures (303/323/343/363 K) is within tolerance (target
+  criterion: Linear-fit slope of a vs T over the four RTP temperatures (303/323/343/363 K) is within tolerance (target 
     0.00129 ± 0.0006 Å/K). Read from eval_results path rtp.fits.a.slope.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: tool_utilization
 - id: htp_c_slope
-  criterion: Linear-fit slope of c vs T over the four HTP temperatures (383/393/403/413 K) is within tolerance (target
+  criterion: Linear-fit slope of c vs T over the four HTP temperatures (383/393/403/413 K) is within tolerance (target 
     -0.00053 ± 0.0006 Å/K). Read from eval_results path htp.fits.c.slope.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: tool_utilization
 - id: required_fields
-  criterion: Answer reports both RTP and HTP phases with linear fit equations including slope, intercept, and R² for at
+  criterion: Answer reports both RTP and HTP phases with linear fit equations including slope, intercept, and R² for at 
     least V vs T in each phase.
-  axis: correctness
   verify: llm_binary_judge
   weight: 0.5
   capability: tool_utilization
 - id: phase_transition_identified
   criterion: Answer identifies a structural phase transition between 363 K and 383 K, with distinct lattice parameters 
     for the two phases (notably a jump in a and β at the transition).
-  axis: correctness
   verify: llm_binary_judge
   weight: 0.5
   capability: scientific_reasoning
@@ -210,14 +199,12 @@ scoring_checklist:
     downloaded and produced both a log file and a results JSON before numeric outputs were read. Do not fail solely 
     because the visible tool-call excerpt is truncated, unless there is positive evidence that no successful Bohrium 
     result directory existed.
-  axis: correctness
   verify: llm_binary_judge
   weight: 0.5
   capability: tool_utilization
 - id: curation_inspected
   criterion: Agent inspected the curation diagnostics or warnings field of the Pawley results JSON for at least one 
     pattern, either by mentioning it in the final answer or through visible tool-call observations.
-  axis: correctness
   verify: llm_binary_judge
   weight: 0.5
   capability: data_handling
@@ -225,14 +212,12 @@ scoring_checklist:
   criterion: Pass if the final answer, workspace run.sh files, or tool-call observations show the run.sh wrapper pattern
     such as bash run.sh > log 2>&1, with the python3 gsas2_pawley.py invocation inside run.sh rather than inlined with 
     embedded quotes in the cmd field.
-  axis: correctness
   verify: llm_binary_judge
   weight: 0.5
   capability: tool_utilization
 - id: merge_audit_surfaced
   criterion: When reporting per-pattern cells from a chain-cell-direction both run, the agent referenced merge_audit 
     (table or warnings) or self_heal_audit at least once in the final answer or reasoning.
-  axis: correctness
   verify: llm_binary_judge
   weight: 0.5
   capability: tool_utilization
@@ -240,7 +225,6 @@ scoring_checklist:
   criterion: Pass if the final answer, workspace files, or tool-call observations show that refinement results came from
     gsas2_pawley.py executed on Bohrium, and there is no positive evidence that the agent bypassed GSAS-II by writing a 
     local scipy/numpy least-squares Pawley replacement.
-  axis: correctness
   verify: llm_binary_judge
   weight: 0.5
   capability: tool_utilization
@@ -248,7 +232,6 @@ scoring_checklist:
   criterion: Lattice parameters and fit results are derived from Pawley refinement of the provided PXRD data file, not 
     from literature values or hallucination. Judge from the final answer and stated methodology; do not fail because the
     tool-call log omits specific tools.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

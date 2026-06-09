@@ -3,6 +3,7 @@ task_type: simulation
 capabilities:
 - structure_manipulation
 domain: agnostic
+difficulty: easy
 intent: Build a perovskite crystal from explicit space group and Wyckoff position inputs and verify formula/lattice 
   consistency.
 human_prompt_seed: '请按给定空间群和 Wyckoff 位点信息构建晶体结构，并导出 `srtio3_wyckoff.cif`：
@@ -47,37 +48,31 @@ reference_answers:
 scoring_checklist:
 - id: structure_artifact
   criterion: Agent writes `srtio3_wyckoff.cif` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: report_artifact
   criterion: Agent writes `wyckoff_build_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: formula_check
   criterion: Output CIF has reduced formula consistent with SrTiO3.
-  axis: correctness
   verify: struct_file_formula
   capability: structure_manipulation
   weight: 0.5
 - id: lattice_a
   criterion: Lattice parameter a is consistent with the target cubic scale around 3.90 Å.
-  axis: correctness
   verify: struct_file_cell_param
   capability: structure_manipulation
   weight: 0.5
 - id: report_required_tokens
   criterion: Report explains Wyckoff-position mapping, space-group setting, and uncertainty caveats.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: grounding_source
   criterion: The final answer is grounded in `srtio3_wyckoff.cif` and the report, not generic perovskite descriptions.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

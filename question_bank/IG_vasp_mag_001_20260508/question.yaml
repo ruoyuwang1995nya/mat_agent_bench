@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: Generate VASP INCAR for a magnetic Fe BCC system with correct spin-polarization settings.
 human_prompt_seed: '工作区中有 Fe_bcc.vasp（体心立方铁，2个原子）。
 
@@ -43,32 +44,27 @@ reference_answers:
 scoring_checklist:
 - id: incar_mag_artifact
   criterion: INCAR_mag file exists in workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: must_ispin
   criterion: INCAR_mag contains ISPIN = 2 for spin-polarized calculation.
-  axis: correctness
   verify: text_file_contains_all
   capability: scientific_reasoning
   weight: 0.5
 - id: must_magmom
   criterion: INCAR_mag sets MAGMOM with 2*5 (or equivalent per-atom magnetic moment for 2 Fe atoms).
-  axis: correctness
   verify: text_file_regex
   capability: scientific_reasoning
   weight: 0.5
 - id: must_encut
   criterion: ENCUT is set to 520 eV.
-  axis: correctness
   verify: text_file_numeric_range
   capability: tool_utilization
   weight: 0.5
 - id: grounding_mag
   criterion: Agent explains why ISPIN=2 and MAGMOM are needed for Fe (magnetic material), not just blindly setting 
     parameters.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

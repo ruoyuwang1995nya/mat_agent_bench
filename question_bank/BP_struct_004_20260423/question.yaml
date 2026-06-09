@@ -4,6 +4,7 @@ capabilities:
 - data_handling
 - scientific_reasoning
 domain: semiconductor
+difficulty: easy
 intent: Perform batch post-processing of pre-computed band structures for 3 materials (Si, Ge, GaAs) with unified 
   analysis parameters. Extract band gaps and band edge positions using identical k-paths, energy windows, and plot 
   specifications across all materials.
@@ -72,31 +73,26 @@ reference_answers:
 scoring_checklist:
 - id: analysis_count_correct
   criterion: Exactly 3 materials are analyzed (Si, Ge, GaAs).
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: kpath_unified
   criterion: All 3 analyses use the same k-path (M-Gamma-K) with 50 points per segment.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: energy_window_unified
   criterion: All 3 analyses use energy window [-5, 5] eV as the plotting range.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: fermi_reference_unified
   criterion: All 3 analyses use VBM (valence band maximum) as the Fermi level reference point.
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
 - id: output_format_consistent
   criterion: All 3 analyses produce both PNG plot and CSV data table in consistent format.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
@@ -104,13 +100,11 @@ scoring_checklist:
   criterion: 'Band gap values extracted for all 3 materials from the provided CSV data and fall within expected range (Si:
     0.95–1.25 eV, Ge: 0.55–0.80 eV, GaAs: 1.25–1.55 eV). The agent must read band gaps from the pre-computed CSV eigenvalue
     data, not generate new band structures.'
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: grounding_analysis_correct
   criterion: Analysis methodology (k-path, window, reference) matches the provided configuration exactly.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

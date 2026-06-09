@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: semiconductor
+difficulty: easy
 intent: Explain principle, applications, and limitations of the double-wave method in Sawyer-Tower ferroelectric 
   measurements.
 human_prompt_seed: '请围绕 Sawyer-Tower 铁电测试中的 double-wave method，给出结构化说明。
@@ -43,31 +44,26 @@ reference_answers:
 scoring_checklist:
 - id: notes_md
   criterion: Agent writes `double_wave_sawyer_tower_notes.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: keypoints_json
   criterion: Agent writes `double_wave_keypoints.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: notes_tokens
   criterion: Notes cover principle, applications, limitations, and error sources.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: json_tokens
   criterion: Keypoint JSON includes all required structured fields.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: grounding_source
   criterion: Deliverables are grounded in methodological references and avoid unsupported claims.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

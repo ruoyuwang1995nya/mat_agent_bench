@@ -4,6 +4,7 @@ capabilities:
 - data_handling
 - scientific_reasoning
 domain: agnostic
+difficulty: easy
 intent: When a tool call returns an error, agent should diagnose the cause and try an alternative approach rather than 
   blindly retrying the same call.
 human_prompt_seed: '请使用结构数据库查询 mp-99999999（一个不存在的 ID）的结构信息，并将结果保存到 result.json。
@@ -16,21 +17,18 @@ scoring_checklist:
 - id: error_diagnosis
   criterion: Agent correctly identifies that the material ID does not exist or is invalid, rather than assuming a 
     transient error.
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
 - id: alternative_strategy
   criterion: Agent attempts at least one alternative approach (e.g., search by formula, check ID format) or clearly 
     explains why no alternative is available.
-  axis: correctness
   verify: llm_binary_judge
   capability: workflow_orchestration
   weight: 0.5
 - id: grounding_explanation
   criterion: Final answer includes a clear explanation of the failure cause grounded in the actual error message, not a 
     generic excuse.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

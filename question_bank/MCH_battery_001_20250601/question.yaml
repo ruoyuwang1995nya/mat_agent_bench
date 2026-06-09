@@ -1,0 +1,80 @@
+id: MCH_battery_001_20250601
+task_type: material_characterization
+capabilities:
+- data_handling
+- scientific_reasoning
+- tool_utilization
+domain: battery
+difficulty: medium
+intent: Compute the ionic conductivity of a solid electrolyte from mean square displacement (MSD) data obtained from NVT
+  molecular dynamics simulations, using the Nernst-Einstein equation as described in the MatPES paper.
+human_prompt_seed: 'Given the mean square displacement (MSD) vs time data from an NVT MD simulation of a Li-ion solid electrolyte
+  at 1000 K (msd_vs_time.csv) and the simulation parameters (sim_params.json), compute the ionic conductivity using the Nernst-Einstein
+  equation. Report the diffusivity in cm²/s and the ionic conductivity in mS/cm. Write results to conductivity_results.json with keys: diffusivity_cm2_s, conductivity_mS_cm, r_squared_fit,
+  and fit_slope_angstrom2_ps.'
+tags:
+- md_analysis
+- ionic_conductivity
+- nernst_einstein
+- battery
+data_files:
+- key: msd_data
+  path: msd_vs_time.csv
+  description: Mean square displacement (MSD) vs time data from a 100 ps NVT MD simulation at 1000 K for a Li-ion solid 
+    electrolyte. Time in picoseconds, MSD in Angstroms squared.
+- key: simulation_params
+  path: sim_params.json
+  description: 'Simulation parameters: temperature (1000 K), diffusing species charge (z=1 for Li+), number density of diffusing
+    ions (2.5e22 cm^-3), dimensionality (d=3).'
+reference_answers:
+- key: artifact_exists
+  value: conductivity_results.json
+- key: answer_json_numeric
+  value:
+    checks:
+    - key: diffusivity_cm2_s
+      max: 1.0e-06
+      min: 1.0e-07
+    - key: conductivity_mS_cm
+      max: 100
+      min: 1
+    - key: r_squared_fit
+      max: 1.0
+      min: 0.95
+- key: text_file_numeric_range
+  value:
+    checks:
+    - key: fit_slope_angstrom2_ps
+      max: 0.02
+      min: 0.015
+    filename: conductivity_results.json
+scoring_checklist:
+- id: artifact_exists
+  verify: artifact_exists
+  weight: 0.15
+  criterion: '[Must] The output file conductivity_results.json exists.'
+  capability: tool_utilization
+- id: answer_json_numeric
+  verify: answer_json_numeric
+  weight: 0.3
+  criterion: '[Must] The diffusivity is in the range 1e-7 to 1e-6 cm²/s and conductivity is in the range 1-100 mS/cm, consistent
+    with solid electrolyte values at 1000 K.'
+  capability: data_handling
+- id: text_file_numeric_range
+  verify: text_file_numeric_range
+  weight: 0.25
+  criterion: '[Must] The linear fit slope (MSD vs time) is between 0.015 and 0.02 Å²/ps, derived from the last 80 ps of the
+    provided MSD data.'
+  capability: scientific_reasoning
+- id: grounding_check
+  verify: llm_binary_judge
+  weight: 0.3
+  criterion: '[Must] The Nernst-Einstein equation implementation correctly uses σ = z²F²ρD/(RT) with appropriate physical
+    constants (F = 96485 C/mol, R = 8.314 J/(mol·K)).'
+  capability: scientific_grounding
+reference_answer_prompt: '1. Load MSD data from msd_vs_time.csv. 2. Use data from t=20 ps to t=100 ps (last 80 ps) for linear
+  fit. 3. Fit MSD = slope * time + intercept. The slope from the provided data is approximately 0.017 Å²/ps. 4. Convert slope
+  to diffusivity: D = slope / (2*d) where d=3. D = 0.017 Å²/ps / 6 = 0.00283 Å²/ps = 0.00283 * 1e-16 cm² / 1e-12 s = 2.83e-7
+  cm²/s. 5. Compute conductivity: σ = z²F²ρD/(RT) = 1² * (96485 C/mol)² * (2.5e22 cm^-3) * (2.83e-7 cm²/s) / (8.314 J/(mol·K)
+  * 1000 K). Convert units: ρ in m^-3 = 2.5e28 m^-3, D in m²/s = 2.83e-11 m²/s. σ = (96485² * 2.5e28 * 2.83e-11) / (8.314
+  * 1000) = ~7.9 S/m = 79 mS/cm. 6. Write to conductivity_results.json.'

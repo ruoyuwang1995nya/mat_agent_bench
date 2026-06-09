@@ -1,7 +1,9 @@
 """Binary evaluator for MATTER v5 runs.
 
 Every criterion is pass (1) or fail (0). The final record contains
-passed_count / total_count + per-axis counts and weighted scores.
+passed_count / total_count and overall_weighted_score.
+
+Scoring: overall_weighted_score = max(0, 1 - sum_failed_weights)
 """
 
 from __future__ import annotations
@@ -50,7 +52,6 @@ from .prompts import (
     GROUNDING_JUDGE_SYSTEM_PROMPT,
 )
 from ..schemas import (
-    AxisLiteral,
     CriterionResult,
     EvalRunRecord,
     LLMConfig,
@@ -73,7 +74,6 @@ class BinaryEvaluator:
     def __init__(
         self,
         llm_cfg: LLMConfig | None = None,
-        axis_weights: dict[str, float] | None = None,
         *,
         parallel_checklist_workers: int = 1,
     ) -> None:
@@ -88,11 +88,6 @@ class BinaryEvaluator:
                 max_tokens=llm_cfg.max_tokens,
                 timeout=llm_cfg.timeout,
             )
-        self._axis_weights = axis_weights or {
-            'correctness': 1.0,
-            'grounding': 1.0,
-            'efficiency': 1.0,
-        }
 
     # ------------------------------------------------------------------
     # Public entry point
@@ -124,26 +119,9 @@ class BinaryEvaluator:
         ref_map = {item.key: item for item in question_item.reference_answers}
         criteria_results = {}
 
-        axis_passed: dict[AxisLiteral, int] = {
-            'correctness': 0,
-            'grounding': 0,
-            'efficiency': 0,
-        }
-        axis_total: dict[AxisLiteral, int] = {
-            'correctness': 0,
-            'grounding': 0,
-            'efficiency': 0,
-        }
-        axis_weighted_passed: dict[AxisLiteral, float] = {
-            'correctness': 0.0,
-            'grounding': 0.0,
-            'efficiency': 0.0,
-        }
-        axis_weighted_total: dict[AxisLiteral, float] = {
-            'correctness': 0.0,
-            'grounding': 0.0,
-            'efficiency': 0.0,
-        }
+        total_passed = 0
+        total_count = 0
+        failed_weight = 0.0
 
         checklist = question_item.scoring_checklist
         use_parallel = self._parallel_checklist_workers > 1 and len(checklist) > 1
@@ -199,39 +177,21 @@ class BinaryEvaluator:
                 item_outcomes.append((item, passed_item, reason))
 
         for item, passed_item, reason in item_outcomes:
-            axis = item.axis
             criteria_results[item.id] = CriterionResult(
                 criterion_id=item.id,
-                axis=axis,
+                capability=item.capability,
                 passed=passed_item,
                 reason=reason,
                 verify_method=item.verify,
             )
-            item_weight = item.weight if hasattr(item, 'weight') else 1.0
-
-            axis_total[axis] += 1
+            item_weight = item.weight if hasattr(item, 'weight') else 0.5
+            total_count += 1
             if passed_item:
-                axis_passed[axis] += 1
+                total_passed += 1
+            else:
+                failed_weight += item_weight
 
-            axis_weighted_total[axis] += item_weight
-            if passed_item:
-                axis_weighted_passed[axis] += item_weight
-
-        total_passed = sum(axis_passed.values())
-        total_count = sum(axis_total.values())
-
-        def calc_weighted_score(axis: AxisLiteral) -> float:
-            if axis_weighted_total[axis] == 0:
-                return 0.0
-            return axis_weighted_passed[axis] / axis_weighted_total[axis]
-
-        correctness_weighted = calc_weighted_score('correctness')
-        grounding_weighted = calc_weighted_score('grounding')
-        efficiency_weighted = calc_weighted_score('efficiency')
-
-        all_weighted_passed = sum(axis_weighted_passed.values())
-        all_weighted_total = sum(axis_weighted_total.values())
-        overall_weighted = self._calc_overall_weighted_score(all_weighted_passed, all_weighted_total)
+        overall_weighted = self._calc_overall_weighted_score(failed_weight)
 
         return EvalRunRecord(
             question_id=question_item.id,
@@ -246,15 +206,6 @@ class BinaryEvaluator:
             criteria_results=criteria_results,
             passed_count=total_passed,
             total_count=total_count,
-            correctness_passed=axis_passed['correctness'],
-            correctness_total=axis_total['correctness'],
-            grounding_passed=axis_passed['grounding'],
-            grounding_total=axis_total['grounding'],
-            efficiency_passed=axis_passed['efficiency'],
-            efficiency_total=axis_total['efficiency'],
-            correctness_weighted_score=correctness_weighted,
-            grounding_weighted_score=grounding_weighted,
-            efficiency_weighted_score=efficiency_weighted,
             overall_weighted_score=overall_weighted,
             model_name=model_name,
             token_usage=token_usage,
@@ -270,15 +221,11 @@ class BinaryEvaluator:
 
     def _calc_overall_weighted_score(
         self,
-        all_weighted_passed: float,
-        all_weighted_total: float,
+        failed_weight: float,
     ) -> float:
-        # Additive: (passed_weight - failed_weight) / total_weight
-        # Range: [-1, 1] — 0 means half pass / half fail
-        if all_weighted_total == 0:
-            return 0.0
-        all_weighted_failed = all_weighted_total - all_weighted_passed
-        return (all_weighted_passed - all_weighted_failed) / all_weighted_total
+        # Penalty-deduction: score = max(0, 1 - sum_failed_weights)
+        # Range: [0, 1] — 1.0 means all passed, 0.0 means penalties >= 1.0
+        return max(0.0, 1.0 - failed_weight)
 
     # ------------------------------------------------------------------
     # Per-item dispatch
@@ -412,7 +359,7 @@ class BinaryEvaluator:
             return _TEXT_FILE_DISPATCH[item.verify](evidence=evidence, ref=ref)
 
         if item.verify == 'llm_binary_judge':
-            if item.axis == 'grounding':
+            if item.capability == 'scientific_grounding':
                 return self.judge_binary(
                     criterion=item.criterion,
                     context=build_llm_context(

@@ -1,0 +1,164 @@
+id: E2E_2dmat_001_20260601
+task_type: end_to_end_research
+capabilities:
+- scientific_reasoning
+- tool_utilization
+- workflow_orchestration
+- data_handling
+- structure_manipulation
+- scientific_grounding
+domain: semiconductor
+difficulty: hard
+intent: Starting from a pristine h-BN monolayer supercell, create substitutional carbon defects (C_B and C_N), apply 
+  biaxial tensile strain from 0% to 4% in 2% increments, compute defect formation energies at each strain level, and 
+  analyze the strain-dependence trends to reproduce the paper's key finding that C_B formation energy increases while 
+  C_N decreases with tensile strain.
+human_prompt_seed: |-
+  Starting from the provided pristine h-BN monolayer structure (hBN_pristine_POSCAR), investigate how biaxial tensile strain affects the formation energy of substitutional carbon defects. Create two defect configurations: C substituting B (C_B) and C substituting N (C_N). Apply biaxial tensile strain at 0%, 2%, 4%, 6%, and 8%. At each strain level, compute the defect formation energy for both defect types using appropriate DFT methodology. The chemical potentials for the N-rich limit are provided in chem_potentials.json. Reference formation energy changes from the paper are in reference_formation_energies.csv for comparison.
+
+  Produce the following deliverables:
+  1. strained_structures/ directory containing all POSCAR files for pristine and defective structures at each strain level
+  2. formation_energies.json with keys: CB_formation_eV (dict mapping strain_pct to energy), CN_formation_eV (dict mapping strain_pct to energy), and delta_Ef (dict with CB and CN keys mapping strain_pct to ΔEf = Ef(strain) - Ef(0%))
+  3. strain_analysis.txt with a scientific discussion of the trends, including the physical mechanism (atomic radius mismatch and defect-induced local strain) that explains why C_B and C_N respond oppositely to tensile strain
+  4. comparison_plot.png showing ΔEf vs strain for both defects alongside the reference data from the paper
+tags:
+- end_to_end
+- strain_engineering
+- defect_formation
+- h-bn
+- carbon_impurity
+- vasp
+- biaxial_strain
+data_files:
+- key: pristine_structure
+  path: hBN_pristine_POSCAR
+  description: Pristine h-BN monolayer structure from Materials Project (mp-984). The agent should convert this to a 
+    rectangular supercell (approximately 8×5 primitive cells ≈ 160 atoms) suitable for isolated defect calculations.
+- key: reference_data
+  path: reference_formation_energies.csv
+  description: 'Reference data from Figure 1: change in formation energy (ΔEf in eV) as a function of biaxial strain (%) for
+    C_B and C_N defects in h-BN. ΔEf = Ef(ε) - Ef(ε=0).'
+- key: chemical_potentials
+  path: chem_potentials.json
+  description: Chemical potentials for defect formation energy calculation under N-rich conditions
+reference_answers:
+- key: artifact_structures
+  value: strained_structures/
+- key: artifact_energies
+  value: formation_energies.json
+- key: artifact_analysis
+  value: strain_analysis.txt
+- key: artifact_plot
+  value: comparison_plot.png
+- key: cb_increasing_trend
+  value:
+    checks:
+    - key: delta_Ef.CB.8
+      max: 2.5
+      min: 0.8
+    filename: formation_energies.json
+- key: cn_decreasing_trend
+  value:
+    checks:
+    - key: delta_Ef.CN.8
+      max: -0.5
+      min: -2.5
+    filename: formation_energies.json
+- key: analysis_mechanism
+  value:
+    flags: IGNORECASE
+    tokens:
+    - atomic radius
+    - local strain
+    - bond contraction
+    - bond elongation
+    - tensile
+    - compressive
+    filename: strain_analysis.txt
+- key: strain_levels
+  value:
+    checks:
+    - key: delta_Ef.CB.0
+      max: 0.5
+      min: -0.5
+    - key: delta_Ef.CB.4
+      max: 1.5
+      min: 0.3
+    - key: delta_Ef.CN.4
+      max: -0.3
+      min: -1.5
+    filename: formation_energies.json
+- key: duration_budget
+  value:
+    max: 1800000
+scoring_checklist:
+- id: artifact_structures
+  verify: artifact_exists
+  weight: 0.1
+  criterion: '[Must] The strained_structures/ directory exists and contains POSCAR files for pristine and defective structures
+    at multiple strain levels.'
+  capability: structure_manipulation
+- id: artifact_energies
+  verify: artifact_exists
+  weight: 0.1
+  criterion: '[Must] formation_energies.json exists with the required keys (CB_formation_eV, CN_formation_eV, delta_Ef).'
+  capability: data_handling
+- id: artifact_analysis
+  verify: artifact_exists
+  weight: 0.05
+  criterion: '[Must] strain_analysis.txt exists with a scientific discussion of the strain-dependent trends.'
+  capability: data_handling
+- id: artifact_plot
+  verify: artifact_exists
+  weight: 0.05
+  criterion: '[Must] comparison_plot.png exists showing ΔEf vs strain for both defect types.'
+  capability: data_handling
+- id: cb_increasing_trend
+  verify: text_file_numeric_range
+  weight: 0.15
+  criterion: '[Must] The ΔEf for C_B at 8% strain is positive (formation energy increases with tensile strain), consistent
+    with the paper''s finding that C (smaller than B) creates local tensile strain that cooperates with external tensile strain.'
+  capability: scientific_reasoning
+- id: cn_decreasing_trend
+  verify: text_file_numeric_range
+  weight: 0.15
+  criterion: '[Must] The ΔEf for C_N at 8% strain is negative (formation energy decreases with tensile strain), consistent
+    with the paper''s finding that C (larger than N) creates local compressive strain that is compensated by external tensile
+    strain.'
+  capability: scientific_reasoning
+- id: analysis_mechanism
+  verify: text_file_contains_all
+  weight: 0.1
+  criterion: '[Must] The analysis correctly identifies the physical mechanism: atomic radius mismatch between impurity and
+    host atom creates local strain fields that either cooperate with or compensate the external strain.'
+  capability: scientific_reasoning
+- id: strain_levels
+  verify: text_file_numeric_range
+  weight: 0.1
+  criterion: '[Must] Formation energies are computed at multiple strain levels (at least 0%, 4%, 8%) and show the correct
+    qualitative trend (monotonic increase for C_B, monotonic decrease for C_N).'
+  capability: data_handling
+- id: workflow_sequence
+  verify: llm_binary_judge
+  weight: 0.1
+  criterion: '[Must] The agent correctly sequences the workflow: (1) build supercell from primitive, (2) create defects, (3)
+    apply strain at each level, (4) relax structures, (5) compute total energies, (6) calculate formation energies using chemical
+    potentials, (7) analyze trends.'
+  capability: workflow_orchestration
+- id: tool_usage
+  verify: llm_binary_judge
+  weight: 0.05
+  criterion: '[Must] The agent uses appropriate computational tools (DFT code, structure manipulation tools) to perform the
+    calculations.'
+  capability: tool_utilization
+- id: grounding_check
+  verify: llm_binary_judge
+  weight: 0.15
+  criterion: '[Suggested] The computed trends (C_B increasing, C_N decreasing with tensile strain) and the physical explanation
+    are consistent with the findings reported in the source paper (Figure 1 and associated discussion).'
+  capability: scientific_grounding
+- id: duration_budget
+  verify: duration_budget
+  weight: 0.0
+  criterion: '[Variable] Agent completes task within 1800 seconds.'
+  capability: tool_utilization

@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
+difficulty: easy
 intent: Retrieve an MgB2 structure from open databases and compute its phonon spectrum with an ML potential workflow.
 human_prompt_seed: "执行 MgB2 “检索 + 声子”流程（Mock版）：\n1. 先 query/检索 MgB2 结构并记录来源、结构标识与输入文件；\n2. 说明拟采用的声子设置；\n3. 不做真实计算，使用以下 mock
   结果：\n   - retrieval_source = Materials Project\n   - structure_identifier = mp-763\n   - imaginary_mode_check = false\n\
@@ -43,38 +44,32 @@ reference_answers:
 scoring_checklist:
 - id: phonon_json
   criterion: Agent writes `mgb2_phonon_summary.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: phonon_report
   criterion: Agent writes `mgb2_phonon_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: json_required_tokens
   criterion: JSON includes retrieval metadata and phonon-result summary fields.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: report_required_tokens
   criterion: Report explains two-stage workflow and uncertainty caveats.
-  axis: correctness
   verify: llm_binary_judge
   capability: workflow_orchestration
   weight: 0.5
 - id: gamma_e2g_mock
   criterion: Final answer includes a mock Gamma E2g mode near 74.8 meV.
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: grounding_source
   criterion: Final answer is grounded in both retrieval and phonon artifacts and does not fabricate unsupported 
     structure/spectrum details.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

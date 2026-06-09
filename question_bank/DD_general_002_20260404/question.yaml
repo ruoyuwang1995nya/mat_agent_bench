@@ -4,6 +4,7 @@ capabilities:
 - data_handling
 - scientific_reasoning
 domain: semiconductor
+difficulty: easy
 intent: Diagnose SCF non-convergence caused by wrong SMEARING settings for a semiconductor.
 human_prompt_seed: '读取 `case_bundle.json`，其中包含一个 Si 计算的 INCAR 参数和 OUTCAR 能量迭代摘录。 SCF 100 步仍未收敛，能量振幅约 5 meV，且有分数占据。请诊断根本原因，并给出修复方案。
 
@@ -27,21 +28,18 @@ reference_answers:
 scoring_checklist:
 - id: root_cause
   criterion: Correctly identifies ISMEAR/SIGMA mismatch (Methfessel-Paxton on semiconductor Si) as root cause.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: required_fields
   criterion: Provides root cause, evidence from fractional occupation, and concrete fixes (ISMEAR=0 or -5, reduce 
     SIGMA).
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: grounding_evidence
   criterion: Diagnosis is grounded in the provided INCAR/OUTCAR data from case_bundle.json, citing specific parameter 
     values.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

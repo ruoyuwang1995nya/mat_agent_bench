@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: alloy
+difficulty: easy
 intent: Compare database-retrieved alloy references with APEX elastic predictions for a Ni-Co-Cr composition at room 
   temperature.
 human_prompt_seed: '面向 Ni-Co-Cr 合金的室温弹性性质评估，请先检索相近成分的结构/弹性参考信息，再结合 APEX 计算结果给出对比结论。
@@ -43,32 +44,27 @@ reference_answers:
 scoring_checklist:
 - id: elastic_json
   criterion: Agent writes `nico_cr_roomtemp_elastic.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: report_md
   criterion: Agent writes `nico_cr_roomtemp_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: elastic_required_tokens
   criterion: JSON includes required elastic constants, bulk modulus, and database-comparison fields.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: report_required_tokens
   criterion: Report clearly explains retrieval + APEX workflow and uncertainty caveats.
-  axis: correctness
   verify: llm_binary_judge
   capability: workflow_orchestration
   weight: 0.5
 - id: grounding_source
   criterion: Deliverables are grounded in generated artifacts and do not fabricate unsupported reference or computed 
     values.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

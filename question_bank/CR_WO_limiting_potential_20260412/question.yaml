@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: catalysis
+difficulty: easy
 intent: From free-energy steps on CO2RR-to-CO, HER, and CO2-to-HCOOH pathways, compute limiting potentials U_L = 
   -ΔG_max/e per doc 3.2.2.
 human_prompt_seed: '给定（或由你说明来源的）各中间态与气相参考的吉布斯自由能或等价能量数据，对以下三条路径计算极限电势 U_L = -ΔG_max/e： （1）CO2(g)→CO* 路径含 CO2*、COOH*、CO* 等步骤；（2）HER：H*
@@ -23,13 +24,11 @@ scoring_checklist:
     tables; lines like ''|------|-------------|-----'' are standard table header separators, NOT truncation indicators. Judge
     ONLY on whether the final answer text contains the three complete sets of (PDS, ΔG_max, U_L) values, regardless of intermediate
     computation steps.'
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: grounding_energies
   criterion: 使用的能量/自由能数据来源清楚（计算值、表格或明确假设），且代入与决速步判定一致。
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
+difficulty: easy
 intent: 'Build and execute periodic liquid water gap workflow: construct 32-water box, compute HOMO-LUMO gap with hybrid acceleration.'
 human_prompt_seed: '计算周期性液态水体系的 HOMO-LUMO gap： 构建 32 个水分子的周期性盒子（密度 ~1.0 g/cm3）， 使用杂化泛函或加速方案（如先 PBE 再 HSE 单点）计算电子 gap。
 
@@ -34,27 +35,23 @@ reference_answers:
 scoring_checklist:
 - id: gap_value_eV
   criterion: Gap value is in tolerance.
-  axis: correctness
   verify: numerical_range
   capability: scientific_reasoning
   weight: 0.5
 - id: report_artifact
   criterion: Agent writes `water_gap_report.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: report_required_tokens
   criterion: JSON report includes all required fields (gap_eV, hybrid_functional, acceleration_strategy, 
     gap_extraction_method, cost_estimate).
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: grounding_source
   criterion: The gap value in the JSON report and final answer is consistent with the stated calculation approach. Judge
     from deliverables; do not fail because the tool-call log omits MCP, web_search, or any specific tool.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

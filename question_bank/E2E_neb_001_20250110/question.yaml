@@ -1,0 +1,110 @@
+id: E2E_neb_001_20250110
+task_type: end_to_end_research
+capabilities:
+- scientific_reasoning
+- tool_utilization
+- workflow_orchestration
+- data_handling
+- structure_manipulation
+domain: battery
+difficulty: hard
+intent: Starting from the crystal structure of V2O3(SO4)2 (mp-28207), set up and compute the Mg-ion migration barrier 
+  using CHGNet with the ApproxNEB method, reporting the kinetically resolved activation (KRA) barrier and comparing 
+  against the DFT reference value.
+human_prompt_seed: 'Starting from the host structure V2O3(SO4)2 (mp-28207, provided as host_structure.cif), identify a feasible
+  Mg-ion migration pathway, set up the ApproxNEB calculation using MACE, and compute the kinetically resolved activation (KRA)
+  migration barrier. The ApproxNEB method evaluates energy along a predefined trajectory without relaxing the pathway collectively.
+  Report your results in migration_results.json with keys: kra_barrier_ev, n_images, initial_site_coords, final_site_coords,
+  and path_description. Also write a comparison to the DFT reference barrier (from dft_reference.json) in migration_notes.txt,
+  discussing whether MACE underpredicts or overpredicts the barrier and by how much.'
+tags:
+- neb
+- ion_migration
+- chgnet
+- approx_neb
+- end_to_end
+data_files:
+- key: host_structure
+  path: host_structure.cif
+  description: CIF file for V2O3(SO4)2 (mp-28207) from Materials Project, the host structure for Mg-ion migration.
+- key: dft_barrier
+  path: dft_reference.json
+  description: DFT reference value for the KRA migration barrier of Mg-ion in mp-28207, ~0.6 eV.
+reference_answers:
+- key: artifact_exists
+  value: migration_results.json
+- key: artifact_exists_notes
+  value: migration_notes.txt
+- key: answer_json_numeric
+  value:
+    checks:
+    - key: kra_barrier_ev
+      max: 0.6
+      min: 0.2
+      tolerance: 0.1
+    - key: n_images
+      expected: 5
+      tolerance: 3
+- key: text_file_contains
+  value:
+    flags: case_insensitive
+    tokens:
+    - CHGNet
+    - barrier
+    - underpredict
+    - DFT
+    filename: migration_notes.txt
+- key: grounding_source
+  value: 'Figure 3a: DFT KRA barrier ~0.6 eV; CHGNet systematically underpredicts barriers (Fig. 3b shows majority of uMLIP
+    barriers are underpredicted).'
+- key: workflow_artifacts
+  value:
+    min_files: 2
+    required_files:
+    - migration_results.json
+    - migration_notes.txt
+scoring_checklist:
+- id: artifact_exists
+  verify: artifact_exists
+  weight: 0.15
+  criterion: '[Must] The file migration_results.json exists with all required keys (kra_barrier_ev, n_images, initial_site_coords,
+    final_site_coords, path_description).'
+  capability: tool_utilization
+- id: artifact_exists_notes
+  verify: artifact_exists
+  weight: 0.1
+  criterion: '[Must] The file migration_notes.txt exists with comparison to DFT reference.'
+  capability: data_handling
+- id: answer_json_numeric
+  verify: answer_json_numeric
+  weight: 0.2
+  criterion: '[Must] The KRA barrier is between 0.2 and 0.6 eV (CHGNet underpredicts DFT ~0.6 eV barrier) and n_images is
+    at least 3.'
+  capability: data_handling
+- id: text_file_contains
+  verify: text_file_contains_all
+  weight: 0.1
+  criterion: '[Must] The notes file discusses CHGNet barrier prediction and compares against DFT, noting systematic underprediction.'
+  capability: scientific_reasoning
+- id: workflow_check
+  verify: llm_binary_judge
+  weight: 0.15
+  criterion: '[Must] The agent correctly sequences: structure preparation → pathway identification → ApproxNEB setup → energy
+    evaluation → KRA barrier extraction.'
+  capability: workflow_orchestration
+- id: structure_check
+  verify: llm_binary_judge
+  weight: 0.1
+  criterion: '[Must] The initial and final site coordinates are valid interstitial positions within the V2O3(SO4)2 host structure.'
+  capability: structure_manipulation
+- id: grounding_check
+  verify: llm_binary_judge
+  weight: 0.1
+  criterion: '[Must] The result and discussion are consistent with the paper''s finding that uMLIPs systematically underpredict
+    ion migration barriers (Fig. 3b).'
+  capability: scientific_grounding
+reference_answer_prompt: '1. Download mp-28207 CIF from Materials Project. 2. Identify Mg migration pathway (use pymatgen
+  DiffusionAnalyzer or manual interstitial site identification). 3. Generate 5-7 intermediate images along the pathway. 4.
+  For each image, run MACE static energy calculation with the Mg ion position constrained. 5. KRA barrier = max(energy_along_path)
+  - min(initial_energy, final_energy). Expected: MACE barrier ~0.3-0.5 eV vs DFT ~0.6 eV (systematic underprediction of ~0.1-0.3
+  eV).'

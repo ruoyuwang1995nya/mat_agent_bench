@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: alloy
+difficulty: easy
 intent: Evaluate phase-formation tendency of AlCr0.8CoFeNi HEA using descriptor calculations, binary-phase cues, and 
   solid-solution prediction.
 human_prompt_seed: '请评估 AlCr0.8CoFeNi 高熵合金是否易形成固溶体，并给出可能结构趋势。
@@ -48,31 +49,26 @@ reference_answers:
 scoring_checklist:
 - id: hea_json
   criterion: Agent writes `hea_alcr0.8cofeni_kb_summary.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: hea_report
   criterion: Agent writes `hea_alcr0.8cofeni_kb_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: hea_required_tokens
   criterion: Summary JSON includes required HEA descriptor and prediction fields.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: hea_report_tokens
   criterion: Report explains rationale and uncertainty caveats for the solid-solution prediction.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: grounding_source
   criterion: Deliverables are grounded in generated HEA-analysis artifacts and avoid unsupported phase claims.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

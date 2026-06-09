@@ -3,6 +3,7 @@ task_type: simulation
 capabilities:
 - structure_manipulation
 domain: agnostic
+difficulty: easy
 intent: Build a multi-component Fe-Ni-Co-Cr-V alloy structure from an fcc-Ni 5x5x5 supercell template and report 
   composition constraints.
 human_prompt_seed: '请构建一个 Fe-Ni-Co-Cr-V 合金结构并导出为 `alloy_5x5x5_feni_cocrv.cif`。
@@ -41,27 +42,23 @@ reference_answers:
 scoring_checklist:
 - id: structure_artifact
   criterion: Agent writes `alloy_5x5x5_feni_cocrv.cif` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: report_artifact
   criterion: Agent writes `alloy_composition_report.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: report_required_tokens
   criterion: Composition report includes template/supercell metadata and explicit element-count entries for Fe, Ni, Co, 
     Cr, and V.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: grounding_source
   criterion: The final answer ties alloy construction details to `alloy_5x5x5_feni_cocrv.cif` and 
     `alloy_composition_report.json`, and explicitly discusses integer mapping or rounding of the target fractions.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

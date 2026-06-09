@@ -1,0 +1,123 @@
+id: E2E_liion_001_20250715
+task_type: end_to_end_research
+capabilities:
+- scientific_reasoning
+- data_handling
+- workflow_orchestration
+- structure_manipulation
+- scientific_grounding
+domain: battery
+difficulty: hard
+intent: Starting from crystal structures of LiFePO4 and LiFeSO4F (favorite polymorph), compute Madelung fields at both 
+  transition-metal and alkali sites using Ewald summation with formal charges, predict cell voltages using the model 
+  V_cell proportional to |M_M + M_A|, and explain the physical origin of the voltage difference between the two 
+  materials.
+human_prompt_seed: 'Starting from the provided crystal structures of LiFePO4 (olivine) and LiFeSO4F (favorite polymorph),
+  predict the cell voltage for each material using the Madelung field model. Report all intermediate values and final predictions in results.json with keys: lifepo4_madelung_fe,
+  lifepo4_madelung_li, lifepo4_voltage_au, lifeso4f_madelung_fe, lifeso4f_madelung_li, lifeso4f_voltage_au. Provide a physical
+  explanation for the voltage difference between the two materials in terms of ligand inductive effects and crystal structure
+  contributions in analysis.txt. Write a trajectory of your workflow steps in workflow.txt, including all intermediate calculations.'
+tags:
+- madelung
+- ewald_summation
+- polymorphism
+- cell_voltage
+- formal_charges
+data_files:
+- key: poscar_lifepo4
+  path: LiFePO4.poscar
+  description: POSCAR file for lithiated LiFePO4 olivine structure
+- key: poscar_lifeso4f
+  path: LiFeSO4F.poscar
+  description: POSCAR file for lithiated LiFeSO4F favorite polymorph structure
+- key: formal_charges
+  path: formal_charges.csv
+  description: Formal charge assignments for cathode material species as specified in the Methods section
+reference_answers:
+- key: results_exists
+  value: results.json
+- key: results_structure
+  value:
+    flags: ''
+    tokens:
+    - lifepo4_madelung_fe
+    - lifepo4_madelung_li
+    - lifepo4_voltage_au
+    - lifeso4f_madelung_fe
+    - lifeso4f_madelung_li
+    - lifeso4f_voltage_au
+    filename: results.json
+- key: madelung_signs
+  value:
+    flags: ''
+    pattern: '"lifepo4_madelung_fe":\s*-[0-9]+'
+    filename: results.json
+- key: voltage_ordering
+  value:
+    flags: ''
+    pattern: '"lifeso4f_voltage_au":\s*[0-9]+\.[0-9]+'
+    filename: results.json
+- key: analysis_exists
+  value: analysis.txt
+- key: analysis_content
+  value:
+    flags: -i
+    tokens:
+    - inductive
+    - ligand
+    - SO4
+    - PO4
+    filename: analysis.txt
+- key: grounding_source
+  value: Equation 5 and Discussion section of the paper
+scoring_checklist:
+- id: results_exists
+  verify: artifact_exists
+  weight: 0.2
+  criterion: '[Must] The results.json file exists.'
+  capability: tool_utilization
+- id: results_structure
+  verify: text_file_contains_all
+  weight: 0.2
+  criterion: '[Must] The results.json file contains all six required keys: lifepo4_madelung_fe, lifepo4_madelung_li, lifepo4_voltage_au,
+    lifeso4f_madelung_fe, lifeso4f_madelung_li, lifeso4f_voltage_au.'
+  capability: data_handling
+- id: madelung_signs
+  verify: text_file_regex
+  weight: 0.15
+  criterion: '[Must] The Madelung field at the Fe site is reported as a negative value (attractive electrostatic field from
+    surrounding anions).'
+  capability: scientific_reasoning
+- id: voltage_ordering
+  verify: text_file_regex
+  weight: 0.15
+  criterion: '[Suggested] The predicted voltage for LiFeSO4F is higher than for LiFePO4, consistent with experimental observations
+    (3.6 V vs 3.4 V) and the model.'
+  capability: scientific_reasoning
+- id: analysis_exists
+  verify: artifact_exists
+  weight: 0.1
+  criterion: '[Must] The analysis.txt file exists with a physical explanation.'
+  capability: workflow_orchestration
+  capability: scientific_grounding
+- id: workflow_seq
+  verify: llm_binary_judge
+  weight: 0.5
+  criterion: '[Must] The agent correctly sequences the workflow: structure parsing -> charge assignment -> Ewald summation
+    -> voltage prediction -> analysis, without skipping stages.'
+  capability: scientific_grounding
+- id: pymatgen_usage
+  verify: llm_binary_judge
+  weight: 0.5
+  criterion: '[Must] The agent properly invoked pymatgen for structure parsing and Ewald summation from workflow.txt.'
+  capability: scientific_grounding
+reference_answer_prompt: |-
+  1. Download LiFePO4 (mp-19017) and LiFeSO4F favorite (mp-504769) structures from Materials Project and convert to POSCAR format.
+  2. Assign formal charges: O=-2, F=-1, P=+5, S=+6, Fe=+2, Li=+1 as per Methods section.
+  3. For each structure, implement Ewald summation to compute:
+     a. Madelung field at the Fe site: M_Fe = sum_i (q_i / |r_Fe - r_i|) with proper Ewald convergence parameters.
+     b. Madelung field at the Li site: M_Li = sum_i (q_i / |r_Li - r_i|).
+  4. Compute V_pred = |M_Fe + M_Li| in arbitrary units for each material.
+  5. Write all values to results.json with the specified keys.
+  6. In analysis.txt, explain that LiFeSO4F has a higher voltage because (SO4)2- is more electronegative/inductive than (PO4)3-, leading to a larger Madelung field at the Fe site, and reference the Discussion section's explanation of the inductive effect.
+  7. Expected experimental values: LiFePO4 ~3.4 V, LiFeSO4F ~3.6 V; the arbitrary-unit predictions should preserve this ordering.

@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: catalysis
+difficulty: easy
 intent: Compute adsorption energies of six adsorbates on Ag(001) and Ag(011) at on-top sites using MLIP/calculator with 
   consistent energy reference per doc 3.2.1.
 human_prompt_seed: '对 Ag 体相切出 (001) 与 (011) 两个表面；分别计算 H、CO、COOH、CO2、HCOO、HCOOH 六种吸附质在 on-top 位点的吸附能。 使用 DP（或题目环境要求的等效势/计算器），并统一气相分子与体相/slab
@@ -22,7 +23,6 @@ scoring_checklist:
     COOH, CO2, HCOO, HCOOH), and (d) uses an MLIP/DP calculator or submits remote Bohrium computation jobs. A well-structured
     script, code, or submitted computation jobs satisfying these elements counts as pass even if final numerical results are
     not yet available (e.g. due to wall-clock timeout).'
-  axis: correctness
   verify: llm_binary_judge
   capability: structure_manipulation
   weight: 0.5
@@ -30,14 +30,12 @@ scoring_checklist:
   criterion: '结果覆盖 Ag(001) 与 Ag(011)，六种吸附质（H, CO, COOH, CO2, HCOO, HCOOH），on-top 位点；给出吸附能数值表并定义能量参考（slab、气相）。NOTE: 具体使用哪种计算器（DP、MACE-MP、或其他
     MLIP）不是本条评判标准——只要结果覆盖齐全、参考态定义清楚即可。若答案中表格包含 markdown 分隔线（如 |:---:|），这是格式标记，不是截断。Judge on coverage completeness and reference
     definition only.'
-  axis: correctness
   verify: llm_binary_judge
   weight: 0.5
   capability: data_handling
 - id: grounding_workflow
   criterion: 从 Agent 的产物（脚本、代码、已提交的 Bohrium 
     计算任务、或最终叙述/表格）中能看出从体相/表面到吸附结构的合理计算链条。若有最终表格，则叙述与数值需自洽；若仅有脚本或计算作业提交记录，则代码逻辑须体现合理的结构构建与能量计算流程。未凭空列出与实际步骤无关的数值。
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

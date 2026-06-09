@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - scientific_reasoning
 domain: agnostic
+difficulty: easy
 intent: Retrieve a target prototype crystal structure from an open database and summarize the returned structural 
   metadata.
 human_prompt_seed: '从开源数据库获取一个 MgB2 晶体结构。
@@ -49,31 +50,26 @@ reference_answers:
 scoring_checklist:
 - id: retrieval_json
   criterion: Agent writes `mgb2_retrieval.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: notes_md
   criterion: Agent writes `mgb2_notes.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: retrieval_required_tokens
   criterion: Retrieval JSON includes essential structure metadata and candidate count.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: notes_required_tokens
   criterion: Notes explain candidate selection and database origin for the MgB2 result.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: grounding_source
   criterion: The answer stays focused on retrieval metadata and provenance, not fabricated downstream calculations.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

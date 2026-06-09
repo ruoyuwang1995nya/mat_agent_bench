@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
+difficulty: easy
 intent: Compute phonon dispersion for Si diamond with DPA; report Gamma-point optical frequency and check for imaginary 
   modes.
 human_prompt_seed: '计算金刚石结构 Si 的声子色散关系。
@@ -30,21 +31,18 @@ reference_answers:
 scoring_checklist:
 - id: gamma_optical_max_cm1
   criterion: Si Gamma-point highest optical phonon frequency is within tolerance (~520 cm⁻¹).
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: required_fields
-  criterion: Report includes phonon dispersion k-path specification, Gamma-point frequency value, and statement about
+  criterion: Report includes phonon dispersion k-path specification, Gamma-point frequency value, and statement about 
     presence/absence of imaginary modes.
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
 - id: grounding_source
   criterion: The reported phonon frequency is tied to force-constant calculation outputs, not textbook values. Judge 
     solely from the final answer.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

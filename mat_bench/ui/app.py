@@ -496,9 +496,6 @@ def create_app(
                 "passed": op,
                 "total": ot,
                 "pass_rate": round(op / ot, 4) if ot else 0.0,
-                "correctness": f"{qpr.correctness[0]}/{qpr.correctness[1]}",
-                "grounding": f"{qpr.grounding[0]}/{qpr.grounding[1]}",
-                "efficiency": f"{qpr.efficiency[0]}/{qpr.efficiency[1]}",
                 "safety_vetoed": qpr.safety_veto_count > 0,
                 "criteria": _agg_criteria(by_q_key.get(key, [])),
                 "criteria_detail": _agg_criteria_detail(by_q_key.get(key, [])),
@@ -542,9 +539,6 @@ def create_app(
                 "passed": op,
                 "total": ot,
                 "pass_rate": round(op / ot, 4) if ot else 0.0,
-                "correctness": f"{qpr.correctness[0]}/{qpr.correctness[1]}",
-                "grounding": f"{qpr.grounding[0]}/{qpr.grounding[1]}",
-                "efficiency": f"{qpr.efficiency[0]}/{qpr.efficiency[1]}",
                 "safety_vetoed": qpr.safety_veto_count > 0,
                 "criteria": _agg_criteria(by_q_key.get(key, [])),
                 "criteria_detail": _agg_criteria_detail(by_q_key.get(key, [])),
@@ -575,7 +569,7 @@ def _agg_criteria_detail(recs: list[EvalRunRecord]) -> list[dict]:
             if cid not in agg:
                 agg[cid] = {
                     "criterion_id": cid,
-                    "axis": cr.axis,
+                    "capability": cr.capability,
                     "passed": 0,
                     "total": 0,
                     "reasons": [],

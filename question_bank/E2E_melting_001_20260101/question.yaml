@@ -1,0 +1,104 @@
+id: E2E_melting_001_20260101
+task_type: end_to_end_research
+capabilities:
+- scientific_reasoning
+- tool_utilization
+- workflow_orchestration
+- data_handling
+- scientific_grounding
+- structure_manipulation
+domain: agnostic
+difficulty: hard
+intent: End-to-end computational workflow to predict melting temperatures of bcc transition metals by combining 
+  DFT-based cohesive energy calculation with empirically validated Tm-Ecoh relationships, including uncertainty 
+  quantification based on coordination number effects.
+human_prompt_seed: |-
+  Starting from the provided bcc transition metal crystal structures (bcc_metals_structures.csv), predict the melting temperature at standard pressure for each element using a computational workflow that combines: 
+  (1) estimate cohesive energy using PBE DFT calculation, (2) Apply the Tm-Ecoh relationship to calculate Tm.
+
+  Report results in results.json with keys for each element: predicted_Tm_K, cohesive_energy_eV, equation_used. Also write a methodology_summary.txt explaining your computational approach.
+tags:
+- end_to_end
+- melting_temperature
+- cohesive_energy
+- bcc_metals
+- empirical_correlation
+- uncertainty_quantification
+data_files:
+- key: bcc_structures
+  path: bcc_metals_structures.csv
+  description: Crystal structure parameters for bcc transition metals from Materials Project. Lattice parameters in 
+    Angstroms, angles in degrees.
+reference_answers:
+- key: artifact_results
+  value: results.json
+- key: artifact_methodology
+  value: methodology_summary.txt
+- key: contains_mo_tm
+  value:
+    checks:
+    - key: Mo.predicted_Tm_K
+      max: 2900
+      min: 2300
+    filename: results.json
+- key: contains_w_tm
+  value:
+    checks:
+    - key: W.predicted_Tm_K
+      max: 3800
+      min: 3000
+    filename: results.json
+- key: contains_equation_ref
+  value:
+    flags: ''
+    tokens:
+    - '0.0346'
+    - transition
+    filename: results.json
+scoring_checklist:
+- id: artifact_results
+  verify: artifact_exists
+  weight: 0.5
+  criterion: '[Must] Output file results.json exists with predicted Tm for all 7 bcc elements'
+  capability: data_handling
+- id: artifact_methodology
+  verify: artifact_exists
+  weight: 0.5
+  criterion: '[Must] Methodology summary methodology_summary.txt exists and describes the computational workflow'
+  capability: workflow_orchestration
+- id: contains_mo_tm
+  verify: text_file_numeric_range
+  weight: 0.5
+  criterion: '[Must] Predicted Tm for Mo is within 2300-2900 K (consistent with DNP-TPC value of ~2550 K)'
+  capability: scientific_reasoning
+- id: contains_w_tm
+  verify: text_file_numeric_range
+  weight: 0.5
+  criterion: '[Must] Predicted Tm for W is within 3000-3800 K (W has higher E_coh than Mo, so higher Tm)'
+  capability: scientific_reasoning
+- id: contains_equation_ref
+  verify: text_file_contains_all
+  weight: 0.5
+  criterion: '[Must] Results reference the transition metal equation (coefficient 0.0346)'
+  capability: data_handling
+- id: contains_cn_analysis
+  verify: text_file_numeric_range
+  weight: 0.5
+  criterion: '[Must] Coordination number factor is applied (bcc CN=8 gives lower error than fcc/hcp)'
+  capability: scientific_reasoning
+- id: workflow_chain
+  verify: llm_binary_judge
+  weight: 0.5
+  criterion: '[Must] Workflow correctly chains: structure input -> cohesive energy computation -> Tm prediction via empirical
+    relation -> uncertainty assessment'
+  capability: workflow_orchestration
+
+reference_answer_prompt: |-
+  1. For each bcc element, estimate cohesive energy using DFT (PBE functional) or use literature values:
+     - Mo: E_coh ~6.82 eV, W: ~8.90 eV, Ta: ~8.10 eV, V: ~5.31 eV, Cr: ~4.10 eV, Nb: ~7.57 eV, Fe: ~4.28 eV
+  2. Apply transition metal equation: Tm = 0.0346 * (E_coh / kB)
+     - kB = 8.617e-5 eV/K
+     - Mo: 0.0346 * 6.82 / 8.617e-5 = 0.0346 * 79146 = 2738 K
+     - W: 0.0346 * 8.90 / 8.617e-5 = 3587 K
+  3. Apply coordination number correction: bcc (CN=8) elements have ~5% average error vs fcc (13%) and hcp (20%) per the paper
+  4. Confidence: high for bcc elements (lower CN = better accuracy per paper Section 3.2)

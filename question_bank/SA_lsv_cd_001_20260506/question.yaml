@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: agnostic
+difficulty: easy
 intent: Quantify cadmium in a wastewater sample from CHI linear-sweep voltammetry calibration traces.
 human_prompt_seed: '请下载并分析以下通过 OSS URL 提供的 CHI660E 线性扫描伏安数据文件：
 
@@ -97,39 +98,33 @@ reference_answers:
 scoring_checklist:
 - id: calibration_slope
   criterion: The calibration slope reported in eval_results is consistent with the uploaded Cd standard traces.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: data_handling
 - id: calibration_r2
   criterion: The calibration quality reported in eval_results is consistent with the uploaded standard traces.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: data_handling
 - id: sample_cd
-  criterion: The wastewater Cd concentration reported in eval_results is consistent with the uploaded sample trace and
+  criterion: The wastewater Cd concentration reported in eval_results is consistent with the uploaded sample trace and 
     calibration data.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: data_handling
 - id: sample_ep
   criterion: The sample peak potential reported in eval_results is consistent with the uploaded sample trace.
-  axis: correctness
   verify: answer_json_numeric
   capability: data_handling
   weight: 0.5
 - id: regulatory_conclusion
   criterion: The final answer compares the sample Cd concentration with the 0.1 mg/L limit and concludes that it is 
     below the limit.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: grounding_source
   criterion: The analysis is grounded in the uploaded LSV traces and does not rely on unstated report values.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

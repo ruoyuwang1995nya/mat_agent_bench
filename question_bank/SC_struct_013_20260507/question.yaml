@@ -3,6 +3,7 @@ task_type: simulation
 capabilities:
 - structure_manipulation
 domain: agnostic
+difficulty: easy
 intent: Construct and compare close-packed layer cross sections for fcc and hcp crystals, then expand both slabs to 
   5x5x1 supercells.
 human_prompt_seed: '请演示 fcc 与 hcp 近密堆积结构的差异，完成以下建模任务并导出结构：
@@ -57,56 +58,47 @@ reference_answers:
 scoring_checklist:
 - id: fcc_artifact
   criterion: Agent writes `fcc_close_packed_5x5x1.cif` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: hcp_artifact
   criterion: Agent writes `hcp_close_packed_5x5x1.cif` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: compare_artifact
   criterion: Agent writes `packing_comparison.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: fcc_layer_count
   criterion: The file `fcc_close_packed_5x5x1.cif` contains exactly 5 distinct z-layers.
-  axis: correctness
   verify: struct_file_layer_count
   capability: structure_manipulation
   weight: 0.5
 - id: hcp_layer_count
   criterion: The file `hcp_close_packed_5x5x1.cif` contains exactly 5 distinct z-layers.
-  axis: correctness
   verify: struct_file_layer_count
   capability: structure_manipulation
   weight: 0.5
 - id: fcc_atom_count
   criterion: The file `fcc_close_packed_5x5x1.cif` has 125 atoms for a 5-layer 5x5x1 slab.
-  axis: correctness
   verify: struct_file_atom_count
   capability: structure_manipulation
   weight: 0.5
 - id: hcp_atom_count
   criterion: The file `hcp_close_packed_5x5x1.cif` has 125 atoms for a 5-layer 5x5x1 slab.
-  axis: correctness
   verify: struct_file_atom_count
   capability: structure_manipulation
   weight: 0.5
 - id: compare_tokens
   criterion: The file `packing_comparison.md` explicitly mentions fcc, hcp, AB stacking, and ABC stacking.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: grounding_source
   criterion: The final answer is grounded in both generated CIF files and the comparison note, rather than generic 
     textbook-only statements.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

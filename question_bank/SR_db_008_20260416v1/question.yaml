@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - scientific_reasoning
 domain: agnostic
+difficulty: easy
 intent: Retrieve up to five ternary rare-earth transition-metal oxides excluding Fe and Ni.
 human_prompt_seed: '检索并返回不超过 5 个三元氧化物，约束如下：
 
@@ -50,31 +51,26 @@ reference_answers:
 scoring_checklist:
 - id: candidates_json
   criterion: Agent writes `re_tm_oxide_candidates.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: retrieval_report
   criterion: Agent writes `re_tm_oxide_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: candidates_required_tokens
   criterion: Candidate JSON includes provenance fields and explicit element composition entries.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: report_required_tokens
   criterion: Report describes rare-earth/transition-metal/ternary constraints and Fe/Ni exclusion handling.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: grounding_source
   criterion: The final answer is grounded in retrieved candidates and avoids fabricating unsupported compositions.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

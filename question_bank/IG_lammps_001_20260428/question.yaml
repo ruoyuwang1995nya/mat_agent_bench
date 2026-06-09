@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: Generate a LAMMPS molecular dynamics input file for a simple Lennard-Jones system relaxation.
 human_prompt_seed: '请为一个 FCC 铜体系生成 LAMMPS 分子动力学输入文件，要求：
 
@@ -38,28 +39,24 @@ reference_answers:
 scoring_checklist:
 - id: input_artifact
   criterion: Agent writes `in.lammps` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: required_keywords
-  criterion: The input file contains essential LAMMPS keywords for an EAM MD simulation (pair_style, pair_coeff, fix
+  criterion: The input file contains essential LAMMPS keywords for an EAM MD simulation (pair_style, pair_coeff, fix 
     npt, run, thermo).
-  axis: correctness
   verify: text_file_contains_all
   capability: tool_utilization
   weight: 0.5
 - id: physical_params
-  criterion: The input file uses physically reasonable parameters consistent with the request (FCC Cu lattice constant
+  criterion: The input file uses physically reasonable parameters consistent with the request (FCC Cu lattice constant 
     ~3.615 Å, temperature 300 K, pressure 0, timestep 1 fs, 10000 steps).
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
 - id: grounding_source
   criterion: Parameter choices are tied to the user request and standard Cu EAM simulation practice, not arbitrary 
     values.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

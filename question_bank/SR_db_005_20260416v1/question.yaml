@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - scientific_reasoning
 domain: agnostic
+difficulty: easy
 intent: Retrieve three oxide structures with band gap greater than 2 eV and summarize filter compliance.
 human_prompt_seed: '检索并返回 3 个氧化物结构，要求带隙大于 2 eV。
 
@@ -53,38 +54,32 @@ reference_answers:
 scoring_checklist:
 - id: candidates_json
   criterion: Agent writes `oxide_bg_gt2_candidates.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: retrieval_report
   criterion: Agent writes `oxide_bg_gt2_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: candidates_required_tokens
   criterion: Candidate JSON includes required metadata fields for oxide and band-gap screening.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: bandgap_regex
   criterion: Candidate JSON provides explicit band-gap values greater than 2 eV.
-  axis: correctness
   verify: text_file_regex
   capability: data_handling
   weight: 0.5
 - id: report_required_tokens
   criterion: Retrieval report states filter constraints, candidate-count handling, and uncertainty note.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: grounding_source
   criterion: The final answer is grounded in retrieval results and does not fabricate band-gap values beyond reported 
     metadata.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

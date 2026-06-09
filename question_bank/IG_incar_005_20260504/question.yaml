@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: 'Generate VASP INCAR for DFT+U calculation of RbPmMo2O8 with Hubbard U on Mo d-orbitals. Spin-polarized.
 
   '
@@ -55,43 +56,36 @@ reference_answers:
 scoring_checklist:
 - id: incar_artifact
   criterion: INCAR file is generated.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: incar_critical_tokens
   criterion: INCAR contains all critical parameter keywords.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: critical_ISPIN
   criterion: INCAR sets ISPIN = 2 (critical param).
-  axis: correctness
   verify: text_file_regex
   capability: tool_utilization
   weight: 0.5
 - id: critical_LDAU
   criterion: INCAR sets LDAU = .TRUE. (critical param).
-  axis: correctness
   verify: text_file_regex
   capability: data_handling
   weight: 0.5
 - id: critical_LDAUL
   criterion: INCAR sets LDAUL = -1 -1 2 -1 (critical param).
-  axis: correctness
   verify: text_file_regex
   capability: data_handling
   weight: 0.5
 - id: critical_LDAUTYPE
   criterion: INCAR sets LDAUTYPE = 2 (critical param).
-  axis: correctness
   verify: text_file_regex
   capability: data_handling
   weight: 0.5
 - id: critical_LDAUU
   criterion: INCAR sets LDAUU = 0.000 0.000 4.380 0.000 (critical param).
-  axis: correctness
   verify: text_file_regex
   capability: data_handling
   weight: 0.5
@@ -99,7 +93,6 @@ scoring_checklist:
   criterion: The INCAR uses physically reasonable general settings for a VASP DFT+U calculation. ENCUT is present 
     (unless not relevant), EDIFF is present with a reasonable value, PREC is set. Machine-specific params (KPAR, NCORE, 
     NPAR) are optional and should not be penalized if absent or different from reference.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
@@ -107,7 +100,6 @@ scoring_checklist:
   criterion: The generated INCAR is grounded in the provided prompt data (material system, calculation type, critical 
     parameters) rather than hallucinated. Judge solely from the final answer and stated file content; do not fail 
     because the tool-call log omits MCP, web_search, or any specific tool.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

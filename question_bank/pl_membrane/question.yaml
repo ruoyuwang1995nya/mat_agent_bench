@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: polymer
+difficulty: easy
 intent: Compare PIM-1, Matrimid, and 6FDA-DAM membranes for CO2/N2 separation by integrating solubility, diffusivity, 
   free-volume, and ranking metrics.
 human_prompt_seed: '文件 `membrane_screening_bundle.json` 汇总了 PIM-1、Matrimid 和 6FDA-DAM 三类聚合物膜在 CO2/N2 分离中的中间数据。
@@ -45,34 +46,29 @@ reference_answers:
 scoring_checklist:
 - id: pim1_permeability_barrer
   criterion: PIM-1 CO2 permeability is reported within tolerance of the curated value (~5400 Barrer).
-  axis: correctness
   verify: numerical_range
   capability: data_handling
   weight: 0.5
 - id: dam_selectivity
   criterion: 6FDA-DAM CO2/N2 selectivity is reported within tolerance of the curated value (~28).
-  axis: correctness
   verify: numerical_range
   capability: data_handling
   weight: 0.5
 - id: recommendation_correctness
   criterion: Final recommendation identifies 6FDA-DAM as the best balanced membrane, while recognizing that PIM-1 has 
     the highest throughput.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: required_fields
-  criterion: Report includes permeability and selectivity tables, trade-off discussion, free-volume note, and a clear
+  criterion: Report includes permeability and selectivity tables, trade-off discussion, free-volume note, and a clear 
     recommendation.
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
 - id: grounding_source
   criterion: The answer uses the provided solubility, diffusivity, permeability, and free-volume evidence from 
     membrane_screening_bundle.json rather than generic membrane heuristics alone.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

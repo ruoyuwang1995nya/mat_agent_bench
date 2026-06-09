@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: Generate a CP2K DFT single-point energy input file for a simple bulk system.
 human_prompt_seed: '请为 MgO 岩盐结构（a=4.212 Å）生成 CP2K DFT 单点能计算输入文件，要求：
 
@@ -35,26 +36,22 @@ reference_answers:
 scoring_checklist:
 - id: input_artifact
   criterion: Agent writes `cp2k.inp` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: required_keywords
   criterion: The input file contains essential CP2K sections and keywords (FORCE_EVAL, DFT, PBE, SCF, CUTOFF).
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: physical_params
-  criterion: The input file uses physically reasonable parameters for MgO (PBE functional, DZVP basis, GTH
+  criterion: The input file uses physically reasonable parameters for MgO (PBE functional, DZVP basis, GTH 
     pseudopotentials, cutoff ~400 Ry, SCF convergence 1E-6).
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
 - id: grounding_source
   criterion: Parameters match the user request and standard CP2K MgO calculation practice.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

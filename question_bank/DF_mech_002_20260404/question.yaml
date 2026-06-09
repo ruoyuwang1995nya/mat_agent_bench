@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: agnostic
+difficulty: easy
 intent: From MSST Hugoniot simulation data, fit the P-V Hugoniot curve and determine C-J detonation velocity and 
   pressure for RDX.
 human_prompt_seed: '读取 `msst_hugoniot.json`，其中包含 RDX 在不同冲击波速度下的 MSST 模拟数据 （压力、比容、温度、是否反应）。筛选完全反应的数据点，拟合 P-V Hugoniot 曲线， 通过
@@ -34,19 +35,16 @@ reference_answers:
 scoring_checklist:
 - id: cj_velocity_m_s
   criterion: C-J detonation velocity is within tolerance.
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: cj_pressure_GPa
   criterion: C-J detonation pressure is within tolerance.
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: required_fields
   criterion: Includes Hugoniot curve fitting details, Rayleigh line analysis, and C-J velocity/pressure values.
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
@@ -54,7 +52,6 @@ scoring_checklist:
   criterion: C-J parameters are derived from the provided msst_hugoniot.json data, with filtered reaction-complete 
     points shown. Judge solely from the final answer; do not fail because the tool-call log omits MCP, web_search, or 
     any specific tool.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

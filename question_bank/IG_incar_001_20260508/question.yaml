@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: 'Generate VASP INCAR for a band structure calculation of Lu4N4. Non-self-consistent run reading existing charge density
   (ICHARG=11), with projected band output (LORBIT=11).
 
@@ -47,37 +48,31 @@ reference_answers:
 scoring_checklist:
 - id: incar_artifact
   criterion: INCAR file is generated.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: incar_critical_tokens
   criterion: INCAR contains all critical parameter keywords.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: critical_ICHARG
   criterion: INCAR sets ICHARG = 11 (critical param).
-  axis: correctness
   verify: text_file_regex
   capability: data_handling
   weight: 0.5
 - id: critical_LORBIT
   criterion: INCAR sets LORBIT = 11 (critical param).
-  axis: correctness
   verify: text_file_regex
   capability: data_handling
   weight: 0.5
 - id: optional_IBRION
   criterion: INCAR may omit IBRION; if provided, it must be IBRION = -1.
-  axis: correctness
   verify: text_file_regex
   capability: data_handling
   weight: 0.5
 - id: optional_NSW
   criterion: INCAR may omit NSW; if provided, it must be NSW = 0.
-  axis: correctness
   verify: text_file_regex
   capability: data_handling
   weight: 0.5
@@ -85,7 +80,6 @@ scoring_checklist:
   criterion: The INCAR uses physically reasonable general settings for a VASP band structure calculation. ENCUT is 
     present (unless not relevant), EDIFF is present with a reasonable value, PREC is set. Machine-specific params (KPAR,
     NCORE, NPAR) are optional and should not be penalized if absent or different from reference.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
@@ -93,15 +87,13 @@ scoring_checklist:
   criterion: The generated INCAR is grounded in the provided prompt data (material system, calculation type, critical 
     parameters) rather than hallucinated. Judge solely from the final answer and stated file content; do not fail 
     because the tool-call log omits MCP, web_search, or any specific tool.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5
 - id: soc_consideration
-  criterion: Agent acknowledges or considers spin-orbit coupling (SOC) for Lu (Z=71, heavy lanthanide) in the band
+  criterion: Agent acknowledges or considers spin-orbit coupling (SOC) for Lu (Z=71, heavy lanthanide) in the band 
     structure calculation. The agent should either enable LSORBIT=.TRUE. or explicitly discuss whether SOC is needed for
     this system.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5

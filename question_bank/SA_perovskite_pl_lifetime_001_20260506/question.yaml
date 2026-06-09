@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: semiconductor
+difficulty: easy
 intent: Extract photoluminescence peak, band width, and lifetime metrics from uploaded Mn-doped perovskite spectra.
 human_prompt_seed: '请下载并分析以下通过 OSS URL 提供的两个光谱数据文件：
 
@@ -58,32 +59,27 @@ reference_answers:
 scoring_checklist:
 - id: lambda_max
   criterion: The emission maximum reported in eval_results is consistent with the uploaded emission spectrum.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: data_handling
 - id: fwhm
   criterion: The emission bandwidth reported in eval_results is consistent with the uploaded emission spectrum.
-  axis: correctness
   verify: answer_json_numeric
   capability: data_handling
   weight: 0.5
 - id: tau_avg
   criterion: The representative lifetime reported in eval_results is consistent with the uploaded decay trace.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: data_handling
 - id: photophysics_interpretation
   criterion: The final answer recognizes the broad green Mn-related emission and discusses uncertainty from background 
     or tail fitting.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: grounding_source
   criterion: The reported photophysical metrics are derived from the uploaded spectrum and decay trace.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

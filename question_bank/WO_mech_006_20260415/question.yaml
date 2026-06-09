@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: alloy
+difficulty: easy
 intent: Build the convex hull for a CuCrZr alloy and summarize stability interpretation artifacts.
 human_prompt_seed: "对 CuCrZr 执行凸包稳定性分析（Mock版）：\n1. 先 query/检索并整理凸包分析所需输入文件与参考相信息；\n2. 说明稳定性判据（hull distance 与稳定标签关系）；\n3.
   不做真实计算，使用以下 mock 结果：\n   - hull_distance = 0.024 eV/atom\n   - stability_label = metastable\n   - reference_phases = [\"\
@@ -42,37 +43,31 @@ reference_answers:
 scoring_checklist:
 - id: hull_summary_json
   criterion: Agent writes `cucrzr_convex_hull_summary.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: hull_report_md
   criterion: Agent writes `cucrzr_convex_hull_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: hull_required_tokens
   criterion: Hull summary JSON includes distance/stability fields and phase-reference metadata.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: report_required_tokens
   criterion: Report explains convex-hull interpretation and uncertainty caveats.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: hull_distance_mock
   criterion: Final answer includes a mock hull distance near 0.024 eV/atom.
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: grounding_source
   criterion: Final answer is grounded in convex-hull artifacts and does not assert unsupported stability conclusions.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

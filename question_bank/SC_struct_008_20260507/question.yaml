@@ -3,6 +3,7 @@ task_type: simulation
 capabilities:
 - structure_manipulation
 domain: agnostic
+difficulty: easy
 intent: Construct a computation-ready gamma-alumina bulk model and validate stoichiometry, geometry, coordination 
   environments, and post-relaxation force.
 human_prompt_seed: 'Construct a computation-ready γ-Al2O3 bulk model. Export as `gamma_alumina.cif`. In the final answer,
@@ -65,43 +66,36 @@ reference_answers:
 scoring_checklist:
 - id: file_exists
   criterion: The output file `gamma_alumina.cif` exists.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: al_o_ratio
   criterion: The Al:O stoichiometry ratio read from gamma_alumina.cif is approximately 2:3 within 5%.
-  axis: correctness
   verify: struct_file_stoichiometry_ratio
   capability: structure_manipulation
   weight: 0.5
 - id: alpha_deg
   criterion: The alpha cell angle read from gamma_alumina.cif is close to 90 degrees.
-  axis: correctness
   verify: struct_file_cell_param
   capability: structure_manipulation
   weight: 0.5
 - id: beta_deg
   criterion: The beta cell angle read from gamma_alumina.cif is close to 90 degrees.
-  axis: correctness
   verify: struct_file_cell_param
   capability: structure_manipulation
   weight: 0.5
 - id: gamma_deg
   criterion: The gamma cell angle read from gamma_alumina.cif is close to 90 degrees.
-  axis: correctness
   verify: struct_file_cell_param
   capability: structure_manipulation
   weight: 0.5
 - id: max_force_eV_A
   criterion: The reported relaxed maximum force in `<eval_results>` is below 0.1 eV/A.
-  axis: correctness
   verify: answer_json_numeric
   capability: tool_utilization
   weight: 0.5
 - id: min_distance_A
   criterion: The minimum interatomic distance read from `gamma_alumina.cif` is at least 1.0 A.
-  axis: correctness
   verify: struct_file_min_interatomic_distance
   capability: structure_manipulation
   weight: 0.5
@@ -109,7 +103,6 @@ scoring_checklist:
   criterion: The answer explicitly reports the Al:O ratio, all three cell angles, evidence for both tetrahedral and 
     octahedral AlO environments, a minimum-distance sanity check above 1.0 A, and a relaxed maximum-force check below 
     0.1 eV/A.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
@@ -118,7 +111,6 @@ scoring_checklist:
     tetrahedral and octahedral coordination sites, reflected in the construction approach, final answer, or tool 
     parameters. This criterion can pass even if the final output file was not successfully delivered, as long as the 
     understanding is evident.
-  axis: correctness
   verify: llm_binary_judge
   weight: 0.5
   capability: structure_manipulation
@@ -126,7 +118,6 @@ scoring_checklist:
   criterion: Agent initiates structure relaxation or geometry optimization on the constructed γ-Al2O3 bulk model using 
     any available calculator (MLIP, DP, or force-field), even if the relaxation does not converge or the final file is 
     not delivered. Evidence may come from tool calls, scripts, or narrative.
-  axis: correctness
   verify: llm_binary_judge
   weight: 0.5
   capability: tool_utilization
@@ -135,7 +126,6 @@ scoring_checklist:
     distances, and post-relax forces to `gamma_alumina.cif` and the stated relaxation, not handbook recall disconnected 
     from that file. Judge solely from the final answer and named deliverables; do not fail because the tool-call log 
     omits MCP, web_search, or any specific tool.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

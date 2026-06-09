@@ -4,6 +4,7 @@ capabilities:
 - data_handling
 - scientific_reasoning
 domain: agnostic
+difficulty: easy
 intent: Repair 5 problematic POSCAR structures by fixing geometry issues only. Focus the evaluation entirely on POSCAR 
   repair correctness and cause-aligned fixes.
 human_prompt_seed: '从 `failure_recovery.json` 读取 5 个结构（TiO2, ZnO, MgO, Al2O3, SiO2）的失败恢复场景。每个条目里都有待修复的 `input_poscar` 路径。每个结构的初始计算因几何问题失败（如原子重叠、晶胞畸变、对称性错误等）。
@@ -87,37 +88,31 @@ reference_answers:
 scoring_checklist:
 - id: input_file_sets_count
   criterion: '[Must] Exactly 5 corrected POSCAR files are generated.'
-  axis: correctness
   verify: numerical_range
   weight: 0.5
   capability: tool_utilization
 - id: calc_001_tio2_fixed_artifact
   criterion: Agent writes `calc_001_TiO2_fixed.POSCAR` to workspace.
-  axis: correctness
   verify: artifact_exists
   weight: 0.5
   capability: tool_utilization
 - id: calc_002_zno_fixed_artifact
   criterion: Agent writes `calc_002_ZnO_fixed.POSCAR` to workspace.
-  axis: correctness
   verify: artifact_exists
   weight: 0.5
   capability: tool_utilization
 - id: calc_003_mgo_fixed_artifact
   criterion: Agent writes `calc_003_MgO_fixed.POSCAR` to workspace.
-  axis: correctness
   verify: artifact_exists
   weight: 0.5
   capability: tool_utilization
 - id: calc_004_al2o3_fixed_artifact
   criterion: Agent writes `calc_004_Al2O3_fixed.POSCAR` to workspace.
-  axis: correctness
   verify: artifact_exists
   weight: 0.5
   capability: tool_utilization
 - id: calc_005_sio2_fixed_artifact
   criterion: Agent writes `calc_005_SiO2_fixed.POSCAR` to workspace.
-  axis: correctness
   verify: artifact_exists
   weight: 0.5
   capability: tool_utilization
@@ -125,14 +120,12 @@ scoring_checklist:
   criterion: '[Must] For each material, judge repair correctness using only the bad/fixed POSCAR pair and the `repair_acceptance`
     rules in `failure_recovery.json`. Do not enforce a single coordinate-level canonical answer when multiple valid repairs
     satisfy the acceptance constraints.'
-  axis: correctness
   verify: llm_binary_judge
   weight: 0.5
   capability: structure_manipulation
 - id: grounding_repair_causes
   criterion: '[Must] Each POSCAR repair addresses the specific failure cause in configuration (overlap, cell distortion, symmetry
     issues, etc.).'
-  axis: grounding
   verify: llm_binary_judge
   weight: 0.5
   capability: scientific_grounding

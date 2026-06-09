@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - scientific_reasoning
 domain: agnostic
+difficulty: easy
 intent: Search a target inorganic crystal structure and report the original database source with machine-checkable 
   provenance fields.
 human_prompt_seed: '搜索高氯酸铷（RbClO4）的晶体结构，并明确告知原始数据库来源。
@@ -54,34 +55,29 @@ reference_answers:
 scoring_checklist:
 - id: retrieval_report
   criterion: Agent writes `retrieval_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: source_summary
   criterion: Agent writes `source_summary.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: summary_required_tokens
   criterion: Source summary JSON includes query formula, selected structure formula, database source, structure 
     identifier, candidate count, and space group.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: report_required_tokens
   criterion: Retrieval report explicitly describes query conditions, candidate handling, and database-source 
     explanation.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: grounding_source
   criterion: The answer ties the selected RbClO4 structure and provenance fields to the retrieval outputs, and does not 
     claim unsupported source certainty.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

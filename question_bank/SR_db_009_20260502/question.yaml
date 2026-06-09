@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - scientific_reasoning
 domain: agnostic
+difficulty: easy
 intent: Retrieve five candidate Heusler-alloy structures and summarize downloadable structure resources.
 human_prompt_seed: '检索并返回 5 个 Heusler 合金候选结构，并提供结构文件或下载链接信息。
 
@@ -47,32 +48,27 @@ reference_answers:
 scoring_checklist:
 - id: candidates_json
   criterion: Agent writes `heusler_candidates.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: retrieval_report
   criterion: Agent writes `heusler_retrieval_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: candidates_required_tokens
   criterion: Candidate JSON includes required metadata fields and explicit space-group context.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: report_required_tokens
   criterion: Report explains retrieval constraints and downloadability notes with uncertainty handling.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: grounding_source
   criterion: The final answer is grounded in retrieved Heusler candidates and does not invent missing links or 
     identifiers.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

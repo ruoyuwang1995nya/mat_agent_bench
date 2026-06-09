@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: Generate a GPUMD MSD self-consistent `run.in`.
 human_prompt_seed: 请写一份用于 MSD 自洽测试的 `run.in`，要求包含 NVE、`compute_msd` 与基本积分参数。
 tags:
@@ -26,13 +27,11 @@ reference_answers:
 scoring_checklist:
 - id: run_in_artifact
   criterion: 生成 `run.in`。
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: msd_tokens
   criterion: 输入包含 MSD 自洽测试关键命令。
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5

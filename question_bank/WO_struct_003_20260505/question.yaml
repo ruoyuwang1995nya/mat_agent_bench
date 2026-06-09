@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
+difficulty: easy
 intent: Generate and summarize 10 candidate crystal structures constrained by superconducting critical temperature and 
   space group.
 human_prompt_seed: '基于结构生成流程，生成 10 个候选晶体结构，并满足以下约束：
@@ -56,38 +57,32 @@ reference_answers:
 scoring_checklist:
 - id: candidate_json
   criterion: Agent writes `candidate_structures.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: generation_report
   criterion: Agent writes `generation_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: candidate_required_tokens
   criterion: Candidate JSON includes required fields and explicitly reflects the space-group 225 constraint.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: structure_artifacts
   criterion: Structure files referenced in candidate JSON actually exist in workspace.
-  axis: correctness
   verify: json_file_artifacts
   capability: data_handling
   weight: 0.5
 - id: report_required_tokens
   criterion: Report explains generation parameters, Tc/space-group constraints, and uncertainty handling.
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
 - id: grounding_source
   criterion: The final answer is grounded in generated candidate artifacts and explicitly checks the three constraints 
     (count, Tc threshold, and space group), rather than generic superconductivity statements.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

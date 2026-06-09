@@ -3,6 +3,7 @@ task_type: simulation
 capabilities:
 - structure_manipulation
 domain: agnostic
+difficulty: easy
 intent: Construct corundum (alpha-Al2O3) using Wyckoff-position information and validate lattice/formula consistency.
 human_prompt_seed: '请基于刚玉（corundum, alpha-Al2O3）的 Wyckoff 位点信息构建晶体结构，并导出为 `corundum_wyckoff.cif`。
 
@@ -50,44 +51,37 @@ reference_answers:
 scoring_checklist:
 - id: structure_artifact
   criterion: Agent writes `corundum_wyckoff.cif` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: notes_artifact
   criterion: Agent writes `wyckoff_construction_notes.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: formula_check
   criterion: Output CIF has reduced formula consistent with Al2O3.
-  axis: correctness
   verify: struct_file_formula
   capability: structure_manipulation
   weight: 0.5
 - id: lattice_a
   criterion: Lattice parameter a is consistent with corundum reference scale.
-  axis: correctness
   verify: struct_file_cell_param
   capability: structure_manipulation
   weight: 0.5
 - id: lattice_c
   criterion: Lattice parameter c is consistent with corundum reference scale.
-  axis: correctness
   verify: struct_file_cell_param
   capability: structure_manipulation
   weight: 0.5
 - id: notes_required_tokens
   criterion: Notes describe Wyckoff-based construction details.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: grounding_source
   criterion: The final answer is grounded in `corundum_wyckoff.cif` and the Wyckoff-construction notes, rather than 
     generic mineral background.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

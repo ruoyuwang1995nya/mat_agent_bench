@@ -1,0 +1,134 @@
+id: E2E_point_defect_001_20260101
+task_type: end_to_end_research
+capabilities:
+- scientific_reasoning
+- tool_utilization
+- workflow_orchestration
+- data_handling
+- structure_manipulation
+- scientific_grounding
+domain: semiconductor
+difficulty: hard
+intent: 'Perform a complete point defect analysis workflow for a semiconductor material: from structure preparation and defect
+  supercell construction, through formation energy computation with a-posteriori corrections, to transition level determination,
+  Fermi level solution, and dopability assessment.'
+human_prompt_seed: 'Starting from the provided ZnO bulk structure (bulk_structure.cif, mp-2133) and reference energies (reference_energies.json),
+  perform a comprehensive intrinsic point defect analysis. Construct a ~2×2×2 supercell, create oxygen and zinc vacancy defects,
+  and compute their formation energies across the band gap using the bes_free correction scheme. Determine thermodynamic transition
+  levels between charge states, solve for the equilibrium Fermi level at 300 K, and assess the n-type and p-type dopability
+  limits. Report all results in results.json with keys: formation_energies (dict mapping defect/charge to list of [fermi_level,
+  energy] pairs), transition_levels (list of {defect, q, q_prime, level_ev, classification}), fermi_level_ev, carrier_type,
+  dopability_limits (dict with upper_limit_ev and lower_limit_ev). Also produce defect_diagram.png showing the formation energy
+  vs. Fermi level plot with transition levels marked.'
+tags:
+- point_defect
+- end_to_end
+- screening
+- dopability
+data_files:
+- key: bulk_structure.cif
+  path: bulk_structure.cif
+  description: Bulk ZnO wurtzite crystal structure from Materials Project (mp-2133). Space group P6_3mc, used as the 
+    starting point for defect supercell construction.
+- key: reference_energies.json
+  path: reference_energies.json
+  description: 'Reference energies for ZnO: bulk total energy, elemental chemical potentials (Zn metal and O2 molecule), hybrid
+    band gap, and list of intrinsic defects to analyze.'
+reference_answers:
+- key: results_exists
+  value: results.json
+- key: diagram_exists
+  value: defect_diagram.png
+- key: results_structure
+  value:
+    pattern: formation_energies
+    filename: results.json
+- key: transition_levels_present
+  value:
+    pattern: transition_levels
+    filename: results.json
+- key: fermi_level_present
+  value:
+    pattern: fermi_level_ev
+    filename: results.json
+- key: dopability_present
+  value:
+    pattern: dopability_limits
+    filename: results.json
+- key: grounding
+  value:
+    source: Broberg et al. full defect analysis workflow, Table 2 summary
+scoring_checklist:
+- id: results_exists
+  verify: artifact_exists
+  weight: 0.5
+  criterion: '[Must] The file results.json exists with the required top-level keys.'
+  capability: tool_utilization
+- id: diagram_exists
+  verify: artifact_exists
+  weight: 0.5
+  criterion: '[Must] The file defect_diagram.png exists and shows formation energy vs. Fermi level.'
+  capability: tool_utilization
+- id: results_structure
+  verify: text_file_regex
+  weight: 0.5
+  criterion: '[Must] results.json contains formation_energies, transition_levels, fermi_level_ev, carrier_type, and dopability_limits
+    keys.'
+  capability: data_handling
+- id: transition_levels_present
+  verify: llm_binary_judge
+  weight: 0.5
+  criterion: '[Must] Transition levels are computed for at least V_O and V_Zn with correct charge state pairs and classified
+    as deep or shallow.'
+  capability: scientific_reasoning
+- id: fermi_level_present
+  verify: answer_json_numeric
+  weight: 0.5
+  criterion: '[Suggested] The Fermi level is reported in eV above VBM and lies within the ZnO band gap (0 to 3.44 eV).'
+  capability: scientific_reasoning
+- id: dopability_present
+  verify: llm_binary_judge
+  weight: 0.5
+  criterion: '[Must] Dopability limits are reported with upper_limit_ev and lower_limit_ev values that are physically meaningful
+    (upper limit near CBM, lower limit near VBM).'
+  capability: scientific_reasoning
+- id: workflow_sequence
+  verify: llm_binary_judge
+  weight: 0.5
+  criterion: '[Must] The agent correctly sequences the workflow: structure preparation → defect creation → formation energy
+    computation → transition level determination → Fermi level solution → dopability assessment, without skipping steps or
+    circular dependencies.'
+  capability: workflow_orchestration
+- id: bes_free_correction
+  verify: llm_binary_judge
+  weight: 0.5
+  criterion: '[Must] The bes_free correction scheme (ESP-referenced band edge shift plus free carrier shift) is applied consistently
+    to all formation energies, following the methodology in Broberg et al. Table 1.'
+  capability: scientific_reasoning
+- id: grounding
+  verify: llm_binary_judge
+  weight: 0.5
+  criterion: '[Must] The complete analysis traces back to the point defect formalism and correction schemes established in
+    Broberg et al. (2023), with formation energies following Eq. (1), transition levels following Eq. (2), and Fermi level
+    following Eqs. (3)-(4).'
+  capability: scientific_grounding
+- id: turn_budget
+  verify: turn_budget
+  weight: 0
+  criterion: '[Variable] Agent completes within turn budget.'
+  capability: tool_utilization
+- id: no_retries
+  verify: no_retries
+  weight: 0
+  criterion: '[Variable] Agent does not retry unnecessarily.'
+  capability: tool_utilization
+- id: duration_budget
+  verify: duration_budget
+  weight: 0
+  criterion: '[Variable] Agent completes within duration budget.'
+  capability: tool_utilization
+- id: token_budget_total
+  verify: token_budget
+  weight: 0
+  criterion: '[Variable] Agent stays within token budget.'
+  capability: tool_utilization

@@ -1,0 +1,96 @@
+id: MCH_xrd_004_20260601
+task_type: material_characterization
+capabilities:
+- tool_utilization
+- data_handling
+- scientific_reasoning
+domain: battery
+difficulty: medium
+intent: Simulate and compare XRD patterns of orthorhombic and tetrahedral LiMnO2 to identify distinguishing peaks for experimental
+  phase identification.
+human_prompt_seed: Compute the Cu Kα XRD patterns for both orthorhombic LiMnO2 and tetrahedral LiMnO2 structures provided. Identify the shared high-intensity peaks and the key distinguishing peaks that could
+  be used to differentiate these phases experimentally. Report the peak positions (2θ in degrees) and relative 
+  intensities (normalized to strongest peak = 100) for both phases in xrd_comparison.json, with separate arrays for 
+  shared_peaks and distinguishing_peaks. Write a brief analysis in xrd_analysis.txt discussing whether tetrahedral LiMnO2 could be
+  mistaken for the orthorhombic phase in an experimental XRD measurement.
+tags:
+- xrd
+- pymatgen
+- phase_identification
+data_files: 
+- key: ortho_limno2
+  path: ortho-LiMnO2.poscar
+  description: POSCAR file for orthorhombic LiMnO2 structure.
+- key: tetra_limno2
+  path: tetra-LiMnO2.poscar
+  description: POSCAR file for tetrahedral LiMnO2 structure.
+reference_answers:
+- key: artifact_xrd_json
+  value: xrd_comparison.json
+- key: artifact_xrd_analysis
+  value: xrd_analysis.txt
+- key: xrd_shared_peaks
+  value:
+    flags: i
+    tokens:
+    - shared_peaks
+    - '15'
+    - '25'
+    - '39'
+    - '45'
+    - '62'
+    filename: xrd_comparison.json
+- key: xrd_distinguishing
+  value:
+    flags: i
+    tokens:
+    - distinguishing_peaks
+    - '37'
+    filename: xrd_comparison.json
+- key: grounding_source
+  value: POSCAR_ortho_LiMnO2
+- key: turn_budget
+  value:
+    max: 12
+- key: no_retries
+  value:
+    max: 0
+- key: duration_budget
+  value:
+    max: 600000
+- key: token_budget_total
+  value:
+    max: 80000
+scoring_checklist:
+- id: artifact_xrd_json
+  verify: artifact_exists
+  weight: 0.3
+  criterion: '[Must] xrd_comparison.json exists with shared_peaks and distinguishing_peaks arrays.'
+  capability: tool_utilization
+- id: artifact_xrd_analysis
+  verify: artifact_exists
+  weight: 0.2
+  criterion: '[Must] xrd_analysis.txt exists with discussion of phase distinguishability.'
+  capability: scientific_reasoning
+- id: xrd_shared_peaks
+  verify: text_file_contains_all
+  weight: 0.8
+  criterion: '[Must] JSON identifies shared high-intensity peaks near 2θ ≈ 15°, 25°, 39°, 45°, and 62° as reported in the
+    paper.'
+  capability: data_handling
+- id: xrd_distinguishing
+  verify: text_file_contains_all
+  weight: 0.8
+  criterion: '[Must] JSON identifies the peak near 37° as a distinguishing feature (present in ortho, absent/different in
+    tetrahedral).'
+  capability: data_handling
+- id: grounding_source
+  verify: llm_binary_judge
+  weight: 0.5
+  criterion: '[Must] Analysis correctly concludes that tetrahedral LiMnO2 could be mistaken for ortho-LiMnO2 in XRD due to their similar
+    patterns, as discussed in the paper.'
+  capability: scientific_grounding
+reference_answer_prompt: '1. Read both POSCARs using pymatgen Structure.from_file(). 2. Use pymatgen.analysis.diffraction.XRDPRCalculator
+  or similar to simulate Cu Kα (λ=1.5406 Å) XRD patterns for each structure (2θ range 10-90°). 3. Normalize intensities to
+  strongest peak = 100. 4. Compare peak positions: shared peaks at ~15°, 25°, 39°, 45°, 62°; distinguishing feature at ~37°
+  (one of two peaks in ortho disappears in tetrahedral). 5. Write JSON and analysis.'

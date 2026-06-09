@@ -4,6 +4,7 @@ capabilities:
 - data_handling
 - scientific_reasoning
 domain: battery
+difficulty: easy
 intent: Batch retrieve 20 lithium-containing structures and compute the average volume per atom from per-structure 
   metadata.
 human_prompt_seed: '批量检索 20 个含锂材料（结构文件可下载），并计算它们的平均单原子体积（average volume per atom）。
@@ -46,32 +47,27 @@ reference_answers:
 scoring_checklist:
 - id: stats_json
   criterion: Agent writes `li20_volume_stats.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: retrieval_report
   criterion: Agent writes `li20_retrieval_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: stats_required_tokens
   criterion: Stats JSON contains batch-size and average-volume fields for 20 lithium-containing candidates.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: report_required_tokens
   criterion: Report explains retrieval constraints and average-volume calculation rationale.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: grounding_source
   criterion: The final answer is grounded in retrieved structure metadata and explicitly distinguishes measured per-item
     values from computed aggregate statistics.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

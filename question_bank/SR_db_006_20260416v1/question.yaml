@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - scientific_reasoning
 domain: agnostic
+difficulty: easy
 intent: Retrieve up to two Ti-Al-O compounds with space group 63 and export CIF-oriented retrieval metadata.
 human_prompt_seed: '从 Materials Project 检索并返回不超过 2 个化合物，约束如下：
 
@@ -53,32 +54,27 @@ reference_answers:
 scoring_checklist:
 - id: candidates_json
   criterion: Agent writes `tao_spg63_candidates.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: retrieval_report
   criterion: Agent writes `tao_spg63_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: candidates_required_tokens
   criterion: Candidate JSON includes required metadata and explicitly reflects Ti/Al/O with space-group 63 constraints.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: report_required_tokens
   criterion: Retrieval report states filter constraints, upper-bound candidate count, and uncertainty note.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: grounding_source
   criterion: The final answer is grounded in retrieval artifacts and does not claim unsupported compounds beyond 
     reported candidates.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

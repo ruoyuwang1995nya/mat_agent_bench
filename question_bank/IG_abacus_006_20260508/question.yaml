@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: Prepare ABACUS PW inputs for Mo surface-vacancy energy using bulk, pristine slab, and surface-vacancy slab 
   structures.
 human_prompt_seed: '工作区中提供了 Mo 体相、无缺陷表面和表面空位三套结构。
@@ -254,111 +255,94 @@ reference_answers:
 scoring_checklist:
 - id: must_input_bulk_mo_mode
   criterion: '[Must] INPUT_bulk_mo uses PW cell-relax mode.'
-  axis: correctness
   verify: text_file_contains_all
   weight: 0.5
   capability: data_handling
 - id: must_input_slab_clean_mode
   criterion: '[Must] INPUT_slab_clean uses PW SCF mode.'
-  axis: correctness
   verify: text_file_contains_all
   weight: 0.5
   capability: data_handling
 - id: must_input_slab_vac_mode
   criterion: '[Must] INPUT_slab_vac uses PW SCF mode.'
-  axis: correctness
   verify: text_file_contains_all
   weight: 0.5
   capability: data_handling
 - id: must_input_bulk_mo_cal_force_stress
   criterion: '[Must] INPUT_bulk_mo explicitly sets cal_force 1 and cal_stress 1, required for cell-relax calculations.'
-  axis: correctness
   verify: text_file_contains_all
   weight: 0.5
   capability: scientific_reasoning
 - id: must_kpt_gamma_markers
   criterion: '[Must] KPT_gamma is a Gamma-centered K-point file.'
-  axis: correctness
   verify: text_file_contains_all
   weight: 0.5
   capability: data_handling
 - id: must_kpt_gamma_single_point
   criterion: '[Must] KPT_gamma uses a single Gamma point (1x1x1).'
-  axis: correctness
   verify: text_file_regex
   weight: 0.5
   capability: data_handling
 - id: suggested_bulk_low_cost_cutoff
   criterion: '[Suggested] INPUT_bulk_mo uses a low-cost cutoff for benchmark runs.'
-  axis: correctness
   verify: text_file_numeric_range
   weight: 0.5
   capability: scientific_reasoning
 - id: suggested_slab_clean_low_cost_cutoff
   criterion: '[Suggested] INPUT_slab_clean uses a low-cost cutoff for benchmark runs.'
-  axis: correctness
   verify: text_file_numeric_range
   weight: 0.5
   capability: scientific_reasoning
 - id: suggested_slab_vac_low_cost_cutoff
   criterion: '[Suggested] INPUT_slab_vac uses a low-cost cutoff for benchmark runs.'
-  axis: correctness
   verify: text_file_numeric_range
   weight: 0.5
   capability: scientific_reasoning
 - id: variable_bulk_smearing_or_mixing
   criterion: '[Variable] If INPUT_bulk_mo includes smearing/mixing parameters, they should be reasonable; omission should
     not be treated as failure.'
-  axis: correctness
   verify: text_file_numeric_range
   weight: 0.5
   capability: scientific_reasoning
 - id: variable_slab_smearing_or_mixing
   criterion: '[Variable] If INPUT_slab_clean includes smearing/mixing parameters, they should be reasonable; omission should
     not be treated as failure.'
-  axis: correctness
   verify: text_file_numeric_range
   weight: 0.5
   capability: scientific_reasoning
 - id: variable_slab_vac_smearing_or_mixing
   criterion: '[Variable] If INPUT_slab_vac includes smearing/mixing parameters, they should be reasonable; omission should
     not be treated as failure.'
-  axis: correctness
   verify: text_file_numeric_range
   weight: 0.5
   capability: scientific_reasoning
 - id: input_bulk_mo_artifact
   criterion: Generated deliverables count even if the final answer does not quote file contents; `INPUT_bulk_mo` must be
     written to the workspace.
-  axis: correctness
   verify: artifact_exists
   weight: 0.5
   capability: tool_utilization
 - id: input_slab_clean_artifact
   criterion: Generated deliverables count even if the final answer does not quote file contents; `INPUT_slab_clean` must
     be written to the workspace.
-  axis: correctness
   verify: artifact_exists
   weight: 0.5
   capability: tool_utilization
 - id: input_slab_vac_artifact
   criterion: Generated deliverables count even if the final answer does not quote file contents; `INPUT_slab_vac` must 
     be written to the workspace.
-  axis: correctness
   verify: artifact_exists
   weight: 0.5
   capability: tool_utilization
 - id: kpt_gamma_artifact
   criterion: Generated deliverables count even if the final answer does not quote file contents; `KPT_gamma` must be 
     written to the workspace.
-  axis: correctness
   verify: artifact_exists
   weight: 0.5
   capability: tool_utilization
 - id: grounding_source
   criterion: The three generated inputs are grounded in the provided Mo bulk and slab structures, without inventing 
     unrelated structural modifications.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

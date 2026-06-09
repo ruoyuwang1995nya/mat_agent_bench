@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: alloy
+difficulty: easy
 intent: Orchestrate Ni-content sweeps for duplex stainless-steel compositions, produce machine-checkable tensile 
   predictions, and summarize trend plus uncertainty in a report.
 human_prompt_seed: '研究 2209/ER2209 近似成分中 Ni 含量变化对抗拉强度预测的影响。
@@ -39,31 +40,26 @@ reference_answers:
 scoring_checklist:
 - id: tensile_json
   criterion: Agent writes `duplex_ni_tensile_predictions.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: analysis_md
   criterion: Agent writes `duplex_ni_tensile_analysis.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: tensile_tokens
   criterion: Prediction JSON includes required composition-strength fields.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: analysis_tokens
   criterion: Analysis document explains Ni-strength trend with uncertainty caveats.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: grounding_source
   criterion: Deliverables are grounded in generated prediction artifacts and avoid unsupported metallurgy claims.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

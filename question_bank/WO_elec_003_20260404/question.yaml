@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: battery
+difficulty: easy
 intent: 'Compute doping formation energy of NFPP: retrieve structure, build doped supercell, use mock energies, calculate
   formation energy.'
 human_prompt_seed: "计算NFPP的Al掺杂形成能：\n1. 获取NFPP（Na₄Fe₃(PO₄)₂P₂O₇）结构（空间群Pna2₁），构建2×1×1超胞作为pristine结构；\n2. 在P位（PO₄磷酸根位点）用Al替换一个P原子，构建掺杂超胞；\n\
@@ -31,19 +32,16 @@ reference_answers:
 scoring_checklist:
 - id: formation_energy_eV
   criterion: Doping formation energy is computed correctly from mock energies (~0.88 eV).
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: volume_change_percent
   criterion: Volume change is computed correctly (~-0.27%).
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: required_fields
   criterion: Report includes pristine/doped energies, chemical potentials, formation energy, and volume change.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
@@ -51,7 +49,6 @@ scoring_checklist:
   criterion: NFPP structure uses correct Pna2₁ lattice parameters; mock energies used as specified; chemical potentials 
     explicitly defined. Judge solely from the final answer; do not fail because the tool-call log omits MCP, web_search,
     or any specific tool.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

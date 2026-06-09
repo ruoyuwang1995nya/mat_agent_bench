@@ -3,6 +3,7 @@ task_type: simulation
 capabilities:
 - structure_manipulation
 domain: agnostic
+difficulty: easy
 intent: Build a 4-layer (110) surface slab from the uploaded PUBMUU03 molecular crystal CIF and verify molecule 
   integrity plus atom-count scaling.
 human_prompt_seed: '对以下通过 OSS URL 提供的 CIF 结构进行处理：
@@ -65,34 +66,29 @@ reference_answers:
 scoring_checklist:
 - id: unit_cell_atoms
   criterion: The input unit cell atom count read from the downloaded CIF is 144 atoms.
-  axis: correctness
   verify: struct_file_atom_count
   capability: structure_manipulation
   weight: 0.5
 - id: total_atoms
   criterion: Total atom count read from the output slab CIF is 576 atoms (4 × 144).
-  axis: correctness
   verify: struct_file_atom_count
   capability: structure_manipulation
   weight: 0.5
 - id: molcrys_slab_molecular_integrity
   criterion: No molecules are cut by the slab cut (verified via MolCrysKit graph-based molecular integrity check on 
     workspace CIF files).
-  axis: correctness
   verify: molcrys_slab_molecular_integrity
   capability: structure_manipulation
   weight: 0.5
 - id: required_fields
   criterion: Output includes structure file, unit-cell atom count, final atom count, an explicit 4x ratio check, and a 
     molecule-integrity narrative consistent with MolCrysKit / connectivity reasoning.
-  axis: correctness
   verify: llm_binary_judge
   capability: structure_manipulation
   weight: 0.5
 - id: explicit_report_tokens
   criterion: Final answer explicitly includes the 144-atom input cell, 576-atom slab, 4x atom-count scaling, and 
     `slab_PUBMUU03_110.cif` output basename.
-  axis: correctness
   verify: contains_all
   capability: data_handling
   weight: 0.5
@@ -101,7 +97,6 @@ scoring_checklist:
     vs bulk, and how that supports or contradicts cutting molecules), citing the structures, not generic recall 
     disconnected from those files. Judge solely from the final answer and named deliverables; do not fail because the 
     tool-call log omits MCP, web_search, or any specific tool.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

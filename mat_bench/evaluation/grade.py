@@ -57,7 +57,6 @@ def grade_question(
     tool_calls: list[dict[str, Any]] | None = None,
     evidence: EvidenceBundle | None = None,
     llm_cfg: LLMConfig | None = None,
-    axis_weights: dict[str, float] | None = None,
     mode: str = 'direct',
     repeat_idx: int = 0,
     prompt: str = '',
@@ -70,7 +69,6 @@ def grade_question(
     """Grade a single question and return a QuestionReport."""
     evaluator = BinaryEvaluator(
         llm_cfg=llm_cfg,
-        axis_weights=axis_weights,
         parallel_checklist_workers=parallel_checklist_workers,
     )
     record = evaluator.evaluate(

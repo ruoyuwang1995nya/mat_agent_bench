@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
+difficulty: easy
 priority: P0
 intent: When run_spec.json contradicts free-text instructions, generated INCAR-like file must follow the spec 
   (direct.toml contract).
@@ -45,25 +46,21 @@ reference_answers:
 scoring_checklist:
 - id: incar_artifact
   criterion: Workspace contains single_point.incar at project root (or discoverable as artifact).
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: encut_from_spec
   criterion: single_point.incar sets ENCUT from run_spec.json (400), not the wrong 520 value in the prompt text.
-  axis: correctness
   verify: text_file_regex
   capability: data_handling
   weight: 0.5
 - id: ismear_from_spec
   criterion: single_point.incar sets ISMEAR from run_spec.json (-5), not 0 from the prompt text.
-  axis: correctness
   verify: text_file_regex
   capability: data_handling
   weight: 0.5
 - id: sigma_from_spec
   criterion: single_point.incar sets SIGMA from run_spec.json (0.05), not 0.2 from the prompt text.
-  axis: correctness
   verify: text_file_regex
   capability: data_handling
   weight: 0.5

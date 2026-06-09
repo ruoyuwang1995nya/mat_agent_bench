@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: semiconductor
+difficulty: easy
 intent: Query high-efficiency perovskite additives and produce recommendation plus a proposal draft based on predicted 
   performance.
 human_prompt_seed: '请围绕“高效率（>26%）钙钛矿添加剂设计”完成一份推荐与提案。
@@ -40,31 +41,26 @@ reference_answers:
 scoring_checklist:
 - id: additive_json
   criterion: Agent writes `perovskite_additive_candidates.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: proposal_md
   criterion: Agent writes `perovskite_additive_proposal.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: additive_tokens
   criterion: Candidate JSON includes required additive-recommendation fields.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: proposal_tokens
   criterion: Proposal document covers objectives, validation plan, and uncertainty/risk.
-  axis: correctness
   verify: llm_binary_judge
   capability: workflow_orchestration
   weight: 0.5
 - id: grounding_source
   criterion: Deliverables are grounded in generated candidate analysis rather than unsupported additive claims.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: Generate a GPUMD dipole-dump self-consistent `run.in`.
 human_prompt_seed: 请写一份用于偶极输出自洽检查的 `run.in`，要求包含多势函数、NVE、`dump_dipole` 与位置输出。
 tags:
@@ -28,13 +29,11 @@ reference_answers:
 scoring_checklist:
 - id: run_in_artifact
   criterion: 生成 `run.in`。
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: dipole_dump_tokens
   criterion: 输入包含偶极输出自洽测试关键命令。
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5

@@ -2,9 +2,9 @@
 
 Scoring model:
 - Verifiers produce binary (pass/fail) verdicts per checklist item.
-- Each checklist item has optional weight (default 0.5) and a capability tag.
-- Efficiency rubrics are removed; grounding rubrics map to scientific_grounding capability.
-- overall_score = (sum_passed_weights - sum_failed_weights) / sum_all_weights  [-1, 1]
+- Each checklist item has a weight (default 0.5) = penalty deducted on failure.
+- Grounding rubrics use capability='scientific_grounding'.
+- overall_score = max(0, 1 - sum_failed_weights)  [0, 1]
 """
 
 from datetime import datetime, timezone
@@ -69,8 +69,6 @@ VerifyLiteral = Literal[
     'json_file_artifacts',
     'atomworld_active_task',
 ]
-
-AxisLiteral = Literal['correctness', 'grounding', 'efficiency']
 
 CapabilityLiteral = Literal[
     'scientific_reasoning',
@@ -182,11 +180,15 @@ class ReferenceAnswer(BaseModel):
 
 
 class ScoringCheckItem(BaseModel):
-    """One verifiable scoring criterion (binary with optional weight)."""
+    """One verifiable scoring criterion (binary with optional weight).
+
+    weight: penalty deducted from 1.0 when this criterion fails (default 0.5).
+    axis: deprecated field kept for YAML backward compatibility; not used in scoring.
+    """
 
     id: str
     criterion: str
-    axis: AxisLiteral = Field(default='correctness')
+    axis: Optional[str] = None
     verify: VerifyLiteral
     weight: float = Field(default=0.5, ge=0.0)
     capability: Optional[CapabilityLiteral] = None
@@ -196,7 +198,7 @@ class CriterionResult(BaseModel):
     """Per-criterion pass/fail result stored inside EvalRunRecord."""
 
     criterion_id: str
-    axis: AxisLiteral
+    capability: Optional[str] = None
     passed: bool
     reason: str = ''
     verify_method: str = ''
@@ -386,16 +388,6 @@ class EvalRunRecord(BaseModel):
     criteria_results: dict[str, CriterionResult] = Field(default_factory=dict)
     passed_count: int = 0
     total_count: int = 0
-    correctness_passed: int = 0
-    correctness_total: int = 0
-    grounding_passed: int = 0
-    grounding_total: int = 0
-    efficiency_passed: int = 0
-    efficiency_total: int = 0
-
-    correctness_weighted_score: float = 0.0
-    grounding_weighted_score: float = 0.0
-    efficiency_weighted_score: float = 0.0
     overall_weighted_score: float = 0.0
 
     model_name: str | None = None
@@ -413,21 +405,16 @@ class EvalRunRecord(BaseModel):
 
 
 class AxisPassRates(BaseModel):
-    """Pass counts for each axis within a group."""
+    """Pass counts for a group (overall only)."""
 
-    correctness: tuple[int, int] = (0, 0)
-    grounding: tuple[int, int] = (0, 0)
-    efficiency: tuple[int, int] = (0, 0)
     overall: tuple[int, int] = (0, 0)
 
-    def pass_rate(self, axis: str = 'overall') -> float:
-        pair = getattr(self, axis, self.overall)
-        passed, total = pair
+    def pass_rate(self) -> float:
+        passed, total = self.overall
         return passed / total if total > 0 else 0.0
 
-    def fmt(self, axis: str = 'overall') -> str:
-        pair = getattr(self, axis, self.overall)
-        passed, total = pair
+    def fmt(self) -> str:
+        passed, total = self.overall
         pct = f'{100 * passed / total:.1f}%' if total > 0 else '—'
         return f'{passed}/{total} ({pct})'
 
@@ -441,9 +428,6 @@ class QuestionPassRate(BaseModel):
     domain: str = ''
     runs: int = 0
     overall: tuple[int, int] = (0, 0)
-    correctness: tuple[int, int] = (0, 0)
-    grounding: tuple[int, int] = (0, 0)
-    efficiency: tuple[int, int] = (0, 0)
     safety_veto_count: int = 0
 
 

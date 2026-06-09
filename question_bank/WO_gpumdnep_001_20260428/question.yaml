@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
+difficulty: easy
 intent: Build MoSe2 training dataset, generate ABACUS static input, and prepare NEP input.
 human_prompt_seed: 构建 MoSe2 训练集，覆盖原型、应变、扰动、空位等情形，并将训练集统一命名为 `train.xyz`（总帧数 > 100）。 基于该训练集生成 ABACUS 静态计算输入文件 
   `INPUT_scf`。 生成用于该体系训练的 `nep.in`。
@@ -45,37 +46,31 @@ reference_answers:
 scoring_checklist:
 - id: train_xyz_artifact
   criterion: 生成 `train.xyz`。
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: abacus_input_artifact
   criterion: 生成 `INPUT_scf`。
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: nep_artifact
   criterion: 生成 `nep.in`。
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: abacus_static_tokens
   criterion: ABACUS 静态输入包含核心参数。
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: nep_type_mose
   criterion: '`nep.in` 的 `type` 包含 `Mo` 和 `Se`。'
-  axis: correctness
   verify: text_file_regex
   capability: data_handling
   weight: 0.5
 - id: nep_core_tokens
   criterion: '`nep.in` 包含关键训练参数。'
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5

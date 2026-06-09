@@ -1,0 +1,101 @@
+id: E2E_bandgap_001_20260601
+task_type: end_to_end_research
+capabilities:
+- scientific_reasoning
+- tool_utilization
+- workflow_orchestration
+- data_handling
+- scientific_grounding
+domain: semiconductor
+difficulty: hard
+intent: 'Reproduce the end-to-end band gap computation workflow for NiO: determine stable antiferromagnetic magnetic ordering,
+  perform PBE relaxation followed by one-shot HSE06 band gap calculation, and compare against experimental benchmark.'
+human_prompt_seed: 'Starting from the provided initial crystal structure for NiO, determine its stable magnetic ordering,
+  compute the fundamental and optical band gaps with appropriate treatment of electron correlation, and assess the accuracy
+  of your result against the experimental reference. Report all findings in results.json with keys: magnetic_ordering, fundamental_band_gap_ev,
+  optical_band_gap_ev, computational_method_summary, and rmse_vs_experiment_ev. Document the full computational workflow in
+  workflow_log.txt.'
+tags:
+- end_to_end
+- hse06
+- magnetic_ordering
+- antiferromagnetic
+- nio
+- band_gap
+data_files:
+- key: initial_structure
+  path: nio_initial.cif
+  description: Initial (unrelaxed) CIF structure for NiO in the rocksalt phase with antiferromagnetic ordering 
+    considered.
+- key: experimental_reference
+  path: experimental_ref.json
+  description: Reference experimental band gap for NiO from literature.
+reference_answers:
+- key: artifact_results
+  value: results.json
+- key: artifact_workflow
+  value: workflow_log.txt
+- key: text_mag_ordering
+  value:
+    flags: case_insensitive
+    tokens:
+    - antiferromagnetic
+    filename: results.json
+- key: text_band_gap_range
+  value:
+    flags: ''
+    pattern: fundamental_band_gap_ev.*4\.[0-5]
+    filename: results.json
+- key: text_method_summary
+  value:
+    flags: case_insensitive
+    tokens:
+    - HSE06
+    - PBE
+    - relax
+    filename: results.json
+- key: text_rmse
+  value:
+    flags: ''
+    pattern: rmse_vs_experiment_ev.*0\.[1-4]
+    filename: results.json
+scoring_checklist:
+- id: artifact_results
+  verify: artifact_exists
+  weight: 0.5
+  criterion: '[Must] File results.json exists with all required keys (magnetic_ordering, fundamental_band_gap_ev, optical_band_gap_ev,
+    computational_method_summary, rmse_vs_experiment_ev).'
+  capability: workflow_orchestration
+- id: artifact_workflow
+  verify: artifact_exists
+  weight: 0.3
+  criterion: '[Must] File workflow_log.txt exists documenting the computational steps taken.'
+  capability: workflow_orchestration
+- id: text_mag_ordering
+  verify: text_file_contains_all
+  weight: 0.5
+  criterion: '[Must] Results correctly identify NiO as antiferromagnetic (not ferromagnetic or non-magnetic).'
+  capability: scientific_reasoning
+- id: text_band_gap_range
+  verify: text_file_regex
+  weight: 0.5
+  criterion: '[Must] Fundamental band gap is in the range 4.0–4.5 eV, consistent with HSE06 + antiferromagnetic treatment
+    (paper reports ~4.5 eV for NiO with correct AFM ordering).'
+  capability: scientific_reasoning
+- id: text_method_summary
+  verify: text_file_contains_all
+  weight: 0.3
+  criterion: '[Must] Method summary references both PBE (for relaxation) and HSE06 (for band gap) as per the paper''s one-shot
+    scheme.'
+  capability: data_handling
+- id: text_rmse
+  verify: text_file_regex
+  weight: 0.3
+  criterion: '[Must] RMSE vs experimental (4.3 eV) is ≤ 0.4 eV, demonstrating accurate band gap prediction.'
+  capability: data_handling
+- id: workflow_sequence
+  verify: llm_binary_judge
+  weight: 0.5
+  criterion: '[Must] The workflow log shows correct multi-step sequencing: (1) magnetic ordering determination, (2) PBE structural
+    relaxation, (3) one-shot HSE06 band gap calculation, (4) comparison to experiment.'
+  capability: workflow_orchestration

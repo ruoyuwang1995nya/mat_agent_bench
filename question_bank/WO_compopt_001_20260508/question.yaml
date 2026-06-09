@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: alloy
+difficulty: easy
 intent: Use DART GA to search for an optimal high-entropy alloy composition with target hardness properties under 
   element-fraction constraints.
 human_prompt_seed: 'I am designing a CrCoNiFe-based high-entropy alloy and need to find compositions that maximize Vickers
@@ -36,14 +37,12 @@ reference_answers:
 scoring_checklist:
 - id: candidates_csv
   criterion: Agent writes `candidates.csv` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: csv_has_elements
   criterion: The candidates.csv file contains all four element names (Cr, Co, Ni, Fe) as column headers or within data 
     rows.
-  axis: correctness
   verify: text_file_contains_all
   params:
     path: candidates.csv
@@ -56,7 +55,6 @@ scoring_checklist:
   weight: 0.5
 - id: csv_has_hardness
   criterion: The candidates.csv file contains a hardness column with numeric predictions.
-  axis: correctness
   verify: text_file_regex
   params:
     path: candidates.csv
@@ -65,14 +63,12 @@ scoring_checklist:
   weight: 0.5
 - id: hardness_range
   criterion: Predicted hardness values in candidates.csv are within physically plausible range for HEAs (100-1200 HV).
-  axis: correctness
   verify: text_file_numeric_range
   capability: scientific_reasoning
   weight: 0.5
 - id: grounding_source
   criterion: Results are grounded in optimization outputs and do not fabricate composition-property values without tool 
     evidence.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

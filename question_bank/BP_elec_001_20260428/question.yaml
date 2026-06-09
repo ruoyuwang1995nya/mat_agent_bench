@@ -4,6 +4,7 @@ capabilities:
 - data_handling
 - scientific_reasoning
 domain: catalysis
+difficulty: easy
 intent: Batch-compute H adsorption energy on 3 different metal (001) surfaces using mock energies to test batch workflow
   efficiency.
 human_prompt_seed: "批量计算 H 原子在 Cu(001)、Ag(001)、Au(001) 三种金属表面的吸附能，用于 HER 活性对比：\n\n对每种金属执行相同流程：\n1. 获取 FCC 体相结构（Cu: Fm-3m,
@@ -39,7 +40,6 @@ scoring_checklist:
     eV is explicitly reported as a number (accept ±0.2 eV). NOTE: The answer may be in Chinese with markdown tables; ''|------|''
     separator lines are standard table formatting, NOT truncation indicators. Intermediate computation errors do not matter
     if the final answer contains the value.'
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
@@ -48,7 +48,6 @@ scoring_checklist:
     eV is explicitly reported as a number (accept ±0.2 eV). NOTE: The answer may be in Chinese with markdown tables; ''|------|''
     separator lines are standard table formatting, NOT truncation indicators. Intermediate computation errors do not matter
     if the final answer contains the value.'
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
@@ -57,7 +56,6 @@ scoring_checklist:
     eV is explicitly reported as a number (accept ±0.2 eV). NOTE: The answer may be in Chinese with markdown tables; ''|------|''
     separator lines are standard table formatting, NOT truncation indicators. Intermediate computation errors do not matter
     if the final answer contains the value.'
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
@@ -66,13 +64,11 @@ scoring_checklist:
     H₂ reference energy value; (3) an HER activity ranking of the three metals. NOTE: The answer may be in Chinese with markdown
     tables; ''|------|'' separator lines are standard table formatting, NOT truncation. Intermediate computation errors do
     not matter if the final answer covers all five items.'
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
 - id: consistent_slab_params
   criterion: 'All three metal slabs use identical structural parameters: 4 layers, 15 Å vacuum, 2×2 supercell, (001) surface.'
-  axis: correctness
   verify: llm_binary_judge
   capability: structure_manipulation
   weight: 0.5

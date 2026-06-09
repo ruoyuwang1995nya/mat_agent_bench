@@ -4,6 +4,7 @@ capabilities:
 - data_handling
 - scientific_reasoning
 domain: battery
+difficulty: easy
 intent: Diagnose relaxation non-convergence caused by EDIFF being too loose relative to EDIFFG.
 human_prompt_seed: '读取 `case_bundle.json`，其中包含一个 LiCoO2 弛豫计算的 INCAR 参数和离子步摘录。 200 步 NSW 用完仍未收敛，力在 0.019-0.022 eV/A 之间振荡，且每步
   SCF 仅 3 步就收敛了。 请诊断根本原因，并给出修复方案。
@@ -28,20 +29,17 @@ reference_answers:
 scoring_checklist:
 - id: root_cause
   criterion: Correctly identifies EDIFF too loose (1E-3 causing force noise in LiCoO2 relax) as root cause.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: required_fields
   criterion: Explains force noise mechanism from loose EDIFF, and recommends tightening EDIFF to 1E-5 or 1E-6.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: grounding_evidence
   criterion: Diagnosis references specific values from the case_bundle.json (EDIFF=1E-3, force oscillation range, rapid 
     SCF convergence pattern).
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

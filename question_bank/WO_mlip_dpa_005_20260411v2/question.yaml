@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
+difficulty: easy
 intent: Compute Cu FCC single-vacancy migration barrier with DPA via NEB; report forward barrier energy.
 human_prompt_seed: '计算 FCC Cu 中单空位的迁移能垒。
 
@@ -33,21 +34,18 @@ reference_answers:
 scoring_checklist:
 - id: forward_barrier_eV
   criterion: Cu vacancy forward migration barrier is within tolerance (~0.7 eV).
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: required_fields
-  criterion: Report includes description of initial and final states, forward barrier value, and energy profile along
+  criterion: Report includes description of initial and final states, forward barrier value, and energy profile along 
     the migration path.
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
 - id: grounding_source
   criterion: The migration barrier is derived from NEB calculation outputs, not literature values. Judge solely from the
     final answer.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

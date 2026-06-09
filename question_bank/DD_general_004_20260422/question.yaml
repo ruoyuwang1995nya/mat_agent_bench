@@ -4,6 +4,7 @@ capabilities:
 - data_handling
 - scientific_reasoning
 domain: semiconductor
+difficulty: easy
 intent: Diagnose relaxation divergence caused by POTIM too large combined with wrong initial phase.
 human_prompt_seed: '读取 `case_bundle.json`，其中包含一个 CsPbI3 弛豫计算的 INCAR 参数和离子步摘录。 5 步内能量从 -19 eV 升到 +8 eV，力从 2.3 爆炸到 48 eV/A，体积剧烈波动。
   请诊断根本原因，并给出修复方案。
@@ -32,21 +33,18 @@ reference_answers:
 scoring_checklist:
 - id: root_cause
   criterion: Identifies both POTIM too large (1.0) and wrong initial phase (cubic vs orthorhombic CsPbI3).
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: required_fields
   criterion: Provides evidence from energy/force divergence trajectory, and recommends both reducing POTIM and using 
     correct Pnma phase.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: grounding_evidence
   criterion: Both root causes are evidenced by specific data from case_bundle.json (POTIM=1.0 in INCAR, energy/force 
     explosion pattern in OUTCAR).
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

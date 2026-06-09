@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: alloy
+difficulty: easy
 intent: Optimize an alloy structure with APEX and summarize geometry-change evidence with machine-checkable artifacts.
 human_prompt_seed: '使用 APEX 对给定合金结构执行几何优化，并输出优化结果。
 
@@ -43,38 +44,32 @@ reference_answers:
 scoring_checklist:
 - id: optimized_structure
   criterion: Agent writes `alloy_optimized.cif` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: summary_json
   criterion: Agent writes `alloy_opt_summary.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: report_md
   criterion: Agent writes `alloy_opt_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: summary_required_tokens
   criterion: Summary JSON includes optimization metadata and APEX method context.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: report_required_tokens
   criterion: Report explains optimization setup and uncertainty notes.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: grounding_source
   criterion: Final answer is grounded in generated optimization artifacts and does not invent unsupported structural 
     changes.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

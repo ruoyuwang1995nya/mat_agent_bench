@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: agnostic
+difficulty: easy
 intent: Compare paired PXRD traces to determine whether enzyme encapsulation preserves the MAF-4 crystalline phase.
 human_prompt_seed: '请下载并分析以下通过 OSS URL 提供的粉末 XRD 数据文件：
 
@@ -68,55 +69,47 @@ reference_answers:
     tolerance: 0.12
 scoring_checklist:
 - id: pristine_peak1
-  criterion: The first main pristine MAF-4 peak position reported in eval_results is consistent with the uploaded PXRD
+  criterion: The first main pristine MAF-4 peak position reported in eval_results is consistent with the uploaded PXRD 
     trace.
-  axis: correctness
   verify: answer_json_numeric
   capability: data_handling
   weight: 0.5
 - id: pristine_peak2
-  criterion: The second main pristine MAF-4 peak position reported in eval_results is consistent with the uploaded PXRD
+  criterion: The second main pristine MAF-4 peak position reported in eval_results is consistent with the uploaded PXRD 
     trace.
-  axis: correctness
   verify: answer_json_numeric
   capability: data_handling
   weight: 0.5
 - id: pristine_peak3
-  criterion: The third main pristine MAF-4 peak position reported in eval_results is consistent with the uploaded PXRD
+  criterion: The third main pristine MAF-4 peak position reported in eval_results is consistent with the uploaded PXRD 
     trace.
-  axis: correctness
   verify: answer_json_numeric
   capability: data_handling
   weight: 0.5
 - id: mean_peak_shift
   criterion: The mean peak shift reported in eval_results is consistent with comparing the paired PXRD traces.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: data_handling
 - id: max_peak_shift
-  criterion: The maximum matched-peak shift reported in eval_results is consistent with comparing the paired PXRD
+  criterion: The maximum matched-peak shift reported in eval_results is consistent with comparing the paired PXRD 
     traces.
-  axis: correctness
   verify: answer_json_numeric
   capability: data_handling
   weight: 0.5
 - id: pattern_correlation
   criterion: The pattern similarity reported in eval_results is consistent with the paired PXRD traces.
-  axis: correctness
   verify: answer_json_numeric
   weight: 0.5
   capability: data_handling
 - id: phase_preserved
   criterion: The final answer concludes that enzyme encapsulation largely preserves the MAF-4 crystalline phase while 
     allowing intensity changes.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: grounding_source
   criterion: The conclusion is grounded in the uploaded paired PXRD data rather than a generic MOF statement.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

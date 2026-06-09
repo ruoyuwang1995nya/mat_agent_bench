@@ -3,6 +3,7 @@ task_type: simulation
 capabilities:
 - structure_manipulation
 domain: catalysis
+difficulty: easy
 intent: Build Au13 cluster CIF, ZnO(001) two-layer 2x2x1 slab with Au single atom and HCOO adsorbate on-top per doc 
   3.1.3.
 human_prompt_seed: '按文档 3.1.3：（1）用 ASE 或等价方式构建 Au13 团簇并保存为 CIF；（2）ZnO(001) 切面 slab，两层厚、2×2×1 扩胞； （3）在两个表面 O 位点之一上放置单原子 Au；（4）在
@@ -17,13 +18,11 @@ reference_answers: []
 scoring_checklist:
 - id: multi_part_deliverables
   criterion: 同时交付 Au13 团簇 CIF、含单 Au 的 ZnO(001) adslab，且 HCOO 为 on-top 初始构型；层数/扩胞与文档一致。
-  axis: correctness
   verify: llm_binary_judge
   capability: structure_manipulation
   weight: 0.5
 - id: grounding_source
   criterion: 各子结构与相对排布在答案中可追踪（文件名与几何关系一致），非仅文字宣称。
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

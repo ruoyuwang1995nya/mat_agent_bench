@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: catalysis
+difficulty: easy
 intent: 'Calculate vacancy formation energy: build perfect and defective supercells, compute energies, derive formation energy.'
 human_prompt_seed: '计算 MgO 中 O 空位的形成能：从数据库获取 MgO 岩盐结构， 构建 2x2x2 超胞作为 perfect cell，再在超胞中移除一个 O 原子构建 defective cell， 分别优化两个结构，按
   E_f = E_defective - E_perfect + mu_O 计算空位形成能。 输出形成能 (eV) 和计算表达式。
@@ -27,14 +28,12 @@ reference_answers:
 scoring_checklist:
 - id: formation_energy_eV
   criterion: Vacancy formation energy is in tolerance.
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: required_fields
-  criterion: Report includes defective/perfect cell energies, chemical potential definition, and formation energy
+  criterion: Report includes defective/perfect cell energies, chemical potential definition, and formation energy 
     formula.
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
@@ -42,7 +41,6 @@ scoring_checklist:
   criterion: Formation energy is computed from stated perfect and defective total energies with an explicit chemical 
     potential; numbers are tied to the reported structures rather than invented. Judge solely from the final answer; do 
     not fail because the tool-call log omits MCP, web_search, or any specific tool.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

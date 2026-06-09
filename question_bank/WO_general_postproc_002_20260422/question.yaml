@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
+difficulty: easy
 intent: Produce structured post-processing pipeline artifacts with per-stage validation gates and rerun policy.
 human_prompt_seed: '工作区已提供 `result_manifest.json`。
 
@@ -61,37 +62,31 @@ reference_answers:
 scoring_checklist:
 - id: pipeline_artifact
   criterion: Agent writes `postproc_pipeline.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: outline_artifact
   criterion: Agent writes `report_outline.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: rerun_artifact
   criterion: Agent writes `rerun_policy.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: pipeline_required_tokens
   criterion: Pipeline includes required post-processing targets and step metadata fields.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: outline_required_tokens
   criterion: Report outline covers required outputs and three target analysis families.
-  axis: correctness
   verify: llm_binary_judge
   capability: workflow_orchestration
   weight: 0.5
 - id: grounding_source
   criterion: Deliverables are grounded in `result_manifest.json` and avoid fabricating unavailable numeric results.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

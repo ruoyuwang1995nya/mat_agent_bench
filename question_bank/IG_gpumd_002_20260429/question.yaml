@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: Generate a GPUMD HNEMD+SHC `run.in` for graphene.
 human_prompt_seed: 请生成一份用于石墨烯 HNEMD 热导率与 SHC 分解的 `run.in`，先平衡再生产，生产段要包含 HNEMD 驱动和 SHC 相关设置。
 tags:
@@ -26,13 +27,11 @@ reference_answers:
 scoring_checklist:
 - id: run_in_artifact
   criterion: 生成 `run.in`。
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: hnemd_core_tokens
   criterion: 输入包含 HNEMD 与 SHC 分解关键命令。
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5

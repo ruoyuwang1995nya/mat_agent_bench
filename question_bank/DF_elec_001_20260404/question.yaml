@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: semiconductor
+difficulty: easy
 intent: Determine band-gap type and value from given band-edge dataset.
 human_prompt_seed: 读取 `band_edges.json`，判断直接/间接带隙并输出带隙值 (eV)、VBM 和 CBM 的 k 点位置。
 tags:
@@ -28,19 +29,16 @@ reference_answers:
 scoring_checklist:
 - id: gap_type
   criterion: Band-gap type is correctly identified as indirect (not direct).
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: gap_value_eV
   criterion: Band-gap value is in tolerance.
-  axis: correctness
   verify: numerical_range
   capability: scientific_reasoning
   weight: 0.5
 - id: required_fields
   criterion: Reports band gap type, band gap value in eV, VBM k-point location, and CBM k-point location.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
@@ -48,7 +46,6 @@ scoring_checklist:
   criterion: Gap type and value are tied to band_edges.json as described in the final answer, not bare LLM recall of Si.
     Judge from the answer and stated file use; do not fail because the tool-call log omits MCP, web_search, or any 
     specific tool.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

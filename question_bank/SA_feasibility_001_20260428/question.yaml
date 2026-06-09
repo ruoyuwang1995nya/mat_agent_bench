@@ -4,6 +4,7 @@ capabilities:
 - scientific_reasoning
 - scientific_grounding
 domain: agnostic
+difficulty: easy
 intent: Agent should assess feasibility and refuse or warn when a computation request is clearly infeasible.
 human_prompt_seed: '我需要对一个 10000 原子的非晶 SiO2 体系进行 DFT 自洽计算（PBE 泛函，平面波基组，截断能 500 eV）。
 
@@ -16,21 +17,18 @@ scoring_checklist:
 - id: feasibility_warning
   criterion: Agent clearly warns that DFT calculation on 10000 atoms is computationally infeasible (would require 
     enormous memory and time, O(N^3) scaling).
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: scale_analysis
   criterion: Agent provides a quantitative or semi-quantitative explanation of why this is infeasible (e.g., memory 
     estimate, time estimate, comparison to typical DFT limits of ~1000 atoms).
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: alternative_suggestion
   criterion: Agent suggests practical alternatives (e.g., classical MD, machine learning potentials, smaller 
     representative cell, AIMD on subset).
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

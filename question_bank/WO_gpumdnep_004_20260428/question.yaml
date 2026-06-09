@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
+difficulty: easy
 intent: Compute Si thermal expansion coefficient with GPUMD using Si_Fan_2019 Tersoff mini potential.
 human_prompt_seed: 获取 
   https://raw.githubusercontent.com/brucefan1983/GPUMD/master/potentials/tersoff/Si_Fan_2019.txt，使用这个势函数采用 GPUMD 计算 Si 
@@ -34,25 +35,21 @@ reference_answers:
 scoring_checklist:
 - id: run_input_artifact
   criterion: 生成 `run.in`。
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: si_fan_potential_token
   criterion: '`run.in` 使用 `Si_Fan_2019.txt` 势函数。'
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: thermal_expansion_core_tokens
   criterion: '`run.in` 包含 `ensemble npt_ber`、`dump_thermo`、`run` 三个关键参数。'
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
 - id: thermal_expansion_alpha_717e6
   criterion: 热膨胀系数结果应在约 `α = 7.17 × 10⁻⁶ K⁻¹`（可接受小范围偏差）。
-  axis: correctness
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5

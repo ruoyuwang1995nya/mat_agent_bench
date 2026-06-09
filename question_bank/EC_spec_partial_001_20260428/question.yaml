@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
+difficulty: easy
 intent: When run_spec.json has only partial fields, agent should use spec values where present and fill missing fields 
   from prompt defaults, not error out.
 human_prompt_seed: '请根据 run_spec.json 和以下说明生成 VASP INCAR 文件。
@@ -43,25 +44,21 @@ reference_answers:
 scoring_checklist:
 - id: output_artifact
   criterion: Agent writes `INCAR` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: encut_from_spec
   criterion: INCAR uses ENCUT=600 from run_spec.json (not the default 520).
-  axis: correctness
   verify: text_file_regex
   capability: data_handling
   weight: 0.5
 - id: ismear_from_spec
   criterion: INCAR uses ISMEAR=1 from run_spec.json (not the default 0).
-  axis: correctness
   verify: text_file_regex
   capability: data_handling
   weight: 0.5
 - id: defaults_filled
   criterion: INCAR includes default values for fields NOT in run_spec.json.
-  axis: correctness
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5

@@ -4,6 +4,7 @@ capabilities:
 - tool_utilization
 - workflow_orchestration
 domain: agnostic
+difficulty: easy
 intent: Add ABACUS LCAO BSSE correction at a bulk Fe vacancy site using a single Fe_empty ghost atom and SCF INPUT.
 human_prompt_seed: '工作区中提供了一个 Fe 体相空位结构（已去掉一个 Fe 原子）。
 
@@ -104,19 +105,16 @@ scoring_checklist:
 - id: must_stru_vac_fe_empty_core
   criterion: '[Must] Judge from `STRU_vac_bsse` file content: STRU_vac_bsse defines Fe_empty as vacancy ghost-basis species
     with physically consistent empty-site marker (allowing equivalent numeric formats).'
-  axis: correctness
   verify: llm_binary_judge
   weight: 0.5
   capability: tool_utilization
 - id: must_input_vac_core
   criterion: '[Must] INPUT_vac_bsse uses LCAO SCF core controls (`calculation scf`, `basis_type lcao`, `nspin 2`).'
-  axis: correctness
   verify: text_file_contains_all
   weight: 0.5
   capability: data_handling
 - id: must_input_vac_ntype_matches_species
   criterion: '[Must] INPUT_vac_bsse sets ntype to 2, matching the two species (Fe and Fe_empty) defined in STRU_vac_bsse ATOMIC_SPECIES.'
-  axis: correctness
   verify: text_file_regex
   weight: 0.5
   capability: data_handling
@@ -124,48 +122,41 @@ scoring_checklist:
   criterion: '[Must] Conditional routing: if INPUT_vac_bsse has `kspacing`, it must be either a single value in 0.08~0.20
     or an explicit uniform three-component form in the same range; if INPUT_vac_bsse has no `kspacing`, then KPT_vac_bsse
     must provide a uniform mesh line (n n n).'
-  axis: correctness
   verify: text_file_regex
   weight: 0.5
   capability: tool_utilization
 - id: suggested_input_vac_numerics
   criterion: '[Suggested] INPUT_vac_bsse follows benchmark numeric settings with tolerance (`ecutwfc ~100`, `scf_thr around
     1e-7~1e-6`).'
-  axis: correctness
   verify: text_file_numeric_range
   weight: 0.5
   capability: scientific_reasoning
 - id: suggested_input_vac_smearing
   criterion: '[Suggested] If INPUT_vac_bsse includes smearing parameters, they should be physically reasonable for this benchmark
     family; missing smearing fields should not be treated as failure.'
-  axis: correctness
   verify: text_file_numeric_range
   weight: 0.5
   capability: scientific_reasoning
 - id: variable_bsse_explanation
   criterion: '[Variable] Final answer explains why vacancy-site ghost basis is needed for NAO BSSE correction.'
-  axis: correctness
   verify: llm_binary_judge
   weight: 0.5
   capability: scientific_reasoning
 - id: variable_fe_empty_at_vacancy
   criterion: '[Variable] Fe_empty is placed at the vacancy position (not elsewhere) with physically consistent vacancy-ghost
     intent.'
-  axis: correctness
   verify: llm_binary_judge
   weight: 0.5
   capability: structure_manipulation
 - id: stru_vac_bsse_artifact
   criterion: Generated deliverables count even if the final answer does not quote file contents; `STRU_vac_bsse` must be
     written to the workspace.
-  axis: correctness
   verify: artifact_exists
   weight: 0.5
   capability: tool_utilization
 - id: input_vac_bsse_artifact
   criterion: Generated deliverables count even if the final answer does not quote file contents; `INPUT_vac_bsse` must 
     be written to the workspace.
-  axis: correctness
   verify: artifact_exists
   weight: 0.5
   capability: tool_utilization
@@ -173,7 +164,6 @@ scoring_checklist:
   criterion: Modified STRU keeps the original 53 real Fe fractional coordinates and lattice from base_vacancy.stru; only
     Fe_empty is added at the vacancy. Judge solely from the final answer; do not fail because the tool-call log omits 
     MCP, web_search, or any specific tool.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

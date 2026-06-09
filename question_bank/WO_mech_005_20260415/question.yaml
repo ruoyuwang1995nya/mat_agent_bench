@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
+difficulty: easy
 intent: Compute an equation-of-state workflow for an alloy and summarize volume-scan settings and fitted EOS outputs.
 human_prompt_seed: "对给定合金结构执行 EOS 分析（Mock版）：\n1. 先 query/检索并整理 EOS 所需输入文件与结构信息；\n2. 明确体积扫描设置（0.8~1.2）与拟合模型；\n3. 不做真实计算，使用以下
   mock 数据：\n   - vol_start = 0.8\n   - vol_end = 1.2\n   - vol_step = 0.05\n   - fit_model = Birch-Murnaghan\n   - equilibrium_volume
@@ -45,37 +46,31 @@ reference_answers:
 scoring_checklist:
 - id: eos_summary_json
   criterion: Agent writes `alloy_eos_summary.json` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: eos_report_md
   criterion: Agent writes `alloy_eos_report.md` to workspace.
-  axis: correctness
   verify: artifact_exists
   capability: tool_utilization
   weight: 0.5
 - id: eos_required_tokens
   criterion: EOS summary JSON includes required scan-range and fitted-property fields.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: report_required_tokens
   criterion: Report explains EOS workflow, scan strategy, and uncertainty caveats.
-  axis: correctness
   verify: llm_binary_judge
   capability: workflow_orchestration
   weight: 0.5
 - id: eos_bulk_modulus_mock
   criterion: Final answer includes a mock bulk modulus near 178.6 GPa.
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: grounding_source
   criterion: Final answer is grounded in EOS artifacts and does not fabricate fitted results not present in outputs.
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

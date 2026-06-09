@@ -4,6 +4,7 @@ capabilities:
 - workflow_orchestration
 - tool_utilization
 domain: agnostic
+difficulty: easy
 intent: Compute vacancy formation energies for Fe-X doped supercells from mock BSSE-corrected energies; compare to QE 
   references and rank trends.
 human_prompt_seed: '掺杂 Fe 合金单空位形成能（mock 数据，不跑真实 DFT）。对下列 7 个体系使用同一公式：
@@ -58,33 +59,28 @@ reference_answers:
 scoring_checklist:
 - id: ef_Fe53Cr_eV
   criterion: Fe53Cr vacancy formation energy from mock data is within tolerance (~2.08 eV).
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: ef_Fe53Al_eV
   criterion: Fe53Al vacancy formation energy from mock data is within tolerance (~1.87 eV).
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: ef_Fe53Co_eV
   criterion: Fe53Co vacancy formation energy from mock data is within tolerance (~2.19 eV).
-  axis: correctness
   verify: numerical_range
   capability: tool_utilization
   weight: 0.5
 - id: required_fields
   criterion: Report includes a table for all seven systems, ABACUS vs QE comparison, sorted ranking by E_f, and BSSE 
     note for E_vac.
-  axis: correctness
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: bsse_vacancy_note
   criterion: Explains that NAO basis at the vacancy is incomplete and BSSE-corrected E_vac is needed for meaningful 
     E_f,vac.
-  axis: correctness
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
@@ -94,7 +90,6 @@ scoring_checklist:
     -949.91, -15.30), Fe53Nb(-964.85, -948.32, -14.68), Fe53B(-955.40, -939.54, -13.93). Expected E_f: ~2.08, ~1.87, ~1.93,
     ~2.19, ~2.02, ~1.85, ~1.93 eV respectively. Do not fail because the tool-call log omits MCP, web_search, or any specific
     tool.'
-  axis: grounding
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5
