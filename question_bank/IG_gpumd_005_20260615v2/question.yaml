@@ -6,8 +6,8 @@ capabilities:
 domain: agnostic
 difficulty: easy
 intent: Generate a GPUMD liquid-silicon transport-analysis `run.in`.
-human_prompt_seed: Please write a `run.in` for liquid silicon: first perform high-temperature equilibration, then include
-  self-diffusion, MSD, viscosity, and RDF/ADF statistics in the later stage.
+human_prompt_seed: 'Please write a `run.in` for liquid silicon: first perform high-temperature equilibration, then include
+  self-diffusion, MSD, viscosity, and RDF/ADF statistics in the later stage.'
 tags:
 - eng_gpumd
 data_files: []
