@@ -1,0 +1,101 @@
+id: WO_mlip_dpa_007_20260616v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Build a machine-checkable DP-GEN onboarding package with milestone gates and fallback actions from provided doc 
+  excerpts.
+human_prompt_seed: 'The workspace already provides `dpgen_docs_brief.md` (documentation excerpts).
+
+
+  Please read this file first, then output the following three deliverables:
+
+  1) `onboarding_tutorial.md`: including environment setup, installation, initial data, training, sampling, labeling,
+  iteration, common failure points, and the first-week plan.
+
+  2) `dpgen_checklist.json`: containing the keys `env_ready`, `data_ready`, `train_ready`, `sample_ready`, `label_ready`,
+  `iter_ready`, and `week1_plan`.
+
+  3) `milestone_gate.md`: for Day1-Day7, provide the "pass condition + failure fallback action".
+
+
+  In the final answer, briefly explain how you converted the documentation excerpts into an executable onboarding flow,
+  and identify the highest-risk stage.
+
+  '
+tags:
+- code_mlip
+data_files:
+- key: dpgen_docs
+  path: dpgen_docs_brief.md
+  oss_url: ''
+  description: DP-GEN documentation excerpts for onboarding conversion.
+reference_answers:
+- key: tutorial_artifact
+  value: onboarding_tutorial.md
+- key: checklist_artifact
+  value: dpgen_checklist.json
+- key: milestone_gate_artifact
+  value: milestone_gate.md
+- key: required_sections
+  value:
+    filename: onboarding_tutorial.md
+    must_cover:
+    - environment
+    - installation
+    - initial data
+    - training
+    - sampling
+    - labeling
+    - iteration
+    - failure point
+    - first week
+- key: checklist_required_tokens
+  value:
+    filename: dpgen_checklist.json
+    tokens:
+    - env_ready
+    - data_ready
+    - train_ready
+    - sample_ready
+    - label_ready
+    - iter_ready
+    - week1_plan
+    flags: i
+- key: grounding_source
+  value:
+    filename: dpgen_docs_brief.md
+scoring_checklist:
+- id: tutorial_artifact
+  criterion: Agent writes `onboarding_tutorial.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: checklist_artifact
+  criterion: Agent writes `dpgen_checklist.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: milestone_gate_artifact
+  criterion: Agent writes `milestone_gate.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: required_sections
+  criterion: Tutorial covers core DP-GEN lifecycle sections and practical first-week guidance.
+  verify: llm_binary_judge
+  capability: workflow_orchestration
+  weight: 0.5
+- id: checklist_required_tokens
+  criterion: Checklist JSON includes required readiness keys.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: Tutorial is grounded in `dpgen_docs_brief.md` and avoids unsupported claims not present in provided 
+    excerpts.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

@@ -1,0 +1,78 @@
+id: WO_mech_004_20260616v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: alloy
+difficulty: easy
+intent: Optimize an alloy structure with APEX and summarize geometry-change evidence with machine-checkable artifacts.
+human_prompt_seed: 'Use APEX to perform geometry optimization on the given alloy structure and output the optimized results.
+
+  Please provide the following deliverables:
+
+  1) `alloy_optimized.cif`: the optimized structure file;
+  2) `alloy_opt_summary.json`: containing at least `method`, `input_structure`, `output_structure`, `optimization_status`,
+  and `notes`;
+  3) `alloy_opt_report.md`: explaining the optimization objective, key settings, and the credibility/uncertainty of the result.
+
+  In the final answer, briefly describe the main changes in the optimized structure relative to the input structure (qualitative
+  description is acceptable).'
+tags:
+- code_mlip
+data_files: []
+reference_answers:
+- key: optimized_structure
+  value: alloy_optimized.cif
+- key: summary_json
+  value: alloy_opt_summary.json
+- key: report_md
+  value: alloy_opt_report.md
+- key: summary_required_tokens
+  value:
+    filename: alloy_opt_summary.json
+    must_cover:
+    - method
+    - input_structure
+    - output_structure
+    - optimization_status
+    - APEX
+- key: report_required_tokens
+  value:
+    filename: alloy_opt_report.md
+    must_cover:
+    - optimization
+    - alloy
+    - structure
+    - uncertainty
+scoring_checklist:
+- id: optimized_structure
+  criterion: Agent writes `alloy_optimized.cif` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: summary_json
+  criterion: Agent writes `alloy_opt_summary.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: report_md
+  criterion: Agent writes `alloy_opt_report.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: summary_required_tokens
+  criterion: Summary JSON includes optimization metadata and APEX method context.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: report_required_tokens
+  criterion: Report explains optimization setup and uncertainty notes.
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: grounding_source
+  criterion: Final answer is grounded in generated optimization artifacts and does not invent unsupported structural 
+    changes.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

@@ -1,0 +1,52 @@
+id: WO_mech_001_20260616
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Independently locate Al FCC structure, execute 5-point volume scan, fit EOS, report a0 and B0.
+human_prompt_seed: 'Perform an equation-of-state fit for FCC Al: retrieve the Al FCC primitive-cell structure from a database, run a 5-point volume scan near the equilibrium volume (0.95, 0.975, 1.0, 1.025, and 1.05 times the reference volume), perform a single-point energy calculation at each volume, fit a Birch-Murnaghan EOS, and report the equilibrium lattice constant a0 (A) and bulk modulus B0 (GPa).
+
+  '
+tags:
+- meta_database
+data_files: []
+reference_answers:
+- key: a0_A
+  value: 4.04
+  tolerance: 0.08
+- key: b0_GPa
+  value: 79.0
+  tolerance: 8.0
+- key: required_fields
+  value:
+  - volume_points
+  - fit_model
+  - a0
+  - b0
+  - failure_handling
+scoring_checklist:
+- id: a0_A
+  criterion: Equilibrium lattice constant is in range.
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: b0_GPa
+  criterion: Bulk modulus is in range.
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: required_fields
+  criterion: Report includes volume scan points, fit model identification, a0 and b0 values, and any failure handling 
+    notes.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: The answer ties Al structure and energy values to stated retrieval or calculation outputs (or given mock 
+    data), not invented numbers. Judge solely from the final answer; do not require or penalize absence of MCP, 
+    web_search, or any specific tool in the tool-call log.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

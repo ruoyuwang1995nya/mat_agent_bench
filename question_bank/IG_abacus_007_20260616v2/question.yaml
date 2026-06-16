@@ -1,0 +1,95 @@
+id: IG_abacus_007_20260616v2
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
+domain: agnostic
+difficulty: easy
+intent: Prepare ABACUS Si LCAO-SCF inputs and Bohrium submission configuration.
+human_prompt_seed: Please prepare `INPUT`, `STRU`, and `KPT` in the current directory for an ABACUS LCAO-SCF trial calculation
+  of Si, and write the Bohrium submission configuration to `submit_job.json`.
+tags:
+- eng_abacus
+reference_answers:
+- key: submit_json_artifact
+  value: submit_job.json
+- key: input_artifact
+  value: INPUT
+- key: stru_artifact
+  value: STRU
+- key: kpt_artifact
+  value: KPT
+- key: must_submit_json_core
+  value:
+    filename: submit_job.json
+    pattern: 
+      (?is)"image"\s*:\s*"registry\.dp\.tech/dptech/dp/native/hub/mrdic2/abacusp:1\.0\.1-1778080680".*"machine"\s*:\s*"c32_m128_cpu".*"cmd"\s*:\s*"[^"]*abacus[^"]*"
+    flags: im
+- key: must_input_pseudo_dir
+  value:
+    filename: INPUT
+    pattern: (?im)^\s*pseudo_dir\s+/root/apns-pseudopotentials-v1/?\s*$
+    flags: im
+- key: must_input_orbital_dir
+  value:
+    filename: INPUT
+    pattern: (?im)^\s*orbital_dir\s+\S+
+    flags: im
+- key: must_stru_si_pseudo
+  value:
+    filename: STRU
+    pattern: (?im)^\s*Si\s+[0-9.]+\s+Si\.upf\s*$
+    flags: im
+- key: variable_workspace_files_correct
+  value: {}
+scoring_checklist:
+- id: submit_json_artifact
+  criterion: Generated deliverables count even if the final answer does not quote file contents; `submit_job.json` must 
+    be written to the workspace.
+  verify: artifact_exists
+  weight: 0.5
+  capability: tool_utilization
+- id: input_artifact
+  criterion: Generated deliverables count even if the final answer does not quote file contents; `INPUT` must be written
+    to the workspace.
+  verify: artifact_exists
+  weight: 0.5
+  capability: tool_utilization
+- id: stru_artifact
+  criterion: Generated deliverables count even if the final answer does not quote file contents; `STRU` must be written 
+    to the workspace.
+  verify: artifact_exists
+  weight: 0.5
+  capability: tool_utilization
+- id: kpt_artifact
+  criterion: Generated deliverables count even if the final answer does not quote file contents; `KPT` must be written 
+    to the workspace.
+  verify: artifact_exists
+  weight: 0.5
+  capability: tool_utilization
+- id: must_submit_json_core
+  criterion: '[Must] submit_job.json uses the expected ABACUS Bohrium image, machine, and command.'
+  verify: text_file_regex
+  weight: 0.5
+  capability: data_handling
+- id: must_input_pseudo_dir
+  criterion: '[Must] INPUT points ABACUS to the APNS pseudopotential directory.'
+  verify: text_file_regex
+  weight: 0.5
+  capability: data_handling
+- id: must_input_orbital_dir
+  criterion: '[Must] INPUT includes an explicit orbital_dir path, required for LCAO Bohrium jobs where orbital files are not
+    in the default location.'
+  verify: text_file_regex
+  weight: 0.5
+  capability: data_handling
+- id: must_stru_si_pseudo
+  criterion: '[Must] STRU uses the available Si pseudopotential filename.'
+  verify: text_file_regex
+  weight: 0.5
+  capability: data_handling
+- id: variable_workspace_files_correct
+  criterion: '[Variable] Workspace files are mutually consistent for the ABACUS Si LCAO-SCF run.'
+  verify: llm_binary_judge
+  weight: 0.5
+  capability: data_handling

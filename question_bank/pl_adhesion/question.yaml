@@ -7,17 +7,17 @@ domain: polymer
 difficulty: easy
 intent: Compare polyimide adhesion on hydroxyl-rich, epoxy-rich, and carboxyl-rich graphene-oxide surfaces using curated
   adsorption, MD, and adhesion-work evidence.
-human_prompt_seed: '文件 `interface_adhesion_bundle.json` 汇总了聚酰亚胺短链与三类氧化石墨烯表面的界面项目数据。
+human_prompt_seed: 'The file `interface_adhesion_bundle.json` summarizes interface-project data for polyimide short chains on three types of graphene-oxide surfaces.
 
-  请完成一个界面粘附分析报告：
+  Please complete an interfacial adhesion analysis report:
 
-  1. 比较不同表面化学条件下的吸附能、界面接触面积、链取向和粘附功；
+  1. Compare the adsorption energy, interfacial contact area, chain orientation, and work of adhesion under different surface-chemistry conditions.
 
-  2. 说明哪类官能团更有利于增强界面；
+  2. Explain which type of functional group is more beneficial for strengthening the interface.
 
-  3. 给出最优表面改性建议；
+  3. Provide the optimal surface-modification recommendation.
 
-  4. 说明至少一个可能的尺度放大风险。
+  4. State at least one possible scale-up risk.
 
   '
 tags:

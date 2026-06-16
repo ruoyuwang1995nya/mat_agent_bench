@@ -1,0 +1,52 @@
+id: WO_elec_004_20260616
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: battery
+difficulty: easy
+intent: Compute average Na intercalation voltage of NFPP using mock energies.
+human_prompt_seed: "Compute the average Na intercalation voltage of NFPP:\n1. Retrieve the NFPP (Na₄Fe₃(PO₄)₂P₂O₇) structure (space group Pna2₁, Z=4) and use the unit cell (104 atoms).\n2. Sodiated state: Na₁₆Fe₁₂P₁₆O₆₀ (fully sodiated unit cell, 104 atoms).\n\
+  \   Desodiated state: Na₄Fe₁₂P₁₆O₆₀ (remove 12 Na in the order Na3→Na1→Na4, 92 atoms).\n3. Use the following mock energies (simulating DPA-relaxed results):\n   - E_sodiated = -689.60 eV\n   - E_desodiated = -633.08 eV\n   - μ_Na (BCC Na metal) = -1.31 eV/atom\n   - n = 12 (number of removed Na ions: 3 per formula unit × Z=4)\n4. Compute the average voltage using V = -[E(sodiated) - E(desodiated) - n·μ_Na] / n.\n5. Report the average voltage (V vs Na/Na⁺), the value of n, and the energy values.\n"
+tags:
+- code_mlip
+data_files: []
+reference_answers:
+- key: avg_voltage_V
+  value: 3.4
+  tolerance: 0.5
+- key: required_fields
+  value:
+  - E_sodiated
+  - E_desodiated
+  - mu_Na
+  - voltage
+  - voltage_formula
+scoring_checklist:
+- id: avg_voltage_V
+  criterion: Average voltage is computed correctly from mock energies (~3.4 V).
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: sodiated_state
+  criterion: Sodiated state is the full unit cell Na₁₆Fe₁₂P₁₆O₆₀ with 104 atoms and all 16 Na sites occupied.
+  verify: llm_binary_judge
+  capability: structure_manipulation
+  weight: 0.5
+- id: desodiated_state
+  criterion: Desodiated state Na₄Fe₁₂P₁₆O₆₀ has 92 atoms with exactly 12 Na removed following Na3→Na1→Na4 site order.
+  verify: llm_binary_judge
+  capability: structure_manipulation
+  weight: 0.5
+- id: required_fields
+  criterion: Report includes sodiated/desodiated energies, Na chemical potential, voltage formula, and computed voltage.
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: NFPP structure uses correct Pna2₁ lattice parameters; mock energies and μ_Na used exactly as specified; 
+    voltage formula applied correctly. Judge solely from the final answer; do not fail because the tool-call log omits 
+    MCP, web_search, or any specific tool.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

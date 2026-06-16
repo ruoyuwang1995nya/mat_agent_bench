@@ -1,0 +1,52 @@
+id: DF_elec_001_20260615v2
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
+domain: semiconductor
+difficulty: easy
+intent: Determine band-gap type and value from given band-edge dataset.
+human_prompt_seed: Read `band_edges.json`, determine whether the band gap is direct or indirect, and report the band-gap
+  value (eV) as well as the k-point locations of the VBM and CBM.
+tags:
+- phy_electronic
+data_files:
+- key: band_data
+  path: band_edges.json
+  oss_url: ''
+  description: Band-edge summary data.
+reference_answers:
+- key: gap_type
+  value: indirect
+- key: gap_value_eV
+  value: 1.18
+  tolerance: 0.08
+- key: required_fields
+  value:
+  - gap_type
+  - gap_value
+  - vbm_kpoint
+  - cbm_kpoint
+scoring_checklist:
+- id: gap_type
+  criterion: Band-gap type is correctly identified as indirect (not direct).
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: gap_value_eV
+  criterion: Band-gap value is in tolerance.
+  verify: numerical_range
+  capability: scientific_reasoning
+  weight: 0.5
+- id: required_fields
+  criterion: Reports band gap type, band gap value in eV, VBM k-point location, and CBM k-point location.
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: grounding_source
+  criterion: Gap type and value are tied to band_edges.json as described in the final answer, not bare LLM recall of Si.
+    Judge from the answer and stated file use; do not fail because the tool-call log omits MCP, web_search, or any 
+    specific tool.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

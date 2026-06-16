@@ -1,0 +1,29 @@
+id: EC_filename_case_001_20260615v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Agent must respect exact case in output filenames (POSCAR not poscar).
+human_prompt_seed: 'Please build a simple Si FCC structure (lattice constant 5.43 Å, space group Fd-3m) and output it
+  in VASP format.
+
+  Note: the output filename must be exactly `POSCAR` (all uppercase), not `poscar` or any other variant.'
+tags:
+- eng_vasp
+data_files: []
+reference_answers:
+- key: output_artifact
+  value: POSCAR
+scoring_checklist:
+- id: output_artifact
+  criterion: Agent writes exactly `POSCAR` (uppercase) to workspace, not `poscar` or any case variant.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: valid_structure
+  criterion: The POSCAR file contains a valid Si diamond cubic structure with lattice constant approximately 5.43 Å.
+  verify: llm_binary_judge
+  capability: structure_manipulation
+  weight: 0.5

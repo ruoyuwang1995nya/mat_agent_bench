@@ -1,0 +1,223 @@
+id: PXRD_thermal_expansion_001_20260616
+task_type: material_characterization
+capabilities:
+- scientific_reasoning
+- scientific_grounding
+domain: agnostic
+difficulty: easy
+intent: Perform Pawley refinement on variable-temperature PXRD patterns to extract lattice parameters at each 
+  temperature, identify two structural phases (low-temperature RTP and high-temperature HTP), and fit linear thermal 
+  expansion equations for each phase.
+human_prompt_seed: 'The file `_td-pxrd_test.txt` contains variable-temperature powder X-ray diffraction (PXRD) data for a compound at 8 temperatures, with the temperature-label mapping: 30°C→303K, 50°C→323K, 70°C→343K, 90°C→363K, 110°C→383K, 120°C→393K, 130°C→403K, and 140°C→413K. The compound is monoclinic, with an indicated space group of P 21 (No. 4), and the wavelength is Cu Kα1, λ = 1.5406 Å.
+
+  Data characteristics and refinement strategy: - the data are real variable-temperature experimental data, with a pre-background-subtraction dynamic range of about 10×–30×; the 2θ range is 5°–50°, and it is recommended to use the 14°–50° range in refinement to avoid low-angle artifacts. - It is recommended to split the data by phase (4 RTP points and 4 HTP points) and refine them separately, enabling chain-cell within each phase (using the refined result from the previous temperature as the initial guess for the next one). - Within the same phase, the volume/cell parameters should vary monotonically or approximately monotonically with temperature; if the refined V at some temperature jumps by more than 5% relative to neighboring temperatures, it should be treated as convergence to a wrong basin (possibly a √2 or 2× false solution), and reinitialized from neighboring-temperature results or re-refined with multiple starts.
+
+  Runtime budget (important): this task has a hard wall-clock limit of 1200 s (online task timeout). Please use the following Pawley refinement settings to balance stability and time limit: - use `--multi-start 1` (one chain per phase is enough; niggli standardization + bidirectional chain-cell already covers the vast majority of wrong basins, so brute-force 5×/8× multi-start is unnecessary; the scripts default `--self-heal-chain` will automatically re-refine single points with V jumps >2% using 5-start multi-start after chain merge, which is sufficient to catch occasional failures); - use `--chain-cell --chain-cell-direction both` (the script internally performs forward/backward merge and volume-consistency arbitration); - use `--standardize-cell ref` (perform axis permutation + niggli reduction based on the reference cell, to avoid equivalent-setting switching in monoclinic/orthorhombic and similar systems); - you must **submit the RTP and HTP Bohrium jobs in parallel first** (issue two `Bohrium(action=''submit'')` calls at once; **do not submit RTP → wait for results → then submit HTP**), and then loop with `poll`; serial submission will almost certainly time out because each single job takes 8–12 min. - **Do not launch any new Bohrium refinement job after obtaining `results.json`**: the scripts built-in `chain-cell` + `standardize-cell` + `self-heal-chain` has already handled neighbor-volume consistency and wrong-basin single-point re-refinement; on the agent side you only need to read `results` / `merge_audit` / `self_heal_audit`, perform the final phase grouping and linear fitting, and write the answer directly. Resubmitting Bohrium even once will consume another 8–12 min and will almost certainly time out.
+
+  Literature reference cells (used as the initial guesses for Pawley refinement for each phase, followed by free refinement; c and β are sensitive parameters for the monoclinic structure, and the following literature values have been checked for each phase): - low-temperature phase RTP (303K–363K): a ≈ 10.83 Å, b ≈ 9.62 Å, c ≈ 10.13 Å, β ≈ 108.75°, V ≈ 1000 Å³ - high-temperature phase HTP (383K–413K): a ≈ 11.05 Å, b ≈ 9.48 Å, c ≈ 10.48 Å, β ≈ 111.25°, V ≈ 1023 Å³
+
+  Please perform Pawley refinement on the PXRD pattern at each temperature, extract the lattice parameters (a, b, c, β, V), and analyze the results: 1. Identify the two structural phases: low-temperature phase (1-RTP, 303K–363K) and high-temperature phase (1-HTP, 383K–413K). 2. Fit the temperature dependence of each lattice parameter (a, b, c, β, V) linearly for the two phases separately, and provide the fitting equations (slope, intercept, R²). The two phases must be fitted independently rather than merged into a single line, and the RTP and HTP slopes must each be calculated from the four temperature points within that phase (do not let the two phases share the same slope). 3. Report the refinement result at each temperature. For every temperature, you must use the Pawley script (such as `gsas2_pawley.py`) and use the true volume from the output JSON (computed from the converged a/b/c/β), rather than filling in the answer with the approximate initial guesses from the prompt (V ≈ 1000, 1023 Å³).
+
+  [Machine-scoring convention] At the end of the final answer, append a JSON block wrapped in an eval_results tag (values without units; conventional units are Å / Å³ / Å·K⁻¹ / Å³·K⁻¹), which must include at least the following dot-paths (other fields such as additional temperatures, b/beta, intercept, and r_squared may be added as needed; fits are 4-point linear fits within the same phase, and RTP and HTP must be independent):
+
+  - rtp.{303K,363K}.V，rtp.303K.a，rtp.fits.V.slope，rtp.fits.a.slope - htp.{383K,413K}.V，htp.383K.a，htp.fits.V.slope，htp.fits.c.slope
+
+  The values must come from actual Pawley refinement and linear fitting, and must not be filled in using the approximate initial guesses from the prompt.
+
+  In the final answer, also use 2–4 sentences to briefly summarize the audit information: - refinement-quality audit: whether `curation.verdict` / `warnings` indicate any issues; whether `merge_audit.warnings` or `self_heal_audit.outliers` are empty, and if not, which temperature points are affected. - Bohrium execution audit: how many `Bohrium(action=''submit'')` calls were made in total (should be ≤3 for this task); whether the submission command used `cmd=''bash run.sh > log 2>&1''`; whether each result directory was confirmed to contain both `log` and `results.json` after download; and whether the results came from `gsas2_pawley.py` run on Bohrium rather than a local scipy/numpy approximate fit. '
+tags:
+- char_diffraction
+data_files:
+- key: vt_pxrd_data
+  path: _td-pxrd_test.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/PXRD_thermal_expansion_001_20260427_v3/1777279719__td-pxrd_test.txt
+  description: Variable-temperature PXRD patterns at 8 temperatures (303K–413K, °C labels 30/50/70/90/110/120/130/140), 
+    CSV format with paired (2theta, intensity) columns per temperature. Generated from real laboratory diffractometer 
+    scans (Cu Kα1, 5°–50° 2θ, step 0.0197°).
+reference_answers:
+- key: rtp_V_303K
+  value:
+    json_path: rtp.303K.V
+    target: 999.81
+    tolerance: 20.0
+  unit: A3
+- key: rtp_V_363K
+  value:
+    json_path: rtp.363K.V
+    target: 1011.67
+    tolerance: 20.0
+  unit: A3
+- key: htp_V_383K
+  value:
+    json_path: htp.383K.V
+    target: 1022.73
+    tolerance: 20.0
+  unit: A3
+- key: htp_V_413K
+  value:
+    json_path: htp.413K.V
+    target: 1026.1
+    tolerance: 20.0
+  unit: A3
+- key: rtp_a_303K
+  value:
+    json_path: rtp.303K.a
+    target: 10.828
+    tolerance: 0.05
+  unit: A
+- key: htp_a_383K
+  value:
+    json_path: htp.383K.a
+    target: 11.0506
+    tolerance: 0.05
+  unit: A
+- key: rtp_V_slope
+  value:
+    json_path: rtp.fits.V.slope
+    target: 0.2013
+    tolerance: 0.15
+  unit: A3/K
+- key: htp_V_slope
+  value:
+    json_path: htp.fits.V.slope
+    target: 0.1154
+    tolerance: 0.06
+  unit: A3/K
+- key: rtp_a_slope
+  value:
+    json_path: rtp.fits.a.slope
+    target: 0.00129
+    tolerance: 0.0006
+  unit: A/K
+- key: htp_c_slope
+  value:
+    json_path: htp.fits.c.slope
+    target: -0.00053
+    tolerance: 0.0006
+  unit: A/K
+- key: required_fields
+  value:
+  - RTP
+  - HTP
+  - slope
+  - intercept
+- key: grounding_source
+  value:
+    filename: _td-pxrd_test.txt
+scoring_checklist:
+- id: rtp_V_303K
+  criterion: Refined unit cell volume V at the RTP phase / T=303 K is within tolerance (target 999.81 ± 20.0 Å³). Read 
+    from the eval_results JSON path rtp.303K.V.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: tool_utilization
+- id: rtp_V_363K
+  criterion: Refined unit cell volume V at RTP / T=363 K is within tolerance (target 1011.67 ± 20.0 Å³). Read from 
+    eval_results path rtp.363K.V.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: tool_utilization
+- id: htp_V_383K
+  criterion: Refined unit cell volume V at HTP / T=383 K is within tolerance (target 1022.73 ± 20.0 Å³). Read from 
+    eval_results path htp.383K.V.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: tool_utilization
+- id: htp_V_413K
+  criterion: Refined unit cell volume V at HTP / T=413 K is within tolerance (target 1026.10 ± 20.0 Å³). Read from 
+    eval_results path htp.413K.V.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: tool_utilization
+- id: rtp_a_303K
+  criterion: Refined lattice parameter a at RTP / T=303 K is within tolerance (target 10.828 ± 0.05 Å). Read from 
+    eval_results path rtp.303K.a.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: tool_utilization
+- id: htp_a_383K
+  criterion: Refined lattice parameter a at HTP / T=383 K is within tolerance (target 11.0506 ± 0.05 Å). Read from 
+    eval_results path htp.383K.a.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: tool_utilization
+- id: rtp_V_slope
+  criterion: Linear-fit slope of V vs T over the four RTP temperatures (303/323/343/363 K) is within tolerance (target 
+    0.2013 ± 0.15 Å³/K; widened to absorb the rare ``--multi-start 1`` wrong-basin case at one interior RTP temperature 
+    when ``--self-heal-chain`` does not successfully replace it — the slope is the most sensitive of the four-point 
+    fits). Read from eval_results path rtp.fits.V.slope.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: tool_utilization
+- id: htp_V_slope
+  criterion: Linear-fit slope of V vs T over the four HTP temperatures (383/393/403/413 K) is within tolerance (target 
+    0.1154 ± 0.06 Å³/K). Read from eval_results path htp.fits.V.slope.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: tool_utilization
+- id: rtp_a_slope
+  criterion: Linear-fit slope of a vs T over the four RTP temperatures (303/323/343/363 K) is within tolerance (target 
+    0.00129 ± 0.0006 Å/K). Read from eval_results path rtp.fits.a.slope.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: tool_utilization
+- id: htp_c_slope
+  criterion: Linear-fit slope of c vs T over the four HTP temperatures (383/393/403/413 K) is within tolerance (target 
+    -0.00053 ± 0.0006 Å/K). Read from eval_results path htp.fits.c.slope.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: tool_utilization
+- id: required_fields
+  criterion: Answer reports both RTP and HTP phases with linear fit equations including slope, intercept, and R² for at 
+    least V vs T in each phase.
+  verify: llm_binary_judge
+  weight: 0.5
+  capability: tool_utilization
+- id: phase_transition_identified
+  criterion: Answer identifies a structural phase transition between 363 K and 383 K, with distinct lattice parameters 
+    for the two phases (notably a jump in a and β at the transition).
+  verify: llm_binary_judge
+  weight: 0.5
+  capability: scientific_reasoning
+- id: bohrium_submit_executed
+  criterion: Pass if the final answer, workspace evidence, or tool-call observations state that each Bohrium submit was 
+    downloaded and produced both a log file and a results JSON before numeric outputs were read. Do not fail solely 
+    because the visible tool-call excerpt is truncated, unless there is positive evidence that no successful Bohrium 
+    result directory existed.
+  verify: llm_binary_judge
+  weight: 0.5
+  capability: tool_utilization
+- id: curation_inspected
+  criterion: Agent inspected the curation diagnostics or warnings field of the Pawley results JSON for at least one 
+    pattern, either by mentioning it in the final answer or through visible tool-call observations.
+  verify: llm_binary_judge
+  weight: 0.5
+  capability: data_handling
+- id: runsh_wrapper_used
+  criterion: Pass if the final answer, workspace run.sh files, or tool-call observations show the run.sh wrapper pattern
+    such as bash run.sh > log 2>&1, with the python3 gsas2_pawley.py invocation inside run.sh rather than inlined with 
+    embedded quotes in the cmd field.
+  verify: llm_binary_judge
+  weight: 0.5
+  capability: tool_utilization
+- id: merge_audit_surfaced
+  criterion: When reporting per-pattern cells from a chain-cell-direction both run, the agent referenced merge_audit 
+    (table or warnings) or self_heal_audit at least once in the final answer or reasoning.
+  verify: llm_binary_judge
+  weight: 0.5
+  capability: tool_utilization
+- id: local_solver_avoided
+  criterion: Pass if the final answer, workspace files, or tool-call observations show that refinement results came from
+    gsas2_pawley.py executed on Bohrium, and there is no positive evidence that the agent bypassed GSAS-II by writing a 
+    local scipy/numpy least-squares Pawley replacement.
+  verify: llm_binary_judge
+  weight: 0.5
+  capability: tool_utilization
+- id: grounding_source
+  criterion: Lattice parameters and fit results are derived from Pawley refinement of the provided PXRD data file, not 
+    from literature values or hallucination. Judge from the final answer and stated methodology; do not fail because the
+    tool-call log omits specific tools.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

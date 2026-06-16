@@ -1,0 +1,70 @@
+id: WO_general_ferro_009_20260615v2
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
+domain: semiconductor
+difficulty: easy
+intent: Explain principle, applications, and limitations of the double-wave method in Sawyer-Tower ferroelectric 
+  measurements.
+human_prompt_seed: 'Please provide a structured explanation of the double-wave method in Sawyer-Tower ferroelectric measurements.
+
+  Please output:
+  1) `double_wave_sawyer_tower_notes.md`: including the principle, typical applications, limitations, and sources of error;
+  2) `double_wave_keypoints.json`: containing at least `principle`, `applications`, `limitations`, and `best_practices`.
+
+  In the final answer, summarize in a short paragraph the scenarios for which this method is most suitable and least suitable.'
+tags:
+- meta_userlog
+- phy_eos
+data_files: []
+reference_answers:
+- key: notes_md
+  value: double_wave_sawyer_tower_notes.md
+- key: keypoints_json
+  value: double_wave_keypoints.json
+- key: notes_tokens
+  value:
+    filename: double_wave_sawyer_tower_notes.md
+    tokens:
+    - principle
+    - application
+    - limitation
+    - error
+    - Sawyer-Tower
+    flags: i
+- key: json_tokens
+  value:
+    filename: double_wave_keypoints.json
+    tokens:
+    - principle
+    - applications
+    - limitations
+    - best_practices
+    flags: i
+scoring_checklist:
+- id: notes_md
+  criterion: Agent writes `double_wave_sawyer_tower_notes.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: keypoints_json
+  criterion: Agent writes `double_wave_keypoints.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: notes_tokens
+  criterion: Notes cover principle, applications, limitations, and error sources.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: json_tokens
+  criterion: Keypoint JSON includes all required structured fields.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: Deliverables are grounded in methodological references and avoid unsupported claims.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

@@ -1,0 +1,77 @@
+id: WO_mech_007_20260616v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Calculate GaAs elastic constants and bulk modulus with ABACUS and summarize the tensor outputs.
+human_prompt_seed: "Compute the elastic constants and bulk modulus of GaAs (mock version):\n1. First query/retrieve and
+  organize the input files required for ABACUS elastic calculations;\n2. Provide the key settings (strain amplitude,
+  k-points, cutoff energy / accuracy strategy);\n3. Do not run a real calculation. Instead, use the following mock results:\n
+  \   - C11 = 118.4 GPa\n   - C12 = 53.7 GPa\n   - C44 = 59.2 GPa\n   - bulk_modulus_GPa = 75.3\n4. Based on the mock
+  values, complete the post-processing, consistency checks, and interpretation.\n\nPlease provide the following deliverables:\n1)
+  `gaas_elastic_abacus.json`: containing at least `input_files`, `C11`, `C12`, `C44`, `bulk_modulus_GPa`, and `calculation_settings`;\n2)
+  `gaas_elastic_abacus_report.md`: explain the query-based input organization, the mock post-processing workflow, and
+  the uncertainty.\n\nIn the final answer, briefly provide C11/C12/C44 and the bulk modulus.\n"
+tags:
+- eng_abacus
+data_files: []
+reference_answers:
+- key: elastic_json
+  value: gaas_elastic_abacus.json
+- key: elastic_report
+  value: gaas_elastic_abacus_report.md
+- key: json_required_tokens
+  value:
+    filename: gaas_elastic_abacus.json
+    must_cover:
+    - C11
+    - C12
+    - C44
+    - bulk_modulus_GPa
+    - calculation_settings
+- key: report_required_tokens
+  value:
+    filename: gaas_elastic_abacus_report.md
+    must_cover:
+    - GaAs
+    - ABACUS
+    - elastic
+    - bulk modulus
+    - uncertainty
+- key: gaas_c11_mock
+  value: 118.4
+  tolerance: 12.0
+scoring_checklist:
+- id: elastic_json
+  criterion: Agent writes `gaas_elastic_abacus.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: elastic_report
+  criterion: Agent writes `gaas_elastic_abacus_report.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: json_required_tokens
+  criterion: JSON includes required elastic-constant and bulk-modulus fields.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: report_required_tokens
+  criterion: Report explains settings and uncertainty caveats.
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: gaas_c11_mock
+  criterion: Final answer includes a mock C11 value near 118.4 GPa.
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: Final answer values match the provided mock data (C11=118.4, C12=53.7, C44=59.2, bulk_modulus=75.3 GPa) and
+    are presented in the generated artifact files (JSON + report), not hallucinated from other sources.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

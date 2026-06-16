@@ -1,0 +1,59 @@
+id: DF_mech_002_20260615v2
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
+domain: agnostic
+difficulty: easy
+intent: From MSST Hugoniot simulation data, fit the P-V Hugoniot curve and determine C-J detonation velocity and 
+  pressure for RDX.
+human_prompt_seed: 'Read `msst_hugoniot.json`, which contains MSST simulation data for RDX at different shock-wave velocities
+  (pressure, specific volume, temperature, and whether reaction is complete). Filter the fully reacted data points, fit
+  the P-V Hugoniot curve, determine the Chapman-Jouguet (C-J) point using the Rayleigh-line tangent method, and report
+  the C-J detonation velocity (m/s) and detonation pressure (GPa).
+
+  '
+tags:
+- phy_eos
+priority: P0
+data_files:
+- key: msst_data
+  path: msst_hugoniot.json
+  oss_url: ''
+  description: MSST simulation data at multiple shock velocities for RDX.
+reference_answers:
+- key: cj_velocity_m_s
+  value: 8750.0
+  tolerance: 300.0
+- key: cj_pressure_GPa
+  value: 34.0
+  tolerance: 5.0
+- key: required_fields
+  value:
+  - cj_velocity
+  - cj_pressure
+  - hugoniot_fit
+  - rayleigh_line
+scoring_checklist:
+- id: cj_velocity_m_s
+  criterion: C-J detonation velocity is within tolerance.
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: cj_pressure_GPa
+  criterion: C-J detonation pressure is within tolerance.
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: required_fields
+  criterion: Includes Hugoniot curve fitting details, Rayleigh line analysis, and C-J velocity/pressure values.
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: C-J parameters are derived from the provided msst_hugoniot.json data, with filtered reaction-complete 
+    points shown. Judge solely from the final answer; do not fail because the tool-call log omits MCP, web_search, or 
+    any specific tool.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

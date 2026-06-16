@@ -1,0 +1,86 @@
+id: SR_db_001_20260615v2
+task_type: search_and_interpretation
+capabilities:
+- tool_utilization
+- scientific_reasoning
+domain: agnostic
+difficulty: easy
+intent: Search a target inorganic crystal structure and report the original database source with machine-checkable 
+  provenance fields.
+human_prompt_seed: 'Search for the crystal structure of rubidium perchlorate (RbClO4), and clearly state the original database
+  source.
+
+
+  Please provide the following deliverables:
+
+  1) `retrieval_report.md`: explain whether the target structure was found, what query conditions were used, how many candidates
+  were returned, and which final result was selected;
+
+  2) `source_summary.json`: containing at least `query_formula`, `selected_formula`, `database_source`, `structure_identifier`,
+  `candidate_count`, and `space_group`;
+
+  3) In the final answer, briefly explain why you believe the selected result can represent the crystal structure of "rubidium
+  perchlorate", and whether the source information is unique.
+
+
+  Note: the focus is on "database retrieval + source description", not on downstream calculations.
+
+  '
+tags:
+- meta_database
+data_files: []
+reference_answers:
+- key: retrieval_report
+  value: retrieval_report.md
+- key: source_summary
+  value: source_summary.json
+- key: summary_required_tokens
+  value:
+    filename: source_summary.json
+    tokens:
+    - query_formula
+    - selected_formula
+    - database_source
+    - structure_identifier
+    - candidate_count
+    - space_group
+    flags: i
+- key: report_required_tokens
+  value:
+    filename: retrieval_report.md
+    tokens:
+    - RbClO4
+    - candidate
+    - source
+    - database
+    - query condition
+    flags: i
+scoring_checklist:
+- id: retrieval_report
+  criterion: Agent writes `retrieval_report.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: source_summary
+  criterion: Agent writes `source_summary.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: summary_required_tokens
+  criterion: Source summary JSON includes query formula, selected structure formula, database source, structure 
+    identifier, candidate count, and space group.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: report_required_tokens
+  criterion: Retrieval report explicitly describes query conditions, candidate handling, and database-source 
+    explanation.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: The answer ties the selected RbClO4 structure and provenance fields to the retrieval outputs, and does not 
+    claim unsupported source certainty.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

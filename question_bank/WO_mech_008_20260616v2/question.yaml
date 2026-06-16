@@ -1,0 +1,77 @@
+id: WO_mech_008_20260616v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Calculate SrTiO3 elastic constants with APEX and report full C11/C12/C44 outputs.
+human_prompt_seed: "Compute the elastic constants of SrTiO3 (mock version):\n1. First query/retrieve and organize the
+  input files required for the APEX elastic workflow;\n2. Explain the elastic method used and the deformation settings;\n3.
+  Do not run a real calculation. Instead, use the following mock results:\n   - C11 = 316.8 GPa\n   - C12 = 101.5 GPa\n
+  \   - C44 = 125.7 GPa\n   - elastic_method = finite_strain\n4. Based on the mock results, complete the post-processing
+  and discuss the physical meaning.\n\nPlease provide the following deliverables:\n1) `srtio3_elastic_apex.json`: containing
+  at least `input_files`, `C11`, `C12`, `C44`, `elastic_method`, and `deformation_settings`;\n2) `srtio3_elastic_apex_report.md`:
+  explain the query-based input organization, the mock post-processing workflow, and the discussion of result reliability.\n\nIn
+  the final answer, briefly provide the key elastic constants and explain their physical meaning.\n"
+tags:
+- code_mlip
+data_files: []
+reference_answers:
+- key: elastic_json
+  value: srtio3_elastic_apex.json
+- key: elastic_report
+  value: srtio3_elastic_apex_report.md
+- key: json_required_tokens
+  value:
+    filename: srtio3_elastic_apex.json
+    must_cover:
+    - C11
+    - C12
+    - C44
+    - elastic_method
+    - deformation_settings
+- key: report_required_tokens
+  value:
+    filename: srtio3_elastic_apex_report.md
+    must_cover:
+    - SrTiO3
+    - APEX
+    - C11
+    - C12
+    - C44
+    - uncertainty
+- key: srtio3_c11_mock
+  value: 316.8
+  tolerance: 25.0
+scoring_checklist:
+- id: elastic_json
+  criterion: Agent writes `srtio3_elastic_apex.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: elastic_report
+  criterion: Agent writes `srtio3_elastic_apex_report.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: json_required_tokens
+  criterion: JSON includes required elastic tensor fields and setup metadata.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: report_required_tokens
+  criterion: Report explains workflow and uncertainty caveats for APEX elastic results.
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: srtio3_c11_mock
+  criterion: Final answer includes a mock C11 value near 316.8 GPa.
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: Final answer is grounded in generated APEX elastic outputs and does not invent unsupported tensor values.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

@@ -1,0 +1,80 @@
+id: WO_mlip_dpa_009_20260616v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Retrieve an MgB2 structure from open databases and compute its phonon spectrum with an ML potential workflow.
+human_prompt_seed: "Perform the MgB2 \"retrieval + phonon\" workflow (mock version):\n1. First query/retrieve the MgB2
+  structure and record the source, structure identifier, and input files;\n2. Explain the phonon settings you would adopt;\n3.
+  Do not run a real calculation. Instead, use the following mock results:\n   - retrieval_source = Materials Project\n
+  \   - structure_identifier = mp-763\n   - imaginary_mode_check = false\n   - gamma_e2g_mode_meV = 74.8\n   - output_artifacts
+  = [\"band.yaml\", \"dos.dat\"]\n4. Based on the mock values, complete post-processing and judge the consistency between
+  the structure and the phonon results.\n\nPlease provide the following deliverables:\n1) `mgb2_phonon_summary.json`:
+  containing at least `input_files`, `retrieval_source`, `structure_identifier`, `phonon_settings`, `imaginary_mode_check`,
+  and `output_artifacts`;\n2) `mgb2_phonon_report.md`: explain the query-based input organization, the two-stage mock
+  post-processing workflow, the key parameters, and the uncertainty.\n\nIn the final answer, briefly state whether the
+  retrieved structure and the phonon results are consistent with each other.\n"
+tags:
+- code_mlip
+data_files: []
+reference_answers:
+- key: phonon_json
+  value: mgb2_phonon_summary.json
+- key: phonon_report
+  value: mgb2_phonon_report.md
+- key: json_required_tokens
+  value:
+    filename: mgb2_phonon_summary.json
+    must_cover:
+    - retrieval_source
+    - structure_identifier
+    - phonon_settings
+    - imaginary_mode_check
+    - output_artifacts
+    - MgB2
+- key: report_required_tokens
+  value:
+    filename: mgb2_phonon_report.md
+    must_cover:
+    - retrieval
+    - MgB2
+    - phonon
+    - parameter
+    - uncertainty
+- key: gamma_e2g_mock
+  value: 74.8
+  tolerance: 10.0
+scoring_checklist:
+- id: phonon_json
+  criterion: Agent writes `mgb2_phonon_summary.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: phonon_report
+  criterion: Agent writes `mgb2_phonon_report.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: json_required_tokens
+  criterion: JSON includes retrieval metadata and phonon-result summary fields.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: report_required_tokens
+  criterion: Report explains two-stage workflow and uncertainty caveats.
+  verify: llm_binary_judge
+  capability: workflow_orchestration
+  weight: 0.5
+- id: gamma_e2g_mock
+  criterion: Final answer includes a mock Gamma E2g mode near 74.8 meV.
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: Final answer is grounded in both retrieval and phonon artifacts and does not fabricate unsupported 
+    structure/spectrum details.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

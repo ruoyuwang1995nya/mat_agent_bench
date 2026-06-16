@@ -1,0 +1,171 @@
+id: DD_data_qc_plot_001_20260615v5
+task_type: material_characterization
+capabilities:
+- data_handling
+- scientific_reasoning
+domain: agnostic
+difficulty: easy
+intent: Build a data-grounded plotting and QC workflow from CSV with machine-checkable artifacts, numeric QC metrics, 
+  and chart-priority decisions.
+human_prompt_seed: "The workspace already provides `experiment_metrics.csv`.\n\nPlease read this file first, then complete
+  the following tasks:\n1) Generate `fig_spec.json`: provide plotting specifications for 3 chart types (line, scatter,
+  and box), where each spec contains at least `chart_type`, `x`, `y`, `group_by`, `title`, and `reason`, and all field
+  names must come from the CSV.\n2) Generate `qc_metrics.json`: it must contain at least the following keys:\n   - `row_count`\n
+  \  - `missing_count_yield_pct`\n   - `missing_rate_yield_pct`\n   - `outlier_rule`\n   - `candidate_outliers_yield_pct`\n
+  \  - `unit_map`\n3) Generate `data_qc_report.md`: include missing-value checks, the outlier rule (the IQR idea must
+  be explicitly stated), unit-consistency checks, and a recommendation for the final deliverable format.\n4) Generate
+  `chart_priority.md`: give a priority ranking (P1/P2/P3) for the 3 chart types and describe their usage boundaries.\n5)
+  In the final answer, briefly explain why you chose these 3 chart types and point out at least 2 limitations of the current
+  data.\n\nNote: do not invent field names that do not exist in the CSV. Write the above four files in the current directory.\n"
+tags:
+- meta_userlog
+- wf_report
+data_files:
+- key: experiment_metrics
+  path: experiment_metrics.csv
+  oss_url: ''
+  description: Small tabular sample for plotting-plan and data-quality checks.
+reference_answers:
+- key: fig_spec_artifact
+  value: fig_spec.json
+- key: qc_metrics_artifact
+  value: qc_metrics.json
+- key: qc_report_artifact
+  value: data_qc_report.md
+- key: chart_priority_artifact
+  value: chart_priority.md
+- key: fig_spec_required_tokens
+  value:
+    filename: fig_spec.json
+    tokens:
+    - line
+    - scatter
+    - box
+    - temperature_C
+    - yield_pct
+    - phase
+    flags: i
+- key: fig_spec_required_keys_regex
+  value:
+    filename: fig_spec.json
+    pattern: (?is)("chart_type"\s*:.*?"x"\s*:.*?"y"\s*:.*?"group_by"\s*:.*?"title"\s*:.*?"reason")
+    flags: is
+- key: qc_metrics_required_tokens
+  value:
+    filename: qc_metrics.json
+    tokens:
+    - row_count
+    - missing_count_yield_pct
+    - missing_rate_yield_pct
+    - outlier_rule
+    - candidate_outliers_yield_pct
+    - unit_map
+    flags: i
+- key: qc_metrics_row_count_regex
+  value:
+    filename: qc_metrics.json
+    pattern: '"row_count"\s*:\s*10\b'
+    flags: i
+- key: qc_metrics_missing_count_regex
+  value:
+    filename: qc_metrics.json
+    pattern: '"missing_count_yield_pct"\s*:\s*1\b'
+    flags: i
+- key: qc_metrics_missing_rate_regex
+  value:
+    filename: qc_metrics.json
+    pattern: '"missing_rate_yield_pct"\s*:\s*(?:0?\.1(?:0+)?|10(?:\.0+)?|10%)\b'
+    flags: i
+- key: qc_report_required_tokens
+  value:
+    filename: data_qc_report.md
+    tokens:
+    - missing values
+    - outliers
+    - units
+    - deliverable format
+    - experiment_metrics.csv
+    - IQR
+    flags: i
+- key: qc_report_missing_rate_regex
+  value:
+    filename: data_qc_report.md
+    pattern: (?i)(missing\\s*rate)
+    flags: i
+- key: qc_report_outlier_regex
+  value:
+    filename: data_qc_report.md
+    pattern: (?i)(1\\.5\\s*\\*\\s*IQR|IQR.*Q1.*Q3)
+    flags: i
+scoring_checklist:
+- id: fig_spec_artifact
+  criterion: Agent writes `fig_spec.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: qc_metrics_artifact
+  criterion: Agent writes `qc_metrics.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: qc_report_artifact
+  criterion: Agent writes `data_qc_report.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: chart_priority_artifact
+  criterion: Agent writes `chart_priority.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: fig_spec_required_tokens
+  criterion: '`fig_spec.json` contains three chart types and is grounded in provided CSV column names.'
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: fig_spec_required_keys_regex
+  criterion: '`fig_spec.json` includes complete chart-spec keys (`chart_type/x/y/group_by/title/reason`) in chart objects.'
+  verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
+- id: qc_metrics_required_tokens
+  criterion: '`qc_metrics.json` includes required QC metric keys.'
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: qc_metrics_row_count_regex
+  criterion: '`qc_metrics.json` reports the correct row count (10).'
+  verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
+- id: qc_metrics_missing_count_regex
+  criterion: '`qc_metrics.json` reports missing count for `yield_pct` as 1.'
+  verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
+- id: qc_metrics_missing_rate_regex
+  criterion: '`qc_metrics.json` reports missing rate for `yield_pct` around 0.1 / 10 / 10%.'
+  verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
+- id: qc_report_required_tokens
+  criterion: '`data_qc_report.md` includes QC essentials (missing values, outliers, unit consistency, and deliverable format).'
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: qc_report_missing_rate_regex
+  criterion: '`data_qc_report.md` reports missing-rate style check explicitly.'
+  verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
+- id: qc_report_outlier_regex
+  criterion: '`data_qc_report.md` explicitly states an IQR-style outlier rule.'
+  verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: Final answer and generated files are grounded in `experiment_metrics.csv` columns and do not invent 
+    nonexistent fields.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

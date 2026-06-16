@@ -1,0 +1,40 @@
+id: IG_gpumd_003_20260615v2
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
+domain: agnostic
+difficulty: easy
+intent: Generate a GPUMD NEMD `run.in` with heat source/sink and grouped statistics.
+human_prompt_seed: Please write a `run.in` for interfacial thermal-transport NEMD. It should include fixed regions, heat
+  source/sink setup, temperature statistics, and subsequent SHC-related settings.
+tags:
+- eng_gpumd
+data_files: []
+reference_answers:
+- key: run_in_artifact
+  value: run.in
+- key: nemd_core_tokens
+  value:
+    filename: run.in
+    tokens:
+    - potential
+    - velocity
+    - ensemble heat_lan
+    - fix 0
+    - compute
+    - temperature
+    - compute_shc
+    - run
+    flags: i
+scoring_checklist:
+- id: run_in_artifact
+  criterion: Generate `run.in`.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: nemd_core_tokens
+  criterion: The input contains the key commands for NEMD heat source/sink setup and temperature statistics.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5

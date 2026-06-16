@@ -1,0 +1,68 @@
+id: WO_general_steel_008_20260615v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: alloy
+difficulty: easy
+intent: Orchestrate Ni-content sweeps for duplex stainless-steel compositions, produce machine-checkable tensile 
+  predictions, and summarize trend plus uncertainty in a report.
+human_prompt_seed: 'Study the effect of Ni-content variation on tensile-strength prediction in compositions approximating
+  2209/ER2209.
+
+  Please output:
+  1) `duplex_ni_tensile_predictions.json`: containing at least `formula`, `ni_content`, `predicted_uts`, and `trend_label`;
+  2) `duplex_ni_tensile_analysis.md`: explain the mechanistic interpretation of how changes in Ni content lead to strength
+  changes, together with the uncertainty.
+
+  In the final answer, provide the overall trend judgment for "Ni-content change vs. strength change".'
+tags:
+- code_mlip
+data_files: []
+reference_answers:
+- key: tensile_json
+  value: duplex_ni_tensile_predictions.json
+- key: analysis_md
+  value: duplex_ni_tensile_analysis.md
+- key: tensile_tokens
+  value:
+    filename: duplex_ni_tensile_predictions.json
+    must_cover:
+    - formula
+    - ni_content
+    - predicted_uts
+    - trend_label
+- key: analysis_tokens
+  value:
+    filename: duplex_ni_tensile_analysis.md
+    must_cover:
+    - Ni
+    - tensile strength
+    - phase fraction
+    - uncertainty
+scoring_checklist:
+- id: tensile_json
+  criterion: Agent writes `duplex_ni_tensile_predictions.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: analysis_md
+  criterion: Agent writes `duplex_ni_tensile_analysis.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: tensile_tokens
+  criterion: Prediction JSON includes required composition-strength fields.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: analysis_tokens
+  criterion: Analysis document explains Ni-strength trend with uncertainty caveats.
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: grounding_source
+  criterion: Deliverables are grounded in generated prediction artifacts and avoid unsupported metallurgy claims.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

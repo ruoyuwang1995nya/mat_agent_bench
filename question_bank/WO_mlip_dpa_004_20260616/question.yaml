@@ -1,0 +1,54 @@
+id: WO_mlip_dpa_004_20260616
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Run two-stage MD (NVT equilibration + NPT production) on Al FCC supercell with DPA; report average temperature 
+  and pressure.
+human_prompt_seed: 'Perform a molecular dynamics simulation for FCC Al.
+
+  Retrieve or build the Al FCC primitive cell from a database and expand it to at least a 2×2×2 supercell,
+
+  then run the following workflow using the DPA machine-learning potential:
+
+  1) NVT equilibration: 300 K, 2 ps
+
+  2) NPT sampling: 300 K, 0 GPa, 5 ps
+
+  Report the average temperature (K) and average pressure (GPa) during the NPT stage.
+
+  '
+tags:
+- code_mlip
+- struct_transform
+data_files: []
+reference_answers:
+- key: avg_temperature_K
+  value: 300.0
+  tolerance: 30.0
+- key: required_fields
+  value:
+  - supercell_size
+  - md_stages
+  - avg_temperature
+  - avg_pressure
+scoring_checklist:
+- id: avg_temperature_K
+  criterion: NPT average temperature is within tolerance of target 300 K.
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: required_fields
+  criterion: Report includes supercell dimensions, MD stage definitions (NVT + NPT with parameters), average 
+    temperature, and average pressure from the NPT stage.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: Temperature and pressure values are extracted from MD simulation outputs, not guessed. Judge solely from 
+    the final answer.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

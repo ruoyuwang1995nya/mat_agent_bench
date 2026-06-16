@@ -1,0 +1,54 @@
+id: WO_gpumdnep_004_20260616v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Compute Si thermal expansion coefficient with GPUMD using Si_Fan_2019 Tersoff mini potential.
+human_prompt_seed: Retrieve `https://raw.githubusercontent.com/brucefan1983/GPUMD/master/potentials/tersoff/Si_Fan_2019.txt`,
+  and use this potential to compute the thermal expansion coefficient of Si with GPUMD.
+tags:
+- eng_gpumd
+data_files: []
+reference_answers:
+- key: run_input_artifact
+  value: run.in
+- key: si_fan_potential_token
+  value:
+    filename: run.in
+    tokens:
+    - potential
+    - Si_Fan_2019.txt
+    flags: i
+- key: thermal_expansion_core_tokens
+  value:
+    filename: run.in
+    tokens:
+    - ensemble npt_ber
+    - dump_thermo
+    - run
+    flags: i
+- key: thermal_expansion_alpha_717e6
+  value: {}
+scoring_checklist:
+- id: run_input_artifact
+  criterion: Generate `run.in`.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: si_fan_potential_token
+  criterion: '`run.in` uses the `Si_Fan_2019.txt` potential.'
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: thermal_expansion_core_tokens
+  criterion: '`run.in` contains the three key parameters `ensemble npt_ber`, `dump_thermo`, and `run`.'
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: thermal_expansion_alpha_717e6
+  criterion: The thermal expansion coefficient should be around `α = 7.17 × 10⁻⁶ K⁻¹` (a small deviation is acceptable).
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5

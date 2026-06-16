@@ -1,0 +1,81 @@
+id: WO_elec_007_20260615v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: catalysis
+difficulty: easy
+intent: Compute Pd(111) work function with ABACUS under a z-direction vacuum setup and summarize key computational 
+  settings and output.
+human_prompt_seed: "Compute the work function of the Pd(111) surface (mock version):\n1. First query/retrieve the input
+  files needed for Pd bulk and Pd(111) slab modeling, and confirm the vacuum-direction constraint;\n2. List the key
+  settings (exchange-correlation functional, calculation mode, vacuum direction, and whether relaxation is performed);\n3.
+  Do not run a real ABACUS calculation. Instead, use the following mock results:\n   - work_function_eV = 5.43\n   -
+  vacuum_direction = z\n   - functional = PBE\n   - calculation_mode = SCF\n4. Based on the above values, complete the
+  post-processing and interpret the conclusions.\n\nPlease provide the following deliverables:\n1) `pd111_work_function.json`:
+  containing at least `input_files`, `work_function_eV`, `vacuum_direction`, `functional`, `calculation_mode`, and
+  `notes`;\n2) `pd111_work_function_report.md`: explain the query-based input organization, the mock post-processing workflow,
+  and the interpretation of the results.\n\nIn the final answer, explicitly provide the work-function value (eV) and
+  confirm that `vacuum_direction = z`.\n"
+tags:
+- struct_surface
+- eng_abacus
+data_files: []
+reference_answers:
+- key: wf_json_artifact
+  value: pd111_work_function.json
+- key: wf_report_artifact
+  value: pd111_work_function_report.md
+- key: wf_required_tokens
+  value:
+    filename: pd111_work_function.json
+    must_cover:
+    - work_function_eV
+    - vacuum_direction
+    - z
+    - functional
+    - calculation_mode
+- key: report_required_tokens
+  value:
+    filename: pd111_work_function_report.md
+    must_cover:
+    - Pd(111)
+    - work function
+    - ABACUS
+    - z
+    - uncertainty
+- key: wf_value_mock
+  value: 5.43
+  tolerance: 0.3
+scoring_checklist:
+- id: wf_json_artifact
+  criterion: Agent writes `pd111_work_function.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: wf_report_artifact
+  criterion: Agent writes `pd111_work_function_report.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: wf_required_tokens
+  criterion: JSON output includes work-function value and explicit z-direction vacuum setting.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: report_required_tokens
+  criterion: Report explains setup rationale and output interpretation with uncertainty caveats.
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: wf_value_mock
+  criterion: Final answer includes a mock work-function value near 5.43 eV.
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: The final answer is grounded in generated work-function artifacts and does not fabricate unsupported setup 
+    or result details.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

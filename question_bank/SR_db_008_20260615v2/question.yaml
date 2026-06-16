@@ -1,0 +1,80 @@
+id: SR_db_008_20260615v2
+task_type: search_and_interpretation
+capabilities:
+- tool_utilization
+- scientific_reasoning
+domain: agnostic
+difficulty: easy
+intent: Retrieve up to five ternary rare-earth transition-metal oxides excluding Fe and Ni.
+human_prompt_seed: 'Retrieve and return no more than 5 ternary oxide structures under the following constraints:
+
+  - Must simultaneously contain: 1 rare-earth element + 1 transition-metal element + O;
+  - Total number of elements is 3 (ternary);
+  - Exclude Fe and Ni.
+
+  Please provide the following deliverables:
+
+  1) `re_tm_oxide_candidates.json`: containing at least `rank`, `formula`, `elements`, `database_source`, `structure_identifier`,
+  and `selection_basis`;
+  2) `re_tm_oxide_report.md`: explain the screening logic (rare earth, transition metal, ternary, excluding Fe/Ni) and
+  the uncertainty of the results.
+
+  In the final answer, confirm how each candidate satisfies the above combination constraints.'
+tags:
+- meta_database
+data_files: []
+reference_answers:
+- key: candidates_json
+  value: re_tm_oxide_candidates.json
+- key: retrieval_report
+  value: re_tm_oxide_report.md
+- key: candidates_required_tokens
+  value:
+    filename: re_tm_oxide_candidates.json
+    tokens:
+    - rank
+    - formula
+    - elements
+    - database_source
+    - structure_identifier
+    - selection_basis
+    - O
+    flags: i
+- key: report_required_tokens
+  value:
+    filename: re_tm_oxide_report.md
+    tokens:
+    - rare earth
+    - transition metal
+    - ternary
+    - exclude
+    - Fe
+    - Ni
+    - uncertainty
+    flags: i
+scoring_checklist:
+- id: candidates_json
+  criterion: Agent writes `re_tm_oxide_candidates.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: retrieval_report
+  criterion: Agent writes `re_tm_oxide_report.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: candidates_required_tokens
+  criterion: Candidate JSON includes provenance fields and explicit element composition entries.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: report_required_tokens
+  criterion: Report describes rare-earth/transition-metal/ternary constraints and Fe/Ni exclusion handling.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: The final answer is grounded in retrieved candidates and avoids fabricating unsupported compositions.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

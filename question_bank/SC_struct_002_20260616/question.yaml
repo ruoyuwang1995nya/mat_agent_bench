@@ -1,0 +1,102 @@
+id: SC_struct_002_20260616
+task_type: simulation
+capabilities:
+- structure_manipulation
+domain: agnostic
+difficulty: easy
+intent: Build a 4-layer (110) surface slab from the uploaded PUBMUU03 molecular crystal CIF and verify molecule 
+  integrity plus atom-count scaling.
+human_prompt_seed: 'Process the following CIF structure provided via OSS URL:
+
+  - `surface_PUBMUU03.cif` -> `https://bohrium-agent-test.oss-cn-zhangjiakou.aliyuncs.com/evomaster/evaluation/structure_surface/1774583701_surface_PUBMUU03.cif`
+
+
+  Task: cut a `(1, 1, 0)` surface slab from this structure with 4 layers.
+
+  The vacuum layer is not the focus here; you may omit it from the explanation or set a reasonable value yourself.
+
+
+  Please explicitly check and report the following in the final answer:
+
+  (1) Whether any molecules are cut by the slab cleavage, and the basis for that judgment.
+
+  (2) The atom count of the input unit cell.
+
+  (3) The total atom count of the final slab.
+
+  (4) Whether the condition "final atom count = 4 × unit-cell atom count" is satisfied.
+
+
+  Output the slab structure file as `slab_PUBMUU03_110.cif`, and provide the above verification conclusions.
+
+  '
+tags:
+- struct_surface
+- struct_molcrys
+data_files: []
+reference_answers:
+- key: unit_cell_atoms
+  value:
+    filename: surface_PUBMUU03*
+    expected: 144
+    tolerance: 0
+- key: total_atoms
+  value:
+    filename: slab_PUBMUU03_110.cif
+    expected: 576
+    tolerance: 0
+- key: required_fields
+  value:
+  - structure_file
+  - unit_cell_atoms
+  - total_atoms
+  - atom_count_ratio_check
+  - molecule_integrity_check
+- key: explicit_report_tokens
+  value:
+  - '144'
+  - '576'
+  - '4'
+  - slab_PUBMUU03_110.cif
+- key: molcrys_slab_molecular_integrity
+  value:
+    unit_cell_atoms: 144
+    slab_atoms: 576
+    layers: 4
+scoring_checklist:
+- id: unit_cell_atoms
+  criterion: The input unit cell atom count read from the downloaded CIF is 144 atoms.
+  verify: struct_file_atom_count
+  capability: structure_manipulation
+  weight: 0.5
+- id: total_atoms
+  criterion: Total atom count read from the output slab CIF is 576 atoms (4 × 144).
+  verify: struct_file_atom_count
+  capability: structure_manipulation
+  weight: 0.5
+- id: molcrys_slab_molecular_integrity
+  criterion: No molecules are cut by the slab cut (verified via MolCrysKit graph-based molecular integrity check on 
+    workspace CIF files).
+  verify: molcrys_slab_molecular_integrity
+  capability: structure_manipulation
+  weight: 0.5
+- id: required_fields
+  criterion: Output includes structure file, unit-cell atom count, final atom count, an explicit 4x ratio check, and a 
+    molecule-integrity narrative consistent with MolCrysKit / connectivity reasoning.
+  verify: llm_binary_judge
+  capability: structure_manipulation
+  weight: 0.5
+- id: explicit_report_tokens
+  criterion: Final answer explicitly includes the 144-atom input cell, 576-atom slab, 4x atom-count scaling, and 
+    `slab_PUBMUU03_110.cif` output basename.
+  verify: contains_all
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: The answer states what physical picture is used (molecular connectivity, periodic boundaries, (110) plane 
+    vs bulk, and how that supports or contradicts cutting molecules), citing the structures, not generic recall 
+    disconnected from those files. Judge solely from the final answer and named deliverables; do not fail because the 
+    tool-call log omits MCP, web_search, or any specific tool.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

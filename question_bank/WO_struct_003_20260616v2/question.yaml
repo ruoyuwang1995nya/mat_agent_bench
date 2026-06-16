@@ -1,0 +1,92 @@
+id: WO_struct_003_20260616v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Generate and summarize 10 candidate crystal structures constrained by superconducting critical temperature and 
+  space group.
+human_prompt_seed: 'Based on a structure-generation workflow, generate 10 candidate crystal structures under the following
+  constraints:
+
+  1) Target condition for candidate structures: superconducting critical temperature `Tc > 40 K`;
+
+  2) The space-group number is fixed at 225;
+
+  3) Provide a machine-checkable candidate-list file `candidate_structures.json`, where each entry contains at least
+  `rank`, `structure_file`, `predicted_tc_k`, `space_group`, and `selection_basis`. Here, `structure_file` is the corresponding
+  structure filename in the working directory (for example, `POSCAR_2`);
+
+  4) Generate `generation_report.md` explaining the generation parameters (such as sample count and constraints), the
+  candidate-screening logic, and the uncertainty statement.
+
+  In the final answer, briefly summarize whether the three requirements are satisfied: "10 candidates + Tc threshold +
+  space-group constraint".'
+tags:
+- struct_build
+data_files: []
+reference_answers:
+- key: candidate_json
+  value: candidate_structures.json
+- key: generation_report
+  value: generation_report.md
+- key: candidate_required_tokens
+  value:
+    filename: candidate_structures.json
+    tokens:
+    - rank
+    - structure_file
+    - predicted_tc_k
+    - space_group
+    - selection_basis
+    - '225'
+    flags: i
+- key: structure_artifacts
+  value:
+    filename: candidate_structures.json
+    path_key: structure_file
+    expected_count: 10
+    count_tolerance: 0
+- key: report_required_tokens
+  value:
+    filename: generation_report.md
+    must_cover:
+    - sample_num
+    - 10
+    - Tc
+    - 40
+    - 225
+    - uncertainty
+scoring_checklist:
+- id: candidate_json
+  criterion: Agent writes `candidate_structures.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: generation_report
+  criterion: Agent writes `generation_report.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: candidate_required_tokens
+  criterion: Candidate JSON includes required fields and explicitly reflects the space-group 225 constraint.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: structure_artifacts
+  criterion: Structure files referenced in candidate JSON actually exist in workspace.
+  verify: json_file_artifacts
+  capability: data_handling
+  weight: 0.5
+- id: report_required_tokens
+  criterion: Report explains generation parameters, Tc/space-group constraints, and uncertainty handling.
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: The final answer is grounded in generated candidate artifacts and explicitly checks the three constraints 
+    (count, Tc threshold, and space group), rather than generic superconductivity statements.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

@@ -1,0 +1,50 @@
+id: WO_elec_001_20260616
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: semiconductor
+difficulty: easy
+intent: 'Run band-structure workflow for Si: locate structure, compute bands along high-symmetry path, report gap.'
+human_prompt_seed: 'Compute the band structure of Si: retrieve diamond-structure Si from a database, perform an SCF calculation first, then compute the bands along the high-symmetry k-path (G-X-L-G), determine the band-gap type (direct or indirect), and report the band-gap value in eV. Also note the deviation between the DFT band gap and the experimental value, and include an uncertainty statement.
+
+  '
+tags:
+- code_mlip
+priority: P0
+data_files: []
+reference_answers:
+- key: gap_type
+  value: indirect
+- key: gap_value_eV
+  value: 0.65
+  tolerance: 0.25
+- key: required_fields
+  value:
+  - kpath
+  - gap_type
+  - gap_value
+  - uncertainty_note
+scoring_checklist:
+- id: gap_type
+  criterion: Band-gap type is correctly identified as indirect (not direct).
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: gap_value_eV
+  criterion: Gap value is in expected DFT range.
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: required_fields
+  criterion: Report includes high-symmetry k-path, gap type classification, gap value, and DFT uncertainty note.
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: Stated band gap values are tied to band-structure or calculation outcomes described in the final answer, 
+    not only generic training recall. Judge from the answer and named outputs; do not fail because the tool-call log 
+    omits MCP, web_search, or any specific tool.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

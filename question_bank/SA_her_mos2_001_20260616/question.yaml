@@ -1,0 +1,190 @@
+id: SA_her_mos2_001_20260616
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
+domain: catalysis
+difficulty: easy
+intent: Compare bulk and exfoliated MoS2 HER electrochemical performance from uploaded LSV and CV traces.
+human_prompt_seed: 'Please download and analyze the following two sets of MoS2 HER electrocatalysis data provided via OSS URLs (bulk MoS2 and exfoliated MoS2, each including an LSV polarization curve at 50 mV/s and CV scan series at 20/40/60/80/100 mV/s):
+
+  - `mos2_lsv_50mvps.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080961_mos2_lsv_50mvps.txt`
+
+  - `exmos2_lsv_50mvps.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080955_exmos2_lsv_50mvps.txt`
+
+  - `mos2_cv_20mvps.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080957_mos2_cv_20mvps.txt`
+
+  - `mos2_cv_40mvps.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080958_mos2_cv_40mvps.txt`
+
+  - `mos2_cv_60mvps.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080959_mos2_cv_60mvps.txt`
+
+  - `mos2_cv_80mvps.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080960_mos2_cv_80mvps.txt`
+
+  - `mos2_cv_100mvps.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080956_mos2_cv_100mvps.txt`
+
+  - `exmos2_cv_20mvps.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080952_exmos2_cv_20mvps.txt`
+
+  - `exmos2_cv_40mvps.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080953_exmos2_cv_40mvps.txt`
+
+  - `exmos2_cv_60mvps.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080954_exmos2_cv_60mvps.txt`
+
+  - `exmos2_cv_80mvps.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080954_exmos2_cv_80mvps.txt`
+
+  - `exmos2_cv_100mvps.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080951_exmos2_cv_100mvps.txt`
+
+  Cdl calculation convention (from the experimental report / EPS fitting table): the geometric electrode area is bulk MoS2 = 0.48 cm² (0.6 cm × 0.8 cm), and exfoliated MoS2 = 0.40 cm² (0.5 cm × 0.8 cm). Use the area to convert current to current density `j` (mA/cm²) only in the Cdl/CV analysis; for LSV, `potential_at_5mA_V` still means the potential at an absolute current of 5 mA. For Cdl, follow the report convention: read the forward and reverse current densities at E = -0.08 V from the CV curves, take the full `Δj = j_forward - j_reverse` (do not divide by 2), fit `Δj` versus scan rate (mV/s) linearly, and convert the slope to `mF/cm²`.
+
+  Please complete the following analysis:
+
+  1. Compare the HER activity of the two materials and report potential/current metrics that reflect the activity difference. 2. Estimate the Tafel behavior of the two materials from the polarization curves, and explain whether the fitting-window choice is reasonable. The Tafel fit should be performed in the quasi-linear region after cathodic HER has clearly started, fitting potential versus `log(|I|)`; do not use the low-current onset region, and do not force both materials to use the same raw potential window. For this LSV set, a higher-current cathodic branch is appropriate, for example the range of absolute current around 1–5 mA. 3. Estimate electrochemical double-layer-related descriptors from the CV series at different scan rates. 4. Judge whether exfoliated MoS2 shows better HER kinetics than bulk MoS2, and explain the basis. 5. Briefly explain uncertainties in the data that may affect quantitative comparison.
+
+  At the end of the final answer, append an `<eval_results>...</eval_results>` JSON block containing at least: `mos2.potential_at_5mA_V`, `exmos2.potential_at_5mA_V`, `mos2.tafel_mV_dec`, `exmos2.tafel_mV_dec`, `mos2.cdl_mF_cm2`, and `exmos2.cdl_mF_cm2`.
+
+  In the JSON, field names like `a.b` indicate nested objects (child key `b` under top-level key `a`); please use a nested structure rather than flat string keys. Example structure (numbers are placeholders):
+
+  ```json {"mos2": {"potential_at_5mA_V": 0, "tafel_mV_dec": 0, "cdl_mF_cm2": 0}, "exmos2": {"potential_at_5mA_V": 0, "tafel_mV_dec":
+  0, "cdl_mF_cm2": 0}} ```'
+tags:
+- char_electrochem
+data_files:
+- key: mos2_lsv
+  path: mos2_lsv_50mvps.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080961_mos2_lsv_50mvps.txt
+  description: Bulk MoS2 HER LSV trace.
+- key: exmos2_lsv
+  path: exmos2_lsv_50mvps.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080955_exmos2_lsv_50mvps.txt
+  description: Exfoliated MoS2 HER LSV trace.
+- key: mos2_cv_20
+  path: mos2_cv_20mvps.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080957_mos2_cv_20mvps.txt
+  description: Bulk MoS2 CV trace at 20 mV/s.
+- key: mos2_cv_40
+  path: mos2_cv_40mvps.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080958_mos2_cv_40mvps.txt
+  description: Bulk MoS2 CV trace at 40 mV/s.
+- key: mos2_cv_60
+  path: mos2_cv_60mvps.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080959_mos2_cv_60mvps.txt
+  description: Bulk MoS2 CV trace at 60 mV/s.
+- key: mos2_cv_80
+  path: mos2_cv_80mvps.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080960_mos2_cv_80mvps.txt
+  description: Bulk MoS2 CV trace at 80 mV/s.
+- key: mos2_cv_100
+  path: mos2_cv_100mvps.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080956_mos2_cv_100mvps.txt
+  description: Bulk MoS2 CV trace at 100 mV/s.
+- key: exmos2_cv_20
+  path: exmos2_cv_20mvps.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080952_exmos2_cv_20mvps.txt
+  description: Exfoliated MoS2 CV trace at 20 mV/s.
+- key: exmos2_cv_40
+  path: exmos2_cv_40mvps.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080953_exmos2_cv_40mvps.txt
+  description: Exfoliated MoS2 CV trace at 40 mV/s.
+- key: exmos2_cv_60
+  path: exmos2_cv_60mvps.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080954_exmos2_cv_60mvps.txt
+  description: Exfoliated MoS2 CV trace at 60 mV/s.
+- key: exmos2_cv_80
+  path: exmos2_cv_80mvps.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080954_exmos2_cv_80mvps.txt
+  description: Exfoliated MoS2 CV trace at 80 mV/s.
+- key: exmos2_cv_100
+  path: exmos2_cv_100mvps.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_her_mos2_001/1778080951_exmos2_cv_100mvps.txt
+  description: Exfoliated MoS2 CV trace at 100 mV/s.
+reference_answers:
+- key: mos2_potential_5ma
+  value:
+    json_path: mos2.potential_at_5mA_V
+    target: -0.898320987654321
+    tolerance: 0.08
+  unit: V
+- key: exmos2_potential_5ma
+  value:
+    json_path: exmos2.potential_at_5mA_V
+    target: -0.8298936170212765
+    tolerance: 0.08
+  unit: V
+- key: mos2_tafel
+  value:
+    json_path: mos2.tafel_mV_dec
+    target: 570.7008285358526
+    tolerance: 120.0
+  unit: mV/dec
+- key: exmos2_tafel
+  value:
+    json_path: exmos2.tafel_mV_dec
+    target: 281.5381155338602
+    tolerance: 80.0
+  unit: mV/dec
+- key: mos2_cdl
+  value:
+    json_path: mos2.cdl_mF_cm2
+    target: 1.1096
+    tolerance: 0.15
+  unit: mF/cm^2
+- key: exmos2_cdl
+  value:
+    json_path: exmos2.cdl_mF_cm2
+    target: 0.53125
+    tolerance: 0.1
+  unit: mF/cm^2
+scoring_checklist:
+- id: mos2_potential_5ma
+  criterion: Bulk MoS2 potential at the selected activity benchmark is consistent with the uploaded LSV trace.
+  verify: answer_json_numeric
+  capability: data_handling
+  weight: 0.5
+- id: exmos2_potential_5ma
+  criterion: Exfoliated MoS2 potential at the selected activity benchmark is consistent with the uploaded LSV trace.
+  verify: answer_json_numeric
+  capability: data_handling
+  weight: 0.5
+- id: mos2_tafel
+  criterion: Bulk MoS2 Tafel descriptor reported in eval_results is consistent with the uploaded LSV trace.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: data_handling
+- id: exmos2_tafel
+  criterion: Exfoliated MoS2 Tafel descriptor reported in eval_results is consistent with the uploaded LSV trace.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: data_handling
+- id: mos2_cdl
+  criterion: Bulk MoS2 double-layer descriptor reported in eval_results is consistent with the scan-rate CV series.
+  verify: answer_json_numeric
+  capability: data_handling
+  weight: 0.5
+- id: exmos2_cdl
+  criterion: Exfoliated MoS2 double-layer descriptor reported in eval_results is consistent with the scan-rate CV 
+    series.
+  verify: answer_json_numeric
+  capability: data_handling
+  weight: 0.5
+- id: comparison_conclusion
+  criterion: The final answer identifies exfoliated MoS2 as having better HER kinetics based on the LSV/Tafel evidence, 
+    while discussing uncertainty in capacitance comparison.
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: grounding_source
+  criterion: The analysis is grounded in the uploaded LSV and CV files and states how the metrics were obtained from 
+    those files.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

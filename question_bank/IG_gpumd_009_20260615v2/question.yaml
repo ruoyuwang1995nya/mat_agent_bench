@@ -1,0 +1,40 @@
+id: IG_gpumd_009_20260615v2
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
+domain: agnostic
+difficulty: easy
+intent: Generate a GPUMD polarizability-dump self-consistent `run.in`.
+human_prompt_seed: Please write a `run.in` for a polarizability-output self-consistency check, including multiple potentials,
+  NVE, `dump_polarizability`, and position output.
+tags:
+- eng_gpumd
+data_files: []
+reference_answers:
+- key: run_in_artifact
+  value: run.in
+- key: polarizability_dump_tokens
+  value:
+    filename: run.in
+    tokens:
+    - potential
+    - potential
+    - time_step
+    - velocity
+    - ensemble nve
+    - dump_polarizability
+    - dump_position
+    - run
+    flags: i
+scoring_checklist:
+- id: run_in_artifact
+  criterion: Generate `run.in`.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: polarizability_dump_tokens
+  criterion: The input contains the key commands for the polarizability-output self-consistency test.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5

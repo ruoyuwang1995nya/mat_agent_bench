@@ -1,0 +1,41 @@
+id: CR_WO_feature_extract_43d_20260615v2
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
+domain: catalysis
+difficulty: easy
+intent: Implement 43-dimensional feature extraction (40 continuous + 3 categorical) from adslab POSCAR paths per doc 
+  4.3.1.
+human_prompt_seed: 'Write a script whose input is a dataset root path containing multiple subdirectories, where each system
+  subdirectory includes a POSCAR (or an equivalent structure file). Use pymatgen or ASE to read the structures, identify
+  the adsorbate and the substrate, and define the adsorption site as the geometric center of the adsorbate. Construct four
+  types of local neighbor environments (first nearest neighbors in the same layer, second nearest neighbors in the same
+  layer, second nearest neighbors in the layer below, and all neighbors within 6 Å). For each environment type, apply
+  inverse-distance weighting and aggregate elemental properties to obtain 40 continuous features. In addition, output 3
+  categorical features: adsorbate species, adsorption type (the labeling rule for physisorption/chemisorption must be
+  explained in comments), and substrate type. Output the CSV column names and a description of the feature dimensions.
+  If the workspace does not contain a complete dataset, you may demonstrate the pipeline on a single example POSCAR and
+  explain how to batch-process the full dataset.
+
+  '
+tags:
+- catalysis_lab
+- chem_her
+- code_pymatgen
+- code_ase
+data_files: []
+reference_answers: []
+scoring_checklist:
+- id: script_and_schema
+  criterion: The script is executable or logically complete; it clearly defines the 40+3 dimensions, the four neighbor
+    categories, the 6 Å cutoff, the weighting method, and the output column descriptions.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: grounding_impl
+  criterion: The implementation is consistent with the description in Document 4.3.1 (including library choice, adsorbate/substrate
+    identification rules, and readable categorical-labeling rules).
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

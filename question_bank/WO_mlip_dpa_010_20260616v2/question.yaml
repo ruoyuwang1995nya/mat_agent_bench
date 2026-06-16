@@ -1,0 +1,77 @@
+id: WO_mlip_dpa_010_20260616v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Fine-tune a DPA3 potential for a fixed step budget and summarize key hyperparameters and outcomes.
+human_prompt_seed: "Perform a DPA3 fine-tuning workflow evaluation (mock version):\n1. First query/retrieve and organize
+  the input files required for training (dataset, model configuration, training parameters);\n2. Clearly define the target
+  training steps and the learning-rate strategy;\n3. Do not run real training. Instead, use the following mock results:\n
+  \   - train_steps = 3000\n   - lr_type = cosine\n   - start_lr = 1.0e-2\n   - stop_lr = 1.0e-5\n   - valid_ratio
+  = 0.2\n   - best_valid_loss = 0.021\n   - status = converged_for_mock\n4. Based on the mock values, perform post-processing
+  and judge whether the model can proceed to downstream validation.\n\nPlease output:\n1) `dpa3_finetune_config.json`:
+  recording `input_files`, training steps, learning-rate strategy, key loss parameters, and validation split;\n2) `dpa3_finetune_report.md`:
+  summarizing the query-based input organization, the mock post-processing procedure, the results, and improvement suggestions.\n\nIn
+  the final answer, state whether this fine-tuning run satisfies the minimum conditions for continuing to downstream validation.\n"
+tags:
+- code_mlip
+data_files: []
+reference_answers:
+- key: finetune_config
+  value: dpa3_finetune_config.json
+- key: finetune_report
+  value: dpa3_finetune_report.md
+- key: config_required_tokens
+  value:
+    filename: dpa3_finetune_config.json
+    must_cover:
+    - train_steps
+    - lr_type
+    - start_lr
+    - stop_lr
+    - valid_ratio
+- key: report_required_tokens
+  value:
+    filename: dpa3_finetune_report.md
+    must_cover:
+    - DPA3
+    - training
+    - result
+    - suggestion
+    - uncertainty
+- key: best_valid_loss_mock
+  value: 0.021
+  tolerance: 0.01
+scoring_checklist:
+- id: finetune_config
+  criterion: Agent writes `dpa3_finetune_config.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: finetune_report
+  criterion: Agent writes `dpa3_finetune_report.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: config_required_tokens
+  criterion: Config JSON includes required training-control fields.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: report_required_tokens
+  criterion: Report summarizes training outcome with uncertainty notes.
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: best_valid_loss_mock
+  criterion: Final answer includes a mock best validation loss near 0.021.
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: Deliverables are grounded in generated finetune artifacts and avoid unsupported benchmark claims.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

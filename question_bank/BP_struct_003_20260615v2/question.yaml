@@ -1,0 +1,87 @@
+id: BP_struct_003_20260615v2
+task_type: simulation
+capabilities:
+- data_handling
+- scientific_reasoning
+domain: alloy
+difficulty: easy
+intent: Generate 5 VASP INCAR input files for Al ENCUT convergence test (280, 300, 320, 340, 360 eV). All other 
+  parameters (k-mesh, ISMEAR, SIGMA, NSW) must remain strictly constant across the 5 files. Focus is on correct input 
+  preparation and variable control, not on submitting or running calculations.
+human_prompt_seed: 'Read the convergence test configuration from `convergence_encut.json`. Generate 5 VASP INCAR input
+  files for an ENCUT convergence test of aluminum (Al), with ENCUT values of 280, 300, 320, 340, and 360 eV.
+
+  Strict requirements: 1. The k-point mesh must be fixed at 8x8x8 for all 5 calculations (either via a KPOINTS file
+  or in INCAR) 2. ISMEAR=1 and SIGMA=0.1 must be exactly the same in all INCAR files 3. NSW=0 (single-point calculation
+  setting) 4. Except for ENCUT, all other VASP parameters must remain identical across the 5 files
+
+  Output 5 INCAR files, with filenames containing the ENCUT value (for example, INCAR_ENCUT280). There is no need to
+  submit the calculations; only generate the correct input files.
+
+  Key evaluation points: 1. ENCUT changes sequentially across the 5 files and is the only varying parameter 2. All
+  non-scan parameters are exactly identical across the 5 files 3. The INCAR format is correct and no parameters are missing
+
+  '
+tags:
+- eng_vasp
+data_files:
+- key: convergence_encut
+  path: convergence_encut.json
+  oss_url: ''
+  description: ENCUT convergence test configuration for Al.
+reference_answers:
+- key: incar_files_count
+  value: 5
+  tolerance: 0.0
+- key: encut_sweep_values
+  value: 280, 300, 320, 340, 360
+- key: kpoint_mesh_constant
+  value: 8 8 8
+- key: electronic_params_frozen
+  value:
+    ISMEAR: 1
+    SIGMA: 0.1
+    NSW: 0
+- key: single_variable_control
+  value: Only ENCUT differs across the 5 files (SYSTEM tag and comment lines may also vary as they are cosmetic, not 
+    computational)
+- key: grounding_config_used
+  value: Parameters from convergence_encut.json
+scoring_checklist:
+- id: incar_files_count
+  criterion: Exactly 5 INCAR files are generated, one per ENCUT value.
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: encut_sweep_values
+  criterion: The 5 INCAR files contain ENCUT values 280, 300, 320, 340, 360 eV respectively, and ENCUT is the only 
+    computational parameter that differs across files. Cosmetic fields such as SYSTEM tags, comment lines, or filename 
+    references may also vary and should not be counted as violations.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: kpoint_mesh_constant
+  criterion: K-point mesh (8×8×8 Gamma-centered) is consistently applied to all 5 calculations—either via a companion 
+    KPOINTS file or via KSPACING/KGAMMA tags in INCAR.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: electronic_params_frozen
+  criterion: ISMEAR=1, SIGMA=0.1, NSW=0 are identical across all 5 INCAR files.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: single_variable_control
+  criterion: Comparing any two of the 5 INCAR files, ENCUT is the only computational parameter that differs. All other 
+    computational parameters (ISMEAR, SIGMA, NSW, EDIFF, PREC, etc.) are identical. Cosmetic differences in SYSTEM tags,
+    comment lines, or first-line labels are acceptable.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5
+- id: grounding_config_used
+  criterion: 'Parameter values in the generated INCAR files match the convergence_encut.json config exactly: k-mesh 8×8×8,
+    ISMEAR=1, SIGMA=0.1, NSW=0, IBRION=-1, ALGO=Fast, ENCUT sweep [280, 300, 320, 340, 360] eV. The answer or files must show
+    these values were derived from reading the JSON file, not invented independently.'
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

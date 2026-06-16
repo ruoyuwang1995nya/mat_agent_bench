@@ -1,0 +1,39 @@
+id: IG_gpumd_010_20260615v2
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
+domain: agnostic
+difficulty: easy
+intent: Generate a GPUMD observer-mode `run.in` with multi-potential observe output.
+human_prompt_seed: Please prepare a `run.in` for multi-potential observer mode, using `dump_observer observe` to output
+  the observation results.
+tags:
+- eng_gpumd
+data_files: []
+reference_answers:
+- key: run_in_artifact
+  value: run.in
+- key: observer_observe_tokens
+  value:
+    filename: run.in
+    tokens:
+    - potential
+    - potential
+    - velocity
+    - time_step
+    - ensemble nve
+    - dump_observer observe
+    - run
+    flags: i
+scoring_checklist:
+- id: run_in_artifact
+  criterion: Generate `run.in`.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: observer_observe_tokens
+  criterion: The input contains the key commands for observer output in `observe` mode.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5

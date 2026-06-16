@@ -1,0 +1,47 @@
+id: DD_general_002_20260615v2
+task_type: material_characterization
+capabilities:
+- data_handling
+- scientific_reasoning
+domain: semiconductor
+difficulty: easy
+intent: Diagnose SCF non-convergence caused by wrong SMEARING settings for a semiconductor.
+human_prompt_seed: 'Read `case_bundle.json`, which contains the INCAR parameters and an OUTCAR energy-iteration excerpt
+  for a Si calculation. The SCF cycle still fails to converge after 100 iterations, with an energy oscillation amplitude
+  of about 5 meV, and fractional occupancies are present. Please diagnose the root cause and provide a fix.
+
+  '
+tags:
+- log_diagnosis
+data_files:
+- key: case_bundle
+  path: case_bundle.json
+  oss_url: ''
+  description: 'VASP input/output bundle: Si with ISMEAR=1 SIGMA=0.4, SCF oscillates.'
+reference_answers:
+- key: root_cause
+  value: smearing_wrong_for_semiconductor
+- key: required_fields
+  value:
+  - root_cause
+  - evidence
+  - fix_ISMEAR
+  - fix_SIGMA
+scoring_checklist:
+- id: root_cause
+  criterion: Correctly identifies ISMEAR/SIGMA mismatch (Methfessel-Paxton on semiconductor Si) as root cause.
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: required_fields
+  criterion: Provides root cause, evidence from fractional occupation, and concrete fixes (ISMEAR=0 or -5, reduce 
+    SIGMA).
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: grounding_evidence
+  criterion: Diagnosis is grounded in the provided INCAR/OUTCAR data from case_bundle.json, citing specific parameter 
+    values.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

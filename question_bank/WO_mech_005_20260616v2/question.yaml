@@ -1,0 +1,80 @@
+id: WO_mech_005_20260616v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Compute an equation-of-state workflow for an alloy and summarize volume-scan settings and fitted EOS outputs.
+human_prompt_seed: "Perform EOS analysis on the given alloy structure (mock version):\n1. First query/retrieve and organize
+  the input files and structural information needed for EOS;\n2. Clearly state the volume-scan settings (0.8~1.2) and
+  the fitting model;\n3. Do not run a real calculation. Instead, use the following mock data:\n   - vol_start = 0.8\n
+  \   - vol_end = 1.2\n   - vol_step = 0.05\n   - fit_model = Birch-Murnaghan\n   - equilibrium_volume = 11.42 (Å^3/atom)\n
+  \   - bulk_modulus = 178.6 (GPa)\n4. Based on the mock values, complete EOS post-processing and interpret the conclusions.\n\nPlease
+  provide the following deliverables:\n1) `alloy_eos_summary.json`: containing at least `input_files`, `vol_start`,
+  `vol_end`, `vol_step`, `fit_model`, `equilibrium_volume`, and `bulk_modulus`;\n2) `alloy_eos_report.md`: explain
+  the query-based input organization, the mock post-processing workflow, the volume-scan strategy, and the uncertainty.\n\nIn
+  the final answer, briefly explain what qualitative judgments this EOS result can support.\n"
+tags:
+- code_mlip
+data_files: []
+reference_answers:
+- key: eos_summary_json
+  value: alloy_eos_summary.json
+- key: eos_report_md
+  value: alloy_eos_report.md
+- key: eos_required_tokens
+  value:
+    filename: alloy_eos_summary.json
+    must_cover:
+    - vol_start
+    - vol_end
+    - vol_step
+    - fit_model
+    - equilibrium_volume
+    - bulk_modulus
+    - '0.8'
+    - '1.2'
+- key: report_required_tokens
+  value:
+    filename: alloy_eos_report.md
+    must_cover:
+    - EOS
+    - volume
+    - scan
+    - bulk modulus
+    - uncertainty
+- key: eos_bulk_modulus_mock
+  value: 178.6
+  tolerance: 20.0
+scoring_checklist:
+- id: eos_summary_json
+  criterion: Agent writes `alloy_eos_summary.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: eos_report_md
+  criterion: Agent writes `alloy_eos_report.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: eos_required_tokens
+  criterion: EOS summary JSON includes required scan-range and fitted-property fields.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: report_required_tokens
+  criterion: Report explains EOS workflow, scan strategy, and uncertainty caveats.
+  verify: llm_binary_judge
+  capability: workflow_orchestration
+  weight: 0.5
+- id: eos_bulk_modulus_mock
+  criterion: Final answer includes a mock bulk modulus near 178.6 GPa.
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: Final answer is grounded in EOS artifacts and does not fabricate fitted results not present in outputs.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

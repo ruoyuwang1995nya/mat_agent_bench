@@ -1,0 +1,42 @@
+id: WO_elec_005_20260616
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: catalysis
+difficulty: easy
+intent: 'Compute CO adsorption energy on Ag(001): build slab, place molecule, use mock energies, calculate E_ads.'
+human_prompt_seed: "Compute the adsorption energy of CO on the Ag(001) surface:\n1. Retrieve the Ag FCC bulk structure (a=4.085 Å) and cut an (001) surface slab (4 layers, 15 Å vacuum, 3×3 supercell).\n2. Build a gas-phase CO molecule (bond length about 1.128 Å).\n3. Place the CO molecule at an ontop site on the top layer of the slab (C end down, initial distance about 2.0 Å) to construct the adsorbed structure.\n4. Use the following mock energies (simulating DPA-relaxed results):\n   - E_slab = -108.45 eV\n   - E_CO = -12.85 eV\n   - E_adsorbed = -121.50 eV\n5. Compute the adsorption energy using E_ads = E(adsorbed) - E(slab) - E(CO).\n6. Report the adsorption energy (eV) and the energy values of the three structures.\n"
+tags:
+- struct_surface
+priority: P0
+data_files: []
+reference_answers:
+- key: adsorption_energy_eV
+  value: -0.2
+  tolerance: 0.5
+- key: required_fields
+  value:
+  - E_slab
+  - E_molecule
+  - E_adsorbed
+  - E_ads
+  - adsorption_site
+scoring_checklist:
+- id: adsorption_energy_eV
+  criterion: Adsorption energy is computed correctly from mock energies (~-0.2 eV).
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: required_fields
+  criterion: Report includes bare slab energy, isolated molecule energy, adsorbed system energy, and adsorption energy.
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: Adsorption energy computed with specified mock energies; structures built with physically correct 
+    parameters (lattice constant, bond length, slab geometry). Judge solely from the final answer; do not fail because 
+    the tool-call log omits MCP, web_search, or any specific tool.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

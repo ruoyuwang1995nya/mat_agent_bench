@@ -1,0 +1,73 @@
+id: WO_general_sse_006_20260615v2
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
+domain: battery
+difficulty: easy
+intent: Summarize sulfur-containing solid-electrolyte candidates for Li-metal interfaces by balancing interface 
+  stability and ionic conductivity from recent literature.
+human_prompt_seed: 'Based on recent literature, please recommend sulfur-containing solid-electrolyte candidates that can
+  be used at lithium-metal anode interfaces, with emphasis on balancing "interface stability + high ionic conductivity".
+
+  Please output:
+  1) `sulfur_sse_candidates.json`: containing at least `material`, `key_property`, `interface_stability_note`, `ionic_conductivity_note`,
+  and `reference_hint`;
+  2) `sulfur_sse_review.md`: explain the screening logic, representative systems, and applicability boundaries.
+
+  In the final answer, briefly provide the 2-3 candidates you recommend most and the reasons why.'
+tags:
+- meta_userlog
+- meta_literature
+data_files: []
+reference_answers:
+- key: candidates_json
+  value: sulfur_sse_candidates.json
+- key: review_md
+  value: sulfur_sse_review.md
+- key: candidates_required_tokens
+  value:
+    filename: sulfur_sse_candidates.json
+    tokens:
+    - material
+    - key_property
+    - interface_stability_note
+    - ionic_conductivity_note
+    - reference_hint
+    flags: i
+- key: review_required_tokens
+  value:
+    filename: sulfur_sse_review.md
+    tokens:
+    - sulfur-containing
+    - solid electrolyte
+    - interface stability
+    - ionic conductivity
+    - uncertainty
+    flags: i
+scoring_checklist:
+- id: candidates_json
+  criterion: Agent writes `sulfur_sse_candidates.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: review_md
+  criterion: Agent writes `sulfur_sse_review.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: candidates_required_tokens
+  criterion: Candidate JSON includes required per-material fields.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: review_required_tokens
+  criterion: Review explains the conductivity-stability tradeoff with uncertainty notes.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: Deliverables are grounded in literature-oriented evidence and avoid unsupported performance claims.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

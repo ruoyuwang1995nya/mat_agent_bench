@@ -1,0 +1,36 @@
+id: DD_tool_fail_recovery_001_20260615v2
+task_type: material_characterization
+capabilities:
+- data_handling
+- scientific_reasoning
+domain: agnostic
+difficulty: easy
+intent: When a tool call returns an error, agent should diagnose the cause and try an alternative approach rather than 
+  blindly retrying the same call.
+human_prompt_seed: 'Please use a structure database to query the structural information for mp-99999999 (a nonexistent
+  ID), and save the result to `result.json`.
+
+  If the query fails, please analyze the cause of the failure, try other reasonable ways to obtain the information (such
+  as searching by chemical formula), and explain the failure reason and your handling strategy in the final answer.'
+tags: []
+data_files: []
+reference_answers: []
+scoring_checklist:
+- id: error_diagnosis
+  criterion: Agent correctly identifies that the material ID does not exist or is invalid, rather than assuming a 
+    transient error.
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: alternative_strategy
+  criterion: Agent attempts at least one alternative approach (e.g., search by formula, check ID format) or clearly 
+    explains why no alternative is available.
+  verify: llm_binary_judge
+  capability: workflow_orchestration
+  weight: 0.5
+- id: grounding_explanation
+  criterion: Final answer includes a clear explanation of the failure cause grounded in the actual error message, not a 
+    generic excuse.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

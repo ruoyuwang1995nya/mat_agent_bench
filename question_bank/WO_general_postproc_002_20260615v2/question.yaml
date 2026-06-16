@@ -1,0 +1,93 @@
+id: WO_general_postproc_002_20260615v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Produce structured post-processing pipeline artifacts with per-stage validation gates and rerun policy.
+human_prompt_seed: 'The workspace already provides `result_manifest.json`.
+
+
+  Please read this file first, then generate:
+
+  1) `postproc_pipeline.json`: provide a step-by-step post-processing workflow (including inputs, outputs, checkpoints,
+  and failure points).
+
+  2) `report_outline.md`: list the structure of the final report in terms of figures/tables/explanatory text.
+
+  3) `rerun_policy.md`: define under which failure modes reruns should occur and how the deliverable should be downgraded.
+
+
+  Requirement: the workflow must cover the three post-processing targets of band structure, MSD, and probability density.
+
+  '
+tags: []
+data_files:
+- key: result_manifest
+  path: result_manifest.json
+  oss_url: ''
+  description: Post-processing target manifest.
+reference_answers:
+- key: pipeline_artifact
+  value: postproc_pipeline.json
+- key: outline_artifact
+  value: report_outline.md
+- key: rerun_artifact
+  value: rerun_policy.md
+- key: pipeline_required_tokens
+  value:
+    filename: postproc_pipeline.json
+    tokens:
+    - band
+    - msd
+    - density
+    - input
+    - output
+    - checkpoint
+    - failure_mode
+    flags: i
+- key: outline_required_tokens
+  value:
+    filename: report_outline.md
+    must_cover:
+    - figure
+    - table
+    - explanation
+    - band structure
+    - MSD
+    - probability density
+- key: grounding_source
+  value:
+    filename: result_manifest.json
+scoring_checklist:
+- id: pipeline_artifact
+  criterion: Agent writes `postproc_pipeline.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: outline_artifact
+  criterion: Agent writes `report_outline.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: rerun_artifact
+  criterion: Agent writes `rerun_policy.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: pipeline_required_tokens
+  criterion: Pipeline includes required post-processing targets and step metadata fields.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: outline_required_tokens
+  criterion: Report outline covers required outputs and three target analysis families.
+  verify: llm_binary_judge
+  capability: workflow_orchestration
+  weight: 0.5
+- id: grounding_source
+  criterion: Deliverables are grounded in `result_manifest.json` and avoid fabricating unavailable numeric results.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

@@ -1,0 +1,76 @@
+id: SC_struct_build_001_20260616
+task_type: simulation
+capabilities:
+- structure_manipulation
+domain: agnostic
+difficulty: easy
+intent: Build FCC copper conventional cell using ASE bulk prototype and verify lattice constant, atom count, and space 
+  group.
+human_prompt_seed: 'Build the conventional FCC copper (Cu) cell using the experimental lattice constant a = 3.615 Å. Export it as `cu_fcc.cif`. In the final answer, explicitly report: (1) the lattice constant; (2) the space-group number #225 / Fm-3m; (3) the number of atoms in the conventional cell, which is 4.'
+tags:
+- struct_build
+data_files: []
+reference_answers:
+- key: file_exists
+  value: cu_fcc.cif
+- key: formula
+  value:
+    filename: cu_fcc.cif
+    formula: Cu1
+- key: cell_a
+  value:
+    filename: cu_fcc.cif
+    param: a
+    expected: 3.615
+    tolerance: 0.02
+- key: atom_count
+  value:
+    filename: cu_fcc.cif
+    expected: 4
+    tolerance: 0
+- key: space_group_number
+  value:
+    filename: cu_fcc.cif
+    expected_number: 225
+    symprec: 0.1
+- key: space_group_tokens
+  value:
+  - '225'
+  - Fm-3m
+scoring_checklist:
+- id: file_exists
+  criterion: Agent writes `cu_fcc.cif` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: formula
+  criterion: Structure formula is Cu.
+  verify: struct_file_formula
+  capability: structure_manipulation
+  weight: 0.5
+- id: cell_a
+  criterion: Lattice constant a is approximately 3.615 Å.
+  verify: struct_file_cell_param
+  capability: structure_manipulation
+  weight: 0.5
+- id: atom_count
+  criterion: Conventional FCC cell contains 4 atoms.
+  verify: struct_file_atom_count
+  capability: structure_manipulation
+  weight: 0.5
+- id: space_group_number
+  criterion: The file `cu_fcc.cif` is identified as space group
+  verify: struct_file_space_group
+  capability: structure_manipulation
+  weight: 0.5
+- id: space_group_tokens
+  criterion: Final answer explicitly reports both space group number 225 and symbol Fm-3m.
+  verify: contains_all
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: Final answer explicitly states the lattice constant, space group number, and atom count from the built 
+    structure.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5
