@@ -42,11 +42,11 @@ reference_answers:
   value:
     filename: li20_retrieval_report.md
     tokens:
-    - 锂
+    - lithium
     - 20
-    - 体积
-    - 原子
-    - 平均
+    - volume
+    - atom
+    - average
     flags: i
 scoring_checklist:
 - id: stats_json
