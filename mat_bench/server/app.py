@@ -308,6 +308,24 @@ try:
         _session_store.save_session(session_id, token, model_name, record.created_at)
         return {"session_id": session_id, "model_name": model_name, "created_at": record.created_at.isoformat()}
 
+    @app.get("/sessions")
+    async def list_sessions(
+        token: str = Depends(_require_token),
+        limit: int = Query(default=10, ge=1, le=500, description="Max sessions to return (default: 10)"),
+    ) -> list[dict]:
+        """List sessions for the authenticated token, most recent first."""
+        with _sessions_lock:
+            owned = [r for r in _sessions.values() if r.token == token]
+        owned.sort(key=lambda r: r.created_at, reverse=True)
+        return [
+            {
+                "session_id": r.session_id,
+                "model_name": r.model_name,
+                "created_at": r.created_at.isoformat(),
+            }
+            for r in owned[:limit]
+        ]
+
     # ------------------------------------------------------------------
     # Question endpoints (no auth required)
     # ------------------------------------------------------------------

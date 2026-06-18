@@ -6,6 +6,7 @@ The API is always mounted at {server}/bench. Pass the bare server URL
 Usage:
     mat-bench-client setup        Save token and create a session
     mat-bench-client session      Create a new session (reuse saved token)
+    mat-bench-client status       Show current token, session, and server from config
     mat-bench-client questions    List available questions
     mat-bench-client question     Fetch a single question (prompt + data files)
     mat-bench-client data         Download a question data file
@@ -17,6 +18,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import os
 import sys
@@ -289,6 +291,19 @@ def api_get_results(api_base: str, token: str, session_id: str) -> dict:
     return data  # type: ignore[return-value]
 
 
+def api_get_evaluated_question_ids(api_base: str, token: str, session_id: str) -> set[str]:
+    summary = api_get_results(api_base, token, session_id)
+    return {r['question_id'] for r in summary.get('results', []) if 'question_id' in r}
+
+
+def api_list_sessions(api_base: str, token: str, limit: int = 10) -> list:
+    status, data = _json_get(f'{api_base}/sessions', token, params={'limit': limit})
+    if status != 200:
+        print(f'error: fetching sessions failed ({status}): {data}', file=sys.stderr)
+        sys.exit(1)
+    return data  # type: ignore[return-value]
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -335,12 +350,21 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     p.set_defaults(func=_cmd_session)
 
+    # status
+    p = subs.add_parser('status', help='Show current token, session ID, and server from config')
+    _server_arg(p)
+    p.add_argument('-n', type=int, default=None, metavar='N',
+                   help='Also list the N most recent sessions from the server')
+    p.set_defaults(func=_cmd_status)
+
     # questions
     p = subs.add_parser('questions', help='List available questions')
     _server_arg(p)
     p.add_argument('--capability', type=str, default=None)
     p.add_argument('--domain', type=str, default=None)
     p.add_argument('--limit', type=int, default=None)
+    p.add_argument('--pending', action='store_true',
+                   help='Only show questions not yet evaluated in the current session')
     p.set_defaults(func=_cmd_questions)
 
     # question
@@ -383,6 +407,10 @@ def _build_parser() -> argparse.ArgumentParser:
     # results
     p = subs.add_parser('results', help='Get aggregate results summary')
     _server_arg(p)
+    p.add_argument('--session', type=str, default=None, metavar='SESSION_ID',
+                   help='Session ID to query (default: from config / $MAT_BENCH_SESSION_ID)')
+    p.add_argument('--download', type=str, nargs='?', const='', default=None, metavar='FILE',
+                   help='Save detailed CSV of results to FILE (default: results_<session_id>.csv)')
     p.set_defaults(func=_cmd_results)
 
     return parser
@@ -424,14 +452,41 @@ def _cmd_session(args: argparse.Namespace) -> None:
     print(f'Config:      {_config_path()}')
 
 
+def _cmd_status(args: argparse.Namespace) -> None:
+    cfg = _load_config()
+    token = os.environ.get('MAT_BENCH_TOKEN') or cfg.get('token', '')
+    session_id = os.environ.get('MAT_BENCH_SESSION_ID') or cfg.get('session_id', '')
+    server = os.environ.get('MAT_BENCH_SERVER_URL') or cfg.get('server_url', _DEFAULT_SERVER)
+    token_display = (token[:8] + '...' + token[-4:]) if len(token) > 12 else token or '(not set)'
+    print(f'Server:     {server}')
+    print(f'Token:      {token_display}')
+    print(f'Session:    {session_id or "(not set)"}')
+    print(f'Config:     {_config_path()}')
+    if args.n is not None:
+        if not token:
+            print('error: no token found. Run setup first.', file=sys.stderr)
+            sys.exit(1)
+        sessions = api_list_sessions(_api(_resolve_server(args.server)), token, limit=args.n)
+        print()
+        print(f'Recent sessions (last {args.n}):')
+        print(f"  {'Session ID':<34s} {'Model':<20s} Created")
+        print('  ' + '-' * 75)
+        for s in sessions:
+            marker = ' *' if s['session_id'] == session_id else ''
+            print(f"  {s['session_id']:<34s} {s.get('model_name', ''):<20s} {s.get('created_at', '')}{marker}")
+
+
 def _cmd_questions(args: argparse.Namespace) -> None:
     server = _resolve_server(args.server)
-    token, _ = _require_credentials(server)
+    token, session_id = _require_credentials(server)
     questions = api_list_questions(
         _api(server), token,
         capability=args.capability, domain=args.domain, limit=args.limit,
     )
-    print(f'Found {len(questions)} questions')
+    if args.pending:
+        evaluated = api_get_evaluated_question_ids(_api(server), token, session_id)
+        questions = [q for q in questions if q['id'] not in evaluated]
+    print(f'Found {len(questions)} question(s)' + (' not yet evaluated' if args.pending else ''))
     print()
     for q in questions:
         intent = q.get('intent', '')
@@ -525,12 +580,14 @@ def _cmd_result(args: argparse.Namespace) -> None:
 
 def _cmd_results(args: argparse.Namespace) -> None:
     server = _resolve_server(args.server)
-    token, session_id = _require_credentials(server)
+    token, default_session = _require_credentials(server)
+    session_id = args.session or default_session
     summary = api_get_results(_api(server), token, session_id)
     total = summary.get('total', 0)
     passed = summary.get('questions_passed', 0)
     rate = summary.get('pass_rate', 0.0)
     weighted = summary.get('weighted_pass_rate', 0.0)
+    print(f'Session:         {session_id}')
     print(f'Total questions: {total}')
     print(f'Passed:          {passed}/{total}')
     print(f'Pass rate:       {rate:.1%}')
@@ -552,6 +609,26 @@ def _cmd_results(args: argparse.Namespace) -> None:
                 f"{r.get('run_status', ''):<12s}"
                 f"{p}/{t}  ({w:.2f})"
             )
+    if args.download is not None:
+        dest = Path(args.download) if args.download else Path(f'results_{session_id}.csv')
+        with dest.open('w', newline='', encoding='utf-8') as fh:
+            writer = csv.DictWriter(fh, fieldnames=[
+                'question_id', 'domain', 'capability', 'run_status',
+                'passed', 'passed_count', 'total_count', 'overall_weighted_score',
+            ])
+            writer.writeheader()
+            for r in rows:
+                writer.writerow({
+                    'question_id': r.get('question_id', ''),
+                    'domain': r.get('domain', ''),
+                    'capability': ', '.join(r.get('capability', []) or []),
+                    'run_status': r.get('run_status', ''),
+                    'passed': r.get('passed', ''),
+                    'passed_count': r.get('passed_count', 0),
+                    'total_count': r.get('total_count', 0),
+                    'overall_weighted_score': r.get('overall_weighted_score', 0.0),
+                })
+        print(f'\nCSV saved to: {dest}')
 
 
 def main() -> None:
