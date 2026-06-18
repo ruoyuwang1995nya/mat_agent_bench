@@ -1,0 +1,80 @@
+id: WO_general_hea_005_20260615v2
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
+domain: alloy
+difficulty: easy
+intent: Evaluate phase-formation tendency of AlCr0.8CoFeNi HEA using descriptor calculations, binary-phase cues, and 
+  solid-solution prediction.
+human_prompt_seed: 'Please evaluate whether the high-entropy alloy AlCr0.8CoFeNi is likely to form a solid solution, and
+  provide the possible structural trend.
+
+  The discussion should cover:
+  - key descriptors such as VEC, mixing enthalpy, and mixing entropy;
+  - a summary of binary formation-energy/phase-diagram information;
+  - the solid-solution formation judgment and the possible crystal structure.
+
+  Please output:
+  1) `hea_alcr0.8cofeni_kb_summary.json` (containing at least `vec`, `mixing_enthalpy`, `mixing_entropy`, `binary_energy_summary`,
+  `solid_solution_prediction`, and `possible_structure`);
+  2) `hea_alcr0.8cofeni_kb_report.md` (explaining the source of the criteria, the conclusion, and the uncertainty).'
+tags:
+- meta_userlog
+- mat_hea
+- wf_postprocess
+- meta_literature
+data_files: []
+reference_answers:
+- key: hea_json
+  value: hea_alcr0.8cofeni_kb_summary.json
+- key: hea_report
+  value: hea_alcr0.8cofeni_kb_report.md
+- key: hea_required_tokens
+  value:
+    filename: hea_alcr0.8cofeni_kb_summary.json
+    tokens:
+    - vec
+    - mixing_enthalpy
+    - mixing_entropy
+    - binary_energy_summary
+    - solid_solution_prediction
+    - possible_structure
+    flags: i
+- key: hea_report_tokens
+  value:
+    filename: hea_alcr0.8cofeni_kb_report.md
+    tokens:
+    - AlCr0.8CoFeNi
+    - VEC
+    - mixing enthalpy
+    - mixing entropy
+    - solid solution
+    - uncertainty
+    flags: i
+scoring_checklist:
+- id: hea_json
+  criterion: Agent writes `hea_alcr0.8cofeni_kb_summary.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: hea_report
+  criterion: Agent writes `hea_alcr0.8cofeni_kb_report.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: hea_required_tokens
+  criterion: Summary JSON includes required HEA descriptor and prediction fields.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: hea_report_tokens
+  criterion: Report explains rationale and uncertainty caveats for the solid-solution prediction.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: Deliverables are grounded in generated HEA-analysis artifacts and avoid unsupported phase claims.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

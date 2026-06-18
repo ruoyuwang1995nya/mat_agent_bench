@@ -1,0 +1,87 @@
+id: WO_mlip_dpa_011_20260616v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Build and validate Nb-doped SrTiO3 supercell workflow, including relaxation and lattice-dynamics/mechanics 
+  checks.
+human_prompt_seed: "Evaluate the workflow for Nb-doped SrTiO3 (mock version):\n1. First query/retrieve the input structure
+  of cubic SrTiO3 (Pm-3m), and explain the 2x2x2 supercell + 1 Ti->Nb doping scheme;\n2. Organize the input files required
+  for the subsequent checks (relax / elastic / phonon / SCF / band-DOS);\n3. Do not run real calculations. Instead, use
+  the following mock check results:\n   - elastic_status = pass\n   - phonon_status = pass_no_imaginary\n   - scf_status
+  = converged\n   - band_dos_status = generated\n   - relax_energy_drop_eV = 1.84\n4. Based on the mock values, perform
+  post-processing and judge whether the system passes the prerequisite checks for electronic-structure analysis.\n\nPlease
+  output:\n1) `srti03_nb125_relaxed.cif`: the structure file used to record the workflow reference;\n2) `srti03_nb125_checks.json`:
+  containing at least `input_files`, `elastic_status`, `phonon_status`, `scf_status`, and `band_dos_status`;\n3) `srti03_nb125_workflow_report.md`:
+  explain the query-based input organization, the mock post-processing workflow, the key observations, and the uncertainty.\n\nIn
+  the final answer, explicitly state whether this doped system passes the prerequisite check of \"being able to proceed
+  to electronic-structure analysis\".\n"
+tags:
+- struct_transform
+data_files: []
+reference_answers:
+- key: relaxed_struct
+  value: srti03_nb125_relaxed.cif
+- key: checks_json
+  value: srti03_nb125_checks.json
+- key: workflow_report
+  value: srti03_nb125_workflow_report.md
+- key: checks_tokens
+  value:
+    filename: srti03_nb125_checks.json
+    must_cover:
+    - elastic_status
+    - phonon_status
+    - scf_status
+    - band_dos_status
+- key: report_tokens
+  value:
+    filename: srti03_nb125_workflow_report.md
+    must_cover:
+    - supercell
+    - doping
+    - geometry optimization
+    - elastic
+    - phonon
+    - uncertainty
+- key: relax_energy_drop_mock
+  value: 1.84
+  tolerance: 0.8
+scoring_checklist:
+- id: relaxed_struct
+  criterion: Agent writes optimized doped structure `srti03_nb125_relaxed.cif`.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: checks_json
+  criterion: Agent writes `srti03_nb125_checks.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: workflow_report
+  criterion: Agent writes `srti03_nb125_workflow_report.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: checks_tokens
+  criterion: Check JSON includes elastic/phonon/SCF/band-DOS status fields.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: report_tokens
+  criterion: Report covers doping workflow and caveats for downstream electronic analysis.
+  verify: llm_binary_judge
+  capability: workflow_orchestration
+  weight: 0.5
+- id: relax_energy_drop_mock
+  criterion: Final answer includes a mock relaxation energy drop near 1.84 eV.
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: Deliverables are grounded in generated workflow outputs and avoid fabricated stability claims.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

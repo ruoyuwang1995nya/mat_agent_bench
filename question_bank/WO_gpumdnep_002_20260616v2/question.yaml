@@ -1,0 +1,53 @@
+id: WO_gpumdnep_002_20260616v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Predict Si phonon spectrum using Si_Fan_2019 Tersoff mini potential and assess optical-branch frequency.
+human_prompt_seed: Retrieve `https://raw.githubusercontent.com/brucefan1983/GPUMD/master/potentials/tersoff/Si_Fan_2019.txt`,
+  use this potential to compute the phonon spectrum of Si with GPUMD, and obtain the optical-branch frequency of Si.
+tags:
+- eng_gpumd
+data_files: []
+reference_answers:
+- key: run_input_artifact
+  value: run.in
+- key: si_fan_potential_token
+  value:
+    filename: run.in
+    tokens:
+    - potential
+    - Si_Fan_2019.txt
+    flags: i
+- key: phonon_core_tokens
+  value:
+    filename: run.in
+    tokens:
+    - replicate
+    - compute_phonon
+    flags: i
+- key: si_optical_branch_15thz
+  value: {}
+scoring_checklist:
+- id: run_input_artifact
+  criterion: Generate `run.in`.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: si_fan_potential_token
+  criterion: '`run.in` uses the `Si_Fan_2019.txt` potential.'
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: phonon_core_tokens
+  criterion: '`run.in` contains the two key settings `replicate` and `compute_phonon`.'
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: si_optical_branch_15thz
+  criterion: The Si optical-branch result is on the order of about 15 THz (a small deviation is acceptable).
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5

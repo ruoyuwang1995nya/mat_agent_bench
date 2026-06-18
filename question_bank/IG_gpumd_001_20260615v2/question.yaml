@@ -1,0 +1,39 @@
+id: IG_gpumd_001_20260615v2
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
+domain: agnostic
+difficulty: easy
+intent: Generate a GPUMD EMD thermal-conductivity `run.in` for graphene.
+human_prompt_seed: Please write a directly runnable `run.in` for graphene following the EMD thermal-conductivity workflow.
+  It should include both equilibration and production stages, and output heat-current-related statistics during the production
+  stage.
+tags:
+- eng_gpumd
+data_files: []
+reference_answers:
+- key: run_in_artifact
+  value: run.in
+- key: emd_core_tokens
+  value:
+    filename: run.in
+    tokens:
+    - potential
+    - velocity
+    - ensemble nve
+    - compute_hac
+    - dump_thermo
+    - run
+    flags: i
+scoring_checklist:
+- id: run_in_artifact
+  criterion: Generate `run.in`.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: emd_core_tokens
+  criterion: The input contains the key commands for the EMD thermal-conductivity workflow.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5

@@ -1,0 +1,79 @@
+id: BP_elec_001_20260615v2
+task_type: simulation
+capabilities:
+- data_handling
+- scientific_reasoning
+domain: catalysis
+difficulty: easy
+intent: Batch-compute H adsorption energy on 3 different metal (001) surfaces using mock energies to test batch workflow
+  efficiency.
+human_prompt_seed: "Batch-calculate the adsorption energies of an H atom on Cu(001), Ag(001), and Au(001) metal surfaces
+  for HER activity comparison:\n\nUse the same workflow for each metal:\n1. Obtain the FCC bulk structure (Cu: Fm-3m, a=3.615
+  Å; Ag: Fm-3m, a=4.085 Å; Au: Fm-3m, a=4.078 Å).\n2. Build a (001) slab (4 layers, 15 Å vacuum, 2×2 supercell).\n3. Place
+  an H atom at the ontop site (1.5 Å above the surface).\n4. Use the following mock energy values (simulating DPA relaxation
+  results):\n\n   | Metal | E_slab (eV) | E_slab+H (eV) |\n   |------|-------------|---------------|\n   | Cu   | -57.12
+  | -61.08        |\n   | Ag   | -43.56      | -47.63        |\n   | Au   | -50.84      | -54.83        |\n\n   H₂ reference
+  energy: E_H₂ = -6.68 eV (Final Energy/Atom ≈ -3.34 eV; calculate it only once and share it across all three metals)\n\n5.
+  Compute E_ads = E(slab+H) - E(slab) - 0.5×E(H₂).\n\nKey requirements:\n- The slab parameters must be exactly the same for
+  all three metals (same number of layers, vacuum thickness, and supercell size)\n- Use the H₂ reference energy only once
+  and share it across all three metals\n- Output a comparison table of the adsorption energies for the three metals, and
+  evaluate HER activity by ranking them according to |ΔG_H|\n\nExpected results:\n- Cu: E_ads ≈ -0.62 eV\n- Ag: E_ads ≈
+  -0.73 eV\n- Au: E_ads ≈ -0.65 eV\n"
+tags:
+- struct_surface
+data_files: []
+reference_answers:
+- key: E_ads_Cu
+  value: -0.62
+  tolerance: 0.2
+- key: E_ads_Ag
+  value: -0.73
+  tolerance: 0.2
+- key: E_ads_Au
+  value: -0.65
+  tolerance: 0.2
+- key: required_fields
+  value:
+  - E_ads_Cu
+  - E_ads_Ag
+  - E_ads_Au
+  - H2_reference
+  - activity_ranking
+scoring_checklist:
+- id: E_ads_Cu
+  criterion: 'In the FINAL delivered answer (not intermediate steps), a Cu(001) H adsorption energy of approximately −0.62
+    eV is explicitly reported as a number (accept ±0.2 eV). NOTE: The answer may be in Chinese with markdown tables; ''|------|''
+    separator lines are standard table formatting, NOT truncation indicators. Intermediate computation errors do not matter
+    if the final answer contains the value.'
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: E_ads_Ag
+  criterion: 'In the FINAL delivered answer (not intermediate steps), an Ag(001) H adsorption energy of approximately −0.73
+    eV is explicitly reported as a number (accept ±0.2 eV). NOTE: The answer may be in Chinese with markdown tables; ''|------|''
+    separator lines are standard table formatting, NOT truncation indicators. Intermediate computation errors do not matter
+    if the final answer contains the value.'
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: E_ads_Au
+  criterion: 'In the FINAL delivered answer (not intermediate steps), an Au(001) H adsorption energy of approximately −0.65
+    eV is explicitly reported as a number (accept ±0.2 eV). NOTE: The answer may be in Chinese with markdown tables; ''|------|''
+    separator lines are standard table formatting, NOT truncation indicators. Intermediate computation errors do not matter
+    if the final answer contains the value.'
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: required_fields
+  criterion: 'The FINAL delivered answer contains ALL of: (1) numerical adsorption energy values for Cu, Ag, and Au; (2) the
+    H₂ reference energy value; (3) an HER activity ranking of the three metals. NOTE: The answer may be in Chinese with markdown
+    tables; ''|------|'' separator lines are standard table formatting, NOT truncation. Intermediate computation errors do
+    not matter if the final answer covers all five items.'
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: consistent_slab_params
+  criterion: 'All three metal slabs use identical structural parameters: 4 layers, 15 Å vacuum, 2×2 supercell, (001) surface.'
+  verify: llm_binary_judge
+  capability: structure_manipulation
+  weight: 0.5

@@ -1,0 +1,60 @@
+id: IG_gromacs_001_20260615v2
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
+domain: agnostic
+difficulty: easy
+intent: Generate GROMACS simulation parameter file for energy minimization.
+human_prompt_seed: 'Please generate a GROMACS energy-minimization parameter file for a protein system with the following
+  requirements:
+
+  1. Use the steepest-descent method
+
+  2. Maximum number of steps: 50000
+
+  3. Energy-convergence criterion: emtol = 1000.0 kJ/mol/nm
+
+  4. Step size: emstep = 0.01 nm
+
+  5. Use the Verlet cutoff scheme, with Coulomb and van der Waals cutoff distances of 1.0 nm
+
+  The output filename must be `em.mdp`.'
+tags:
+- eng_gromacs
+data_files: []
+reference_answers:
+- key: input_artifact
+  value: em.mdp
+- key: required_keywords
+  value:
+    filename: em.mdp
+    tokens:
+    - integrator
+    - steep
+    - nsteps
+    - emtol
+    - emstep
+    flags: i
+scoring_checklist:
+- id: input_artifact
+  criterion: Agent writes `em.mdp` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: required_keywords
+  criterion: The MDP file contains essential energy minimization parameters (integrator, steep, nsteps, emtol, emstep).
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: physical_params
+  criterion: The MDP file uses correct values matching the request (steep integrator, 50000 steps, emtol=1000, 
+    emstep=0.01, cutoff 1.0 nm, Verlet scheme).
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: All parameter values are directly traceable to the user request, not arbitrary defaults.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

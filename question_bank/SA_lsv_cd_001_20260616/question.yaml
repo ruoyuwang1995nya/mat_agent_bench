@@ -1,0 +1,128 @@
+id: SA_lsv_cd_001_20260616
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
+domain: agnostic
+difficulty: easy
+intent: Quantify cadmium in a wastewater sample from CHI linear-sweep voltammetry calibration traces.
+human_prompt_seed: 'Please download and analyze the following CHI660E linear-sweep voltammetry data files provided via OSS URLs:
+
+  - `cd_lsv_blank.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_lsv_cd_001/1778080946_cd_lsv_blank.txt`
+
+  - `cd_lsv_cal_10ugL.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_lsv_cd_001/1778080947_cd_lsv_cal_10ugL.txt`
+
+  - `cd_lsv_cal_30ugL.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_lsv_cd_001/1778080948_cd_lsv_cal_30ugL.txt`
+
+  - `cd_lsv_cal_50ugL.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_lsv_cd_001/1778080949_cd_lsv_cal_50ugL.txt`
+
+  - `cd_lsv_cal_70ugL.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_lsv_cd_001/1778080950_cd_lsv_cal_70ugL.txt`
+
+  - `cd_lsv_cal_100ugL.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_lsv_cd_001/1778080946_cd_lsv_cal_100ugL.txt`
+
+  - `cd_lsv_wastewater_sample.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_lsv_cd_001/1778080950_cd_lsv_wastewater_sample.txt`
+
+  These files come from the same set of Cd standards and a wastewater sample measurement. Please complete the following analysis:
+
+  1. Read each voltammetry file. If the header section already contains instrument-identified peak potential `Ep` and peak current `ip`, prioritize using the header `ip` for subsequent quantification so that the peak-current convention matches the original instrument report; otherwise extract the peak current from the I-V curve yourself. 2. Build a calibration relationship using the standards and evaluate the calibration quality. 3. Estimate the Cd concentration in the wastewater sample. 4. Compare it with the discharge limit of 0.1 mg/L and conclude whether it exceeds the limit. 5. Briefly explain your data-processing choices and principles for handling outliers.
+
+  At the end of the final answer, append an `<eval_results>...</eval_results>` JSON block containing at least: `calibration.slope_A_per_ugL`, `calibration.r_squared`, `sample.cd_mg_L`, and `sample.peak_potential_V`.
+
+  In the JSON, field names like `a.b` indicate nested objects (child key `b` under top-level key `a`); please use a nested structure rather than flat string keys. Example structure (numbers are placeholders):
+
+  ```json {"calibration": {"slope_A_per_ugL": 0, "r_squared": 0}, "sample": {"cd_mg_L": 0, "peak_potential_V": 0}} ```'
+tags:
+- char_electrochem
+data_files:
+- key: blank_trace
+  path: cd_lsv_blank.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_lsv_cd_001/1778080946_cd_lsv_blank.txt
+  description: CHI660E blank LSV trace.
+- key: cal_10
+  path: cd_lsv_cal_10ugL.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_lsv_cd_001/1778080947_cd_lsv_cal_10ugL.txt
+  description: CHI660E Cd calibration LSV trace, 10 ug/L.
+- key: cal_30
+  path: cd_lsv_cal_30ugL.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_lsv_cd_001/1778080948_cd_lsv_cal_30ugL.txt
+  description: CHI660E Cd calibration LSV trace, 30 ug/L.
+- key: cal_50
+  path: cd_lsv_cal_50ugL.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_lsv_cd_001/1778080949_cd_lsv_cal_50ugL.txt
+  description: CHI660E Cd calibration LSV trace, 50 ug/L.
+- key: cal_70
+  path: cd_lsv_cal_70ugL.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_lsv_cd_001/1778080950_cd_lsv_cal_70ugL.txt
+  description: CHI660E Cd calibration LSV trace, 70 ug/L.
+- key: cal_100
+  path: cd_lsv_cal_100ugL.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_lsv_cd_001/1778080946_cd_lsv_cal_100ugL.txt
+  description: CHI660E Cd calibration LSV trace, 100 ug/L.
+- key: wastewater_sample
+  path: cd_lsv_wastewater_sample.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_lsv_cd_001/1778080950_cd_lsv_wastewater_sample.txt
+  description: CHI660E wastewater sample LSV trace.
+reference_answers:
+- key: calibration_slope
+  value:
+    json_path: calibration.slope_A_per_ugL
+    target: 4.231258196721311e-07
+    tolerance: 7.0e-08
+  unit: A/(ug/L)
+- key: calibration_r2
+  value:
+    json_path: calibration.r_squared
+    target: 0.9943284089797766
+    tolerance: 0.03
+- key: sample_cd
+  value:
+    json_path: sample.cd_mg_L
+    target: 0.03708103333213872
+    tolerance: 0.005
+  unit: mg/L
+- key: sample_ep
+  value:
+    json_path: sample.peak_potential_V
+    target: -0.82
+    tolerance: 0.03
+  unit: V
+scoring_checklist:
+- id: calibration_slope
+  criterion: The calibration slope reported in eval_results is consistent with the uploaded Cd standard traces.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: data_handling
+- id: calibration_r2
+  criterion: The calibration quality reported in eval_results is consistent with the uploaded standard traces.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: data_handling
+- id: sample_cd
+  criterion: The wastewater Cd concentration reported in eval_results is consistent with the uploaded sample trace and 
+    calibration data.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: data_handling
+- id: sample_ep
+  criterion: The sample peak potential reported in eval_results is consistent with the uploaded sample trace.
+  verify: answer_json_numeric
+  capability: data_handling
+  weight: 0.5
+- id: regulatory_conclusion
+  criterion: The final answer compares the sample Cd concentration with the 0.1 mg/L limit and concludes that it is 
+    below the limit.
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: grounding_source
+  criterion: The analysis is grounded in the uploaded LSV traces and does not rely on unstated report values.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

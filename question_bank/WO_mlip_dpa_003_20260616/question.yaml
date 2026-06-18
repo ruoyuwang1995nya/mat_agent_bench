@@ -1,0 +1,48 @@
+id: WO_mlip_dpa_003_20260616
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Compute phonon dispersion for Si diamond with DPA; report Gamma-point optical frequency and check for imaginary 
+  modes.
+human_prompt_seed: 'Compute the phonon dispersion of diamond-structure Si.
+
+  Retrieve or build the Si diamond primitive cell from a database, and compute the force-constant matrix using the DPA machine-learning potential,
+
+  then plot the phonon dispersion along the high-symmetry path Gamma-X-K-Gamma-L.
+
+  Report the highest optical-branch frequency at the Gamma point (cm⁻¹) and whether any imaginary frequencies are present (to judge dynamical stability).
+
+  '
+tags:
+- code_mlip
+data_files: []
+reference_answers:
+- key: gamma_optical_max_cm1
+  value: 520.0
+  tolerance: 50.0
+- key: required_fields
+  value:
+  - dispersion_path
+  - gamma_frequency
+  - imaginary_check
+scoring_checklist:
+- id: gamma_optical_max_cm1
+  criterion: Si Gamma-point highest optical phonon frequency is within tolerance (~520 cm⁻¹).
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: required_fields
+  criterion: Report includes phonon dispersion k-path specification, Gamma-point frequency value, and statement about 
+    presence/absence of imaginary modes.
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: The reported phonon frequency is tied to force-constant calculation outputs, not textbook values. Judge 
+    solely from the final answer.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

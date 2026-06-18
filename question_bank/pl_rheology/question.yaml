@@ -7,17 +7,17 @@ domain: polymer
 difficulty: easy
 intent: Identify a processing window for PEO-LiTFSI by balancing zero-shear viscosity, shear-thinning onset, and 
   ionic-conductivity proxies across temperature and salt concentration.
-human_prompt_seed: '文件 `rheology_window_bundle.json` 提供了 PEO-LiTFSI 在不同盐浓度和温度下的流变、扩散和电导 proxy 数据。
+human_prompt_seed: 'The file `rheology_window_bundle.json` provides rheology, diffusion, and conductivity-proxy data for PEO-LiTFSI at different salt concentrations and temperatures.
 
-  请完成一个粘度-电导率窗口分析：
+  Please complete a viscosity-conductivity window analysis:
 
-  1. 比较不同条件下的零剪切粘度、剪切变稀起始和电导 proxy；
+  1. Compare the zero-shear viscosity, shear-thinning onset, and conductivity proxy under different conditions.
 
-  2. 解释盐浓度升高为什么会同时影响粘度和离子迁移；
+  2. Explain why increasing salt concentration affects both viscosity and ion transport at the same time.
 
-  3. 推荐最合适的加工温度与盐浓度窗口；
+  3. Recommend the most suitable processing-temperature and salt-concentration window.
 
-  4. 说明至少一个可能的失效模式或工艺风险。
+  4. State at least one possible failure mode or process risk.
 
   '
 tags:

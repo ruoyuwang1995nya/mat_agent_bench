@@ -1,0 +1,136 @@
+id: BP_struct_005_20260615v3
+task_type: simulation
+capabilities:
+- data_handling
+- scientific_reasoning
+domain: agnostic
+difficulty: easy
+intent: Repair 5 problematic POSCAR structures by fixing geometry issues only. Focus the evaluation entirely on POSCAR 
+  repair correctness and cause-aligned fixes.
+human_prompt_seed: 'Read the failure recovery scenarios for 5 structures (TiO2, ZnO, MgO, Al2O3, SiO2) from `failure_recovery.json`.
+  Each entry contains the `input_poscar` path that needs to be repaired. The initial calculation for each structure failed
+  due to a geometry-related issue (such as atomic overlap, cell distortion, symmetry errors, etc.).
+
+  Please generate a corrected POSCAR for each structure using the following repair strategy:
+
+  1. Only repair geometry-related issues in the structure file (POSCAR), including atomic positions, lattice parameters,
+  and symmetry
+
+  3. For each structure, explain what geometry issue was fixed and why the repaired structure is more reasonable, following
+  the `repair_acceptance` constraints for each entry in `failure_recovery.json`
+
+  Output requirements:
+
+  1. 5 corrected POSCAR files
+
+  2. The corrected POSCAR filenames must be exactly: - `calc_001_TiO2_fixed.POSCAR` - `calc_002_ZnO_fixed.POSCAR` - `calc_003_MgO_fixed.POSCAR`
+  - `calc_004_Al2O3_fixed.POSCAR` - `calc_005_SiO2_fixed.POSCAR`
+
+  There is no need to submit calculations; only generate the correct repaired structures.
+
+  Key evaluation points: 1. Whether the POSCAR structures are repaired correctly 2. Whether the repair content matches
+  the failure cause
+
+  '
+tags:
+- eng_vasp
+priority: P0
+data_files:
+- key: failure_recovery
+  path: failure_recovery.json
+  oss_url: ''
+  description: Batch failure recovery scenarios with frozen calculation parameters.
+- key: calc_001_tio2_bad_poscar
+  path: calc_001_TiO2_bad.POSCAR
+  oss_url: ''
+  description: Bad TiO2 POSCAR with atoms too close.
+- key: calc_002_zno_bad_poscar
+  path: calc_002_ZnO_bad.POSCAR
+  oss_url: ''
+  description: Bad ZnO POSCAR with sign-flipped basis vector causing left-handed cell.
+- key: calc_003_mgo_bad_poscar
+  path: calc_003_MgO_bad.POSCAR
+  oss_url: ''
+  description: Bad MgO POSCAR with broken symmetry.
+- key: calc_004_al2o3_bad_poscar
+  path: calc_004_Al2O3_bad.POSCAR
+  oss_url: ''
+  description: Bad Al2O3 POSCAR with duplicate atoms.
+- key: calc_005_sio2_bad_poscar
+  path: calc_005_SiO2_bad.POSCAR
+  oss_url: ''
+  description: Bad SiO2 POSCAR with distorted cell.
+reference_answers:
+- key: input_file_sets_count
+  value: 5
+  tolerance: 0.0
+- key: calc_001_tio2_fixed_artifact
+  value: calc_001_TiO2_fixed.POSCAR
+- key: calc_002_zno_fixed_artifact
+  value: calc_002_ZnO_fixed.POSCAR
+- key: calc_003_mgo_fixed_artifact
+  value: calc_003_MgO_fixed.POSCAR
+- key: calc_004_al2o3_fixed_artifact
+  value: calc_004_Al2O3_fixed.POSCAR
+- key: calc_005_sio2_fixed_artifact
+  value: calc_005_SiO2_fixed.POSCAR
+- key: poscar_repair_triplet_match
+  value:
+    filenames:
+    - failure_recovery.json
+    - calc_001_TiO2_bad.POSCAR
+    - calc_001_TiO2_fixed.POSCAR
+    - calc_002_ZnO_bad.POSCAR
+    - calc_002_ZnO_fixed.POSCAR
+    - calc_003_MgO_bad.POSCAR
+    - calc_003_MgO_fixed.POSCAR
+    - calc_004_Al2O3_bad.POSCAR
+    - calc_004_Al2O3_fixed.POSCAR
+    - calc_005_SiO2_bad.POSCAR
+    - calc_005_SiO2_fixed.POSCAR
+- key: grounding_repair_causes
+  value: Each geometry fix addresses the specific failure cause
+scoring_checklist:
+- id: input_file_sets_count
+  criterion: '[Must] Exactly 5 corrected POSCAR files are generated.'
+  verify: numerical_range
+  weight: 0.5
+  capability: tool_utilization
+- id: calc_001_tio2_fixed_artifact
+  criterion: Agent writes `calc_001_TiO2_fixed.POSCAR` to workspace.
+  verify: artifact_exists
+  weight: 0.5
+  capability: tool_utilization
+- id: calc_002_zno_fixed_artifact
+  criterion: Agent writes `calc_002_ZnO_fixed.POSCAR` to workspace.
+  verify: artifact_exists
+  weight: 0.5
+  capability: tool_utilization
+- id: calc_003_mgo_fixed_artifact
+  criterion: Agent writes `calc_003_MgO_fixed.POSCAR` to workspace.
+  verify: artifact_exists
+  weight: 0.5
+  capability: tool_utilization
+- id: calc_004_al2o3_fixed_artifact
+  criterion: Agent writes `calc_004_Al2O3_fixed.POSCAR` to workspace.
+  verify: artifact_exists
+  weight: 0.5
+  capability: tool_utilization
+- id: calc_005_sio2_fixed_artifact
+  criterion: Agent writes `calc_005_SiO2_fixed.POSCAR` to workspace.
+  verify: artifact_exists
+  weight: 0.5
+  capability: tool_utilization
+- id: poscar_repair_triplet_match
+  criterion: '[Must] For each material, judge repair correctness using only the bad/fixed POSCAR pair and the `repair_acceptance`
+    rules in `failure_recovery.json`. Do not enforce a single coordinate-level canonical answer when multiple valid repairs
+    satisfy the acceptance constraints.'
+  verify: llm_binary_judge
+  weight: 0.5
+  capability: structure_manipulation
+- id: grounding_repair_causes
+  criterion: '[Must] Each POSCAR repair addresses the specific failure cause in configuration (overlap, cell distortion, symmetry
+    issues, etc.).'
+  verify: llm_binary_judge
+  weight: 0.5
+  capability: scientific_grounding

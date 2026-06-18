@@ -1,0 +1,40 @@
+id: WO_direct_exact_filename_002_20260616
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+priority: P0
+intent: Deliverable must use exact filename summary.md without unauthorized suffix variants (direct.toml workspace 
+  naming).
+human_prompt_seed: 'Please write a short note in the current workspace root (one or two lines is enough) and save it as a Markdown file.
+
+
+  The filename must be exactly `summary.md` (all lowercase). The downstream pipeline only recognizes this filename, so do not save it under any other name.
+
+
+  No computation needs to be run.
+
+  '
+tags: []
+reference_answers:
+- key: summary_md
+  value: summary.md
+  workspace_resolve: root
+- key: no_v2_filename
+  value:
+    pattern: '*_v2*'
+    expected: 0
+    tolerance: 0
+scoring_checklist:
+- id: summary_md
+  criterion: Agent writes summary.md to workspace root.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: no_v2_filename
+  criterion: No deliverable filename uses an unauthorized `_v2` suffix (e.g. summary_v2.md).
+  verify: struct_file_count
+  capability: structure_manipulation
+  weight: 0.5

@@ -1,0 +1,117 @@
+id: BP_struct_004_20260615v2
+task_type: simulation
+capabilities:
+- data_handling
+- scientific_reasoning
+domain: semiconductor
+difficulty: easy
+intent: Perform batch post-processing of pre-computed band structures for 3 materials (Si, Ge, GaAs) with unified 
+  analysis parameters. Extract band gaps and band edge positions using identical k-paths, energy windows, and plot 
+  specifications across all materials.
+human_prompt_seed: 'Read the band structure post-processing configuration for 3 materials (Si, Ge, GaAs) from `postprocessing_bandstr.json`.
+
+  Each material corresponds to one pre-computed band structure CSV file (Si_bandstructure.csv, Ge_bandstructure.csv, GaAs_bandstructure.csv),
+  containing band eigenvalue data along the M-Gamma-K path. The CSV columns are formatted as: k_index, k_distance, k_label,
+  band_1, ..., band_N, where band_1-band_4 are valence bands and band_5-band_7 are conduction bands. The energy unit is
+  eV, with energies referenced to VBM = 0.
+
+  Apply the same analysis workflow to each material: 1. The k-path is fixed as M-Gamma-K, with 50 k-points per segment
+  2. Use a unified energy window of [-5, 5] eV 3. Use VBM (valence band maximum) as the Fermi level reference 4. Use
+  the same plot style and range for all figures
+
+  Output requirements: 1. 3 band structure PNG plots 2. 3 data tables (CSV format) 3. A summary table of band gap values
+  and band edge positions
+
+  Key evaluation points: 1. Analysis parameters (k-path, energy window) are exactly consistent across all materials 2.
+  Although the absolute band gaps differ among materials, the analysis workflow is the same 3. Output files and data formats
+  are uniform
+
+  '
+tags:
+- eng_vasp
+data_files:
+- key: postprocessing_bandstr
+  path: postprocessing_bandstr.json
+  oss_url: ''
+  description: Batch band structure analysis configuration with unified parameters.
+- key: si_band_csv
+  path: Si_bandstructure.csv
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/BP_struct_004/1776789716_Si_bandstructure.csv
+  description: Pre-computed Si band structure eigenvalues along M-Gamma-K (101 k-points, 7 bands, VBM=0 eV).
+- key: ge_band_csv
+  path: Ge_bandstructure.csv
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/BP_struct_004/1776789717_Ge_bandstructure.csv
+  description: Pre-computed Ge band structure eigenvalues along M-Gamma-K (101 k-points, 7 bands, VBM=0 eV).
+- key: gaas_band_csv
+  path: GaAs_bandstructure.csv
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/BP_struct_004/1776789717_GaAs_bandstructure.csv
+  description: Pre-computed GaAs band structure eigenvalues along M-Gamma-K (101 k-points, 7 bands, VBM=0 eV).
+reference_answers:
+- key: analysis_count_correct
+  value: 3
+  tolerance: 0.0
+- key: kpath_unified
+  value: M-Gamma-K
+- key: energy_window_unified
+  value:
+  - -5
+  - 5
+- key: fermi_reference_unified
+  value: VBM
+- key: output_format_consistent
+  value: PNG + CSV for each material
+- key: bandgap_extracted
+  value:
+    si:
+    - 0.95
+    - 1.25
+    ge:
+    - 0.55
+    - 0.8
+    gaas:
+    - 1.25
+    - 1.55
+- key: grounding_analysis_correct
+  value:
+    filename: postprocessing_bandstr.json
+scoring_checklist:
+- id: analysis_count_correct
+  criterion: Exactly 3 materials are analyzed (Si, Ge, GaAs).
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: kpath_unified
+  criterion: All 3 analyses use the same k-path (M-Gamma-K) with 50 points per segment.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: energy_window_unified
+  criterion: All 3 analyses use energy window [-5, 5] eV as the plotting range.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: fermi_reference_unified
+  criterion: All 3 analyses use VBM (valence band maximum) as the Fermi level reference point.
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: output_format_consistent
+  criterion: All 3 analyses produce both PNG plot and CSV data table in consistent format.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: bandgap_extracted
+  criterion: 'Band gap values extracted for all 3 materials from the provided CSV data and fall within expected range (Si:
+    0.95–1.25 eV, Ge: 0.55–0.80 eV, GaAs: 1.25–1.55 eV). The agent must read band gaps from the pre-computed CSV eigenvalue
+    data, not generate new band structures.'
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: grounding_analysis_correct
+  criterion: Analysis methodology (k-path, window, reference) matches the provided configuration exactly.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

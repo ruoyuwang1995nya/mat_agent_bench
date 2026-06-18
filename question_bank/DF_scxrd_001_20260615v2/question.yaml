@@ -1,0 +1,105 @@
+id: DF_scxrd_001_20260615v2
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
+domain: agnostic
+difficulty: easy
+intent: Determine the crystal structure of an ordered molecular crystal (1-RTP, 293 K) from raw single-crystal X-ray 
+  diffraction data. Starting from the reduced reflection file (.hkl) and the data-collection summary (.p4p), the agent 
+  must determine the space group, solve the structure, refine it, and generate a validated CIF with no A-level checkCIF 
+  alerts.
+human_prompt_seed: 'The files `A23050101A0735.hkl` and `A23050101A0735.p4p` are single-crystal X-ray diffraction data
+  collected at 293 K for an organic-inorganic hybrid nitroprusside salt (already reduced). Please complete the following
+  tasks:
+
+  1. Determine the space group based on the unit-cell parameters and systematic absences in the `.p4p` file;
+
+  2. Solve the crystal structure using an appropriate program;
+
+  3. Perform full-matrix least-squares refinement until convergence;
+
+  4. Generate a CIF file and validate it with IUCr checkCIF (A-level alerts are not allowed);
+
+  5. Report the final refinement results: R1, wR2, GooF, and the unit-cell parameters.
+
+  '
+tags:
+- char_diffraction
+data_files:
+- key: hkl_file
+  path: A23050101A0735.hkl
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/DF_scxrd_001_20260408/1775644505_A23050101A0735.hkl
+  description: Reduced reflection data file (SHELX .hkl format) for 1-RTP at 293 K.
+- key: p4p_file
+  path: A23050101A0735.p4p
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/DF_scxrd_001_20260408/1775644506_A23050101A0735.p4p
+  description: Data-collection summary file (.p4p) with unit cell parameters, wavelength, and crystal system 
+    information.
+reference_answers:
+- key: r1_factor
+  value: 0.0418
+  tolerance: 0.008
+  unit: dimensionless
+- key: wr2_factor
+  value: 0.0981
+  tolerance: 0.02
+  unit: dimensionless
+- key: goof
+  value: 1.048
+  tolerance: 0.1
+  unit: dimensionless
+- key: space_group_number
+  value: 4
+  tolerance: 0
+  unit: IT_number
+- key: cell_volume
+  value: 1001.05
+  tolerance: 5.0
+  unit: A3
+- key: checkcif_validation
+  value:
+    filename: '*.cif'
+    max_a_alerts: 0
+scoring_checklist:
+- id: r1_factor
+  criterion: Final R1 factor (on F, I>2sigma) is within tolerance of 0.0418 (human baseline). A value ≤ 0.05 is 
+    acceptable for a well-refined ordered structure.
+  verify: numerical_range
+  weight: 0.5
+  capability: tool_utilization
+- id: wr2_factor
+  criterion: Final wR2 factor (on F², all data) is within tolerance of 0.0981 (human baseline). A value ≤ 0.12 is 
+    acceptable.
+  verify: numerical_range
+  weight: 0.5
+  capability: tool_utilization
+- id: goof
+  criterion: Goodness-of-fit (GooF, S) is within tolerance of 1.048. A value between 0.9 and 1.2 indicates a 
+    well-refined structure.
+  verify: numerical_range
+  weight: 0.5
+  capability: tool_utilization
+- id: space_group_number
+  criterion: The agent correctly identifies the space group number as 4 (P2₁, monoclinic). The answer or CIF must report
+    space group No. 4.
+  verify: numerical_range
+  weight: 0.5
+  capability: scientific_reasoning
+- id: cell_volume
+  criterion: Refined unit cell volume is within tolerance of 1001.05 Å³.
+  verify: numerical_range
+  weight: 0.5
+  capability: tool_utilization
+- id: checkcif_validation
+  criterion: The generated CIF passes IUCr checkCIF with zero A-level alerts.
+  verify: checkcif_no_a_alerts
+  weight: 0.5
+  capability: structure_manipulation
+- id: cif_generated
+  criterion: The agent produces a valid CIF file as output of the refinement.
+  verify: llm_binary_judge
+  weight: 0.5
+  capability: data_handling

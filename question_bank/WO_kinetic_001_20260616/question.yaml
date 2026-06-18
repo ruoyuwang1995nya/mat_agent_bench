@@ -1,0 +1,41 @@
+id: WO_kinetic_001_20260616
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: 'Compute graphene phonon dispersion: build structure, calculate force constants, extract Gamma optical maximum.'
+human_prompt_seed: 'Compute the phonon dispersion of graphene: build the graphene primitive cell, compute the force-constant matrix (using the finite-displacement method or DFPT), plot the phonon dispersion along the G-M-K-G path, and extract the highest optical-branch frequency at the Gamma point in cm-1.
+
+  '
+tags:
+- struct_build
+data_files: []
+reference_answers:
+- key: gamma_optical_max_cm1
+  value: 1585.0
+  tolerance: 40.0
+- key: required_fields
+  value:
+  - dispersion_path
+  - gamma_extraction_rule
+  - unit_cm-1
+scoring_checklist:
+- id: gamma_optical_max_cm1
+  criterion: Gamma optical max is in tolerance.
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: required_fields
+  criterion: Report includes phonon dispersion k-path, Gamma point extraction rule, and frequencies in cm-1 units.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: The reported gamma frequency is tied to phonon or calculation results stated in the final answer, not bare 
+    textbook recall for graphene. Judge from the answer; do not fail because the tool-call log omits MCP, web_search, or
+    any specific tool.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

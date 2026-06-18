@@ -1,0 +1,85 @@
+id: SR_db_003_20260615v4
+task_type: search_and_interpretation
+capabilities:
+- structure_manipulation
+domain: agnostic
+difficulty: easy
+intent: Generate and summarize candidate crystal structures under explicit superconducting constraints.
+human_prompt_seed: 'Use the tool to generate 10 candidate crystal structures under the constraints "superconducting critical
+  temperature greater than 40 K" and "space group number 225".
+
+
+  Please provide the following deliverables:
+
+  1) `candidate_structures.json`: list 10 candidates, with each candidate containing at least `rank`, `formula`, `space_group`,
+  `selection_basis`, and `structure_identifier`;
+
+  2) `screening_report.md`: explain what screening criteria you used, whether you actually found 10 candidates, and how
+  you reported it honestly if fewer than 10 were found;
+
+  3) In the final answer, summarize whether the candidate count meets the requirement and what the most likely uncertainty
+  in the screening process is.
+
+
+  Note:
+  - This is a structure-generation task, not a database-retrieval task;
+  - Do not focus on downstream calculations; the emphasis is on candidate-generation results and summarization.
+
+  '
+tags:
+- wf_batch
+- meta_userlog
+data_files: []
+reference_answers:
+- key: candidate_json
+  value: candidate_structures.json
+- key: screening_report
+  value: screening_report.md
+- key: candidate_required_tokens
+  value:
+    filename: candidate_structures.json
+    tokens:
+    - rank
+    - formula
+    - space_group
+    - selection_basis
+    - structure_identifier
+    flags: i
+- key: screening_required_tokens
+  value:
+    filename: screening_report.md
+    tokens:
+    - Tc
+    - 40
+    - 225
+    - candidate
+    - uncertainty
+    flags: i
+scoring_checklist:
+- id: candidate_json
+  criterion: Agent writes `candidate_structures.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: screening_report
+  criterion: Agent writes `screening_report.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: candidate_required_tokens
+  criterion: Candidate JSON includes ranking and required metadata fields for screened structures.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: screening_required_tokens
+  criterion: Screening report explicitly states the Tc and space-group criteria, candidate-count handling, and 
+    uncertainty note.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: The answer honestly reflects whether the generation step yields enough candidates and does not fabricate 
+    missing entries.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

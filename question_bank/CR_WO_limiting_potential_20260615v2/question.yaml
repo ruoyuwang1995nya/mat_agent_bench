@@ -1,0 +1,39 @@
+id: CR_WO_limiting_potential_20260615v2
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
+domain: catalysis
+difficulty: easy
+intent: From free-energy steps on CO2RR-to-CO, HER, and CO2-to-HCOOH pathways, compute limiting potentials U_L = 
+  -ΔG_max/e per doc 3.2.2.
+human_prompt_seed: 'Given Gibbs free energies or equivalent energy data for the intermediates and gas-phase references
+  (or clearly explain the source if you provide them), calculate the limiting potential U_L = -ΔG_max/e for the following
+  three pathways: (1) the CO2(g)→CO* pathway, including steps such as CO2*, COOH*, and CO*; (2) HER: formation of H*;
+  and (3) the CO2→HCOOH pathway, including HCOO* and HCOOH*. Use the ΔG expression format from the document (including
+  E(slab), E(ads), 0.5 E(H2), and the eU term), identify the potential-determining step for each pathway and its U_L
+  (V), and provide a summary comparison.
+
+  '
+tags:
+- catalysis_lab
+- chem_co2rr
+- chem_her
+data_files: []
+reference_answers: []
+scoring_checklist:
+- id: three_pathways_ul
+  criterion: 'In the FINAL delivered answer, all three reaction pathways are reported with their PDS (potential-determining
+    step), ΔG_max (eV), and U_L (V): (1) CO₂→CO, (2) HER, (3) CO₂→HCOOH. NOTE: The answer may be in Chinese with markdown
+    tables; lines like ''|------|-------------|-----'' are standard table header separators, NOT truncation indicators. Judge
+    ONLY on whether the final answer text contains the three complete sets of (PDS, ΔG_max, U_L) values, regardless of intermediate
+    computation steps.'
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: grounding_energies
+  criterion: The source of the energy/free-energy data used is clear (computed values, tabulated values, or explicit assumptions),
+    and the substituted values are consistent with the potential-determining-step identification.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

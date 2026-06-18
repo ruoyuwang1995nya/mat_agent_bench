@@ -1,0 +1,82 @@
+id: WO_elec_008_20260615v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Perform ABACUS Bader charge analysis for Al2O3 and summarize per-atom charge transfer evidence.
+human_prompt_seed: "Perform Bader charge analysis for Al2O3 (mock version):\n1. First query/retrieve and organize the
+  input files required for Bader analysis (structure, charge density, and partition-related inputs);\n2. Clearly state
+  the analysis objective: compare the direction and magnitude of charge transfer between Al and O;\n3. Do not run a real
+  calculation. Instead, use the following mock statistics:\n   - average Bader charge of Al = +2.31 e\n   - average Bader
+  charge of O = -1.54 e\n   - net charge conservation error < 0.01 e\n4. Based on the mock values, produce a post-processing
+  summary and conclusions.\n\nPlease provide the following deliverables:\n1) `al2o3_bader_summary.json`: containing at
+  least `input_files`, `atom_index`, `element`, `bader_charge`, and `charge_transfer`;\n2) `al2o3_bader_report.md`:
+  explain the query-based input organization, the mock post-processing workflow, the main charge-transfer trends, and
+  the uncertainty.\n\nIn the final answer, briefly summarize the direction of charge transfer between Al and O, and label
+  it as a mock post-processing result.\n"
+tags:
+- eng_abacus
+data_files: []
+reference_answers:
+- key: bader_json_artifact
+  value: al2o3_bader_summary.json
+- key: bader_report_artifact
+  value: al2o3_bader_report.md
+- key: bader_required_tokens
+  value:
+    filename: al2o3_bader_summary.json
+    must_cover:
+    - atom_index
+    - element
+    - bader_charge
+    - charge_transfer
+    - Al
+    - O
+- key: report_required_tokens
+  value:
+    filename: al2o3_bader_report.md
+    must_cover:
+    - Bader
+    - Al2O3
+    - charge
+    - transfer
+    - Al
+    - O
+    - uncertainty
+- key: al_bader_charge_mock
+  value: 2.31
+  tolerance: 0.3
+scoring_checklist:
+- id: bader_json_artifact
+  criterion: Agent writes `al2o3_bader_summary.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: bader_report_artifact
+  criterion: Agent writes `al2o3_bader_report.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: bader_required_tokens
+  criterion: Bader summary JSON includes per-atom charge-transfer fields and element labels.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: report_required_tokens
+  criterion: Report summarizes charge-transfer trend and uncertainty caveats.
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: al_bader_charge_mock
+  criterion: Final answer includes a mock Al average Bader charge near +2.31 e.
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: Final answer values match the provided mock data (Al avg Bader charge +2.31 e, O avg Bader charge -1.54 e) 
+    and are presented in the generated artifact files (JSON + report), not hallucinated from other sources.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

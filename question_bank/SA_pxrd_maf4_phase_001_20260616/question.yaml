@@ -1,0 +1,114 @@
+id: SA_pxrd_maf4_phase_001_20260616
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
+domain: agnostic
+difficulty: easy
+intent: Compare paired PXRD traces to determine whether enzyme encapsulation preserves the MAF-4 crystalline phase.
+human_prompt_seed: 'Please download and analyze the following powder XRD data file provided via OSS URL:
+
+  - `maf4_enzyme_vs_pristine_pxrd.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_pxrd_maf4_phase_001/1778080965_maf4_enzyme_vs_pristine_pxrd.txt`
+
+  This file contains two patterns: enzyme@MAF-4 and pristine MAF-4.
+
+  Please complete the following analysis:
+
+  1. Perform any necessary cleaning, normalization, or alignment on the two patterns. 2. Identify the main diffraction peaks and compare whether their peak positions remain consistent. 3. Provide a quantitative similarity metric. 4. Judge whether the crystalline phase of MAF-4 is largely preserved after enzyme encapsulation. 5. Briefly point out what intensity changes and peak-position changes each imply.
+
+  At the end of the final answer, append an `<eval_results>...</eval_results>` JSON block containing at least: `pristine.peak1_2theta`, `pristine.peak2_2theta`, `pristine.peak3_2theta`, `comparison.mean_peak_shift_deg`, `comparison.max_peak_shift_deg`, and `comparison.pattern_correlation`.
+
+  In the JSON, field names like `a.b` indicate nested objects (child key `b` under top-level key `a`); please use a nested structure rather than flat string keys. Example structure (numbers are placeholders):
+
+  ```json {"pristine": {"peak1_2theta": 0, "peak2_2theta": 0, "peak3_2theta": 0}, "comparison": {"mean_peak_shift_deg": 0,
+  "max_peak_shift_deg": 0, "pattern_correlation": 0}} ```'
+tags:
+- char_diffraction
+data_files:
+- key: paired_pxrd
+  path: maf4_enzyme_vs_pristine_pxrd.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_pxrd_maf4_phase_001/1778080965_maf4_enzyme_vs_pristine_pxrd.txt
+  description: Paired enzyme@MAF-4 and pristine MAF-4 PXRD traces.
+reference_answers:
+- key: pristine_peak1
+  value:
+    json_path: pristine.peak1_2theta
+    target: 7.22
+    tolerance: 0.12
+  unit: deg
+- key: pristine_peak2
+  value:
+    json_path: pristine.peak2_2theta
+    target: 12.62
+    tolerance: 0.15
+  unit: deg
+- key: pristine_peak3
+  value:
+    json_path: pristine.peak3_2theta
+    target: 17.94
+    tolerance: 0.18
+  unit: deg
+- key: mean_peak_shift
+  value:
+    json_path: comparison.mean_peak_shift_deg
+    target: 0.02
+    tolerance: 0.08
+  unit: deg
+- key: max_peak_shift
+  value:
+    json_path: comparison.max_peak_shift_deg
+    target: 0.04
+    tolerance: 0.1
+  unit: deg
+- key: pattern_correlation
+  value:
+    json_path: comparison.pattern_correlation
+    target: 0.8461676890264044
+    tolerance: 0.12
+scoring_checklist:
+- id: pristine_peak1
+  criterion: The first main pristine MAF-4 peak position reported in eval_results is consistent with the uploaded PXRD 
+    trace.
+  verify: answer_json_numeric
+  capability: data_handling
+  weight: 0.5
+- id: pristine_peak2
+  criterion: The second main pristine MAF-4 peak position reported in eval_results is consistent with the uploaded PXRD 
+    trace.
+  verify: answer_json_numeric
+  capability: data_handling
+  weight: 0.5
+- id: pristine_peak3
+  criterion: The third main pristine MAF-4 peak position reported in eval_results is consistent with the uploaded PXRD 
+    trace.
+  verify: answer_json_numeric
+  capability: data_handling
+  weight: 0.5
+- id: mean_peak_shift
+  criterion: The mean peak shift reported in eval_results is consistent with comparing the paired PXRD traces.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: data_handling
+- id: max_peak_shift
+  criterion: The maximum matched-peak shift reported in eval_results is consistent with comparing the paired PXRD 
+    traces.
+  verify: answer_json_numeric
+  capability: data_handling
+  weight: 0.5
+- id: pattern_correlation
+  criterion: The pattern similarity reported in eval_results is consistent with the paired PXRD traces.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: data_handling
+- id: phase_preserved
+  criterion: The final answer concludes that enzyme encapsulation largely preserves the MAF-4 crystalline phase while 
+    allowing intensity changes.
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: grounding_source
+  criterion: The conclusion is grounded in the uploaded paired PXRD data rather than a generic MOF statement.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

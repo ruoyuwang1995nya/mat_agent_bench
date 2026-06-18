@@ -1,0 +1,74 @@
+id: WO_mech_009_20260616v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Combine database lookup and APEX elastic calculation to evaluate room-temperature elastic properties of a 
+  Ni-Co-Cr alloy.
+human_prompt_seed: 'Evaluate the room-temperature elastic properties of a Ni-Co-Cr alloy. First retrieve structural/elastic
+  information for similar compositions, then provide the APEX calculation results and compare them.
+
+  Please provide the following deliverables:
+  1) `nico_cr_elastic_compare.json`: containing at least `C11`, `C12`, `C44`, `bulk_modulus_GPa`, `db_reference_summary`,
+  and `comparison_note`;
+  2) `nico_cr_elastic_report.md`: explain the database reference source, the APEX calculation settings, the result differences,
+  and the uncertainty.
+
+  In the final answer, briefly provide C11/C12/C44/B and the judgment of consistency with the reference data.'
+tags:
+- meta_database
+data_files: []
+reference_answers:
+- key: elastic_compare_json
+  value: nico_cr_elastic_compare.json
+- key: elastic_report_md
+  value: nico_cr_elastic_report.md
+- key: json_required_tokens
+  value:
+    filename: nico_cr_elastic_compare.json
+    must_cover:
+    - C11
+    - C12
+    - C44
+    - bulk_modulus_GPa
+    - db_reference_summary
+    - comparison_note
+- key: report_required_tokens
+  value:
+    filename: nico_cr_elastic_report.md
+    must_cover:
+    - Ni
+    - Co
+    - Cr
+    - APEX
+    - comparison
+    - uncertainty
+scoring_checklist:
+- id: elastic_compare_json
+  criterion: Agent writes `nico_cr_elastic_compare.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: elastic_report_md
+  criterion: Agent writes `nico_cr_elastic_report.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: json_required_tokens
+  criterion: JSON contains required elastic constants, bulk modulus, and database-comparison fields.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: report_required_tokens
+  criterion: Report explains database reference, APEX setup, and uncertainty caveats.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: Final answer is grounded in generated comparison artifacts and does not fabricate unsupported reference or 
+    computed values.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

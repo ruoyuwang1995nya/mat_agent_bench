@@ -1,0 +1,53 @@
+id: SC_struct_build_003_20260616
+task_type: simulation
+capabilities:
+- structure_manipulation
+domain: agnostic
+difficulty: easy
+intent: Build a phenol molecule from SMILES using RDKit and verify atom count and chemical formula.
+human_prompt_seed: 'Build the 3D structure of a phenol molecule from the SMILES `c1ccc(cc1)O`. Export it as `phenol.xyz`. In the final answer, report: (1) the chemical formula; (2) the total atom count; (3) whether all atoms have reasonable 3D coordinates (minimum interatomic distance not less than 0.7 Å, with no overlaps).'
+tags:
+- struct_build
+data_files: []
+reference_answers:
+- key: file_exists
+  value: phenol.xyz
+- key: atom_count
+  value:
+    filename: phenol.xyz
+    expected: 13
+    tolerance: 0
+- key: min_distance
+  value:
+    filename: phenol.xyz
+    min_distance_A: 0.7
+- key: required_fields
+  value:
+  - '13'
+  - phenol
+scoring_checklist:
+- id: file_exists
+  criterion: Agent writes `phenol.xyz` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: atom_count
+  criterion: Molecule contains exactly 13 atoms (6C + 6H + 1O).
+  verify: struct_file_atom_count
+  capability: structure_manipulation
+  weight: 0.5
+- id: min_distance
+  criterion: The minimum interatomic distance in `phenol.xyz` is at least 0.7 Å, ruling out overlapping coordinates.
+  verify: struct_file_min_interatomic_distance
+  capability: structure_manipulation
+  weight: 0.5
+- id: required_fields
+  criterion: Final answer explicitly states atom count 13 and mentions phenol.
+  verify: contains_all
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: Final answer confirms all atoms have valid 3D coordinates and no overlaps.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

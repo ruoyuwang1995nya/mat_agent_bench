@@ -1,0 +1,63 @@
+id: SC_struct_011_20260616
+task_type: simulation
+capabilities:
+- structure_manipulation
+domain: agnostic
+difficulty: easy
+intent: Build a multi-component Fe-Ni-Co-Cr-V alloy structure from an fcc-Ni 5x5x5 supercell template and report 
+  composition constraints.
+human_prompt_seed: 'Please build an Fe-Ni-Co-Cr-V alloy structure and export it as `alloy_5x5x5_feni_cocrv.cif`.
+
+  Target composition ratio (atomic fraction): Fe:Ni:Co:Cr:V = 0.635:0.165:0.10:0.05:0.05.
+
+  Requirements: 1) use fcc-Ni as the template and build a 5×5×5 supercell before performing substitutional doping; 2) generate `alloy_composition_report.json`, containing at least `template`, `supercell`, `target_ratio`, `element_counts`, and `notes`; 3) explain in the final answer how the target ratios are mapped to integer atom counts, and note any possible rounding deviations.
+
+  '
+tags:
+- mat_alloy
+- phy_surface
+- mat_hea
+- meta_userlog
+data_files: []
+reference_answers:
+- key: structure_artifact
+  value: alloy_5x5x5_feni_cocrv.cif
+- key: report_artifact
+  value: alloy_composition_report.json
+- key: report_required_tokens
+  value:
+    filename: alloy_composition_report.json
+    tokens:
+    - template
+    - supercell
+    - target_ratio
+    - element_counts
+    - Fe
+    - Ni
+    - Co
+    - Cr
+    - V
+    flags: i
+scoring_checklist:
+- id: structure_artifact
+  criterion: Agent writes `alloy_5x5x5_feni_cocrv.cif` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: report_artifact
+  criterion: Agent writes `alloy_composition_report.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: report_required_tokens
+  criterion: Composition report includes template/supercell metadata and explicit element-count entries for Fe, Ni, Co, 
+    Cr, and V.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: The final answer ties alloy construction details to `alloy_5x5x5_feni_cocrv.cif` and 
+    `alloy_composition_report.json`, and explicitly discusses integer mapping or rounding of the target fractions.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

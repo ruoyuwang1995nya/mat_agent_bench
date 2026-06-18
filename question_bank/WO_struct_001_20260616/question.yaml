@@ -1,0 +1,44 @@
+id: WO_struct_001_20260616
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: catalysis
+difficulty: easy
+intent: Calculate surface energy of MgO(100) by constructing slab models and comparing with bulk.
+human_prompt_seed: 'Compute the surface energy of MgO(100): retrieve the MgO rocksalt structure from a database, first optimize the bulk and obtain the per-atom bulk energy, then cut a (100) surface slab (at least 5 layers), add 15 A vacuum, optimize the slab, and compute the surface energy using gamma = (E_slab - N * E_bulk) / (2 * A). Report the surface energy (J/m2) and the key energy values used in the calculation.
+
+  '
+tags:
+- struct_surface
+data_files: []
+reference_answers:
+- key: surface_energy_J_m2
+  value: 1.25
+  tolerance: 0.35
+- key: required_fields
+  value:
+  - E_bulk_per_atom
+  - E_slab
+  - surface_area
+  - surface_energy
+  - convergence_check
+scoring_checklist:
+- id: surface_energy_J_m2
+  criterion: Surface energy is in expected range.
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: required_fields
+  criterion: Report includes bulk energy per atom, slab total energy, surface area, computed surface energy, and 
+    convergence check.
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: Surface energy is computed from stated bulk and slab total energies and area; formula inputs are traceable 
+    in the report rather than asserted without energy provenance. Judge solely from the final answer; do not fail 
+    because the tool-call log omits MCP, web_search, or any specific tool.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

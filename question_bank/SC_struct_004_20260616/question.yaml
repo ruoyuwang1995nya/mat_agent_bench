@@ -1,0 +1,63 @@
+id: SC_struct_004_20260616
+task_type: simulation
+capabilities:
+- structure_manipulation
+domain: agnostic
+difficulty: easy
+intent: Exfoliate a MoS2 monolayer from bulk 2H-MoS2 and verify the 2D structure.
+human_prompt_seed: 'Read `twod_spec.json` and exfoliate a MoS2 monolayer from bulk 2H-MoS2. Add 20 A of vacuum along the z direction, verify that the stoichiometry is MoS2 and the layer thickness is about 3.1 A, and output the structure file as `MoS2_monolayer_POSCAR`.
+
+  '
+tags:
+- mat_2d
+- phy_surface
+data_files:
+- key: twod_spec
+  path: twod_spec.json
+  oss_url: ''
+  description: Specification for MoS2 monolayer exfoliation.
+reference_answers:
+- key: stoichiometry_formula
+  value:
+    filename: MoS2_monolayer_POSCAR
+    formula: MoS2
+- key: layer_thickness_A
+  value:
+    filename: MoS2_monolayer_POSCAR
+    element_a: S
+    element_b: S
+    cutoff_A: 4.0
+    expected: 3.13
+    tolerance: 0.6
+- key: required_fields
+  value:
+  - structure_file
+  - stoichiometry_verified
+  - layer_thickness_A
+  - vacuum_A
+scoring_checklist:
+- id: stoichiometry_formula
+  criterion: The output structure file has MoS2 stoichiometry (verified by reading the file).
+  verify: struct_file_formula
+  capability: structure_manipulation
+  weight: 0.5
+- id: layer_thickness_A
+  criterion: The mean S-S nearest-neighbor distance read from the output POSCAR is approximately 3.13 A, representative 
+    of the MoS2 monolayer S-Mo-S sandwich thickness.
+  verify: struct_file_bond_length
+  capability: structure_manipulation
+  weight: 0.5
+- id: required_fields
+  criterion: Output includes structure file, explicit MoS2 stoichiometry verification, layer thickness near 3.1 A, and 
+    vacuum layer near 20 A.
+  verify: llm_binary_judge
+  capability: structure_manipulation
+  weight: 0.5
+- id: grounding_source
+  criterion: The answer explains how monolayer stoichiometry, in-plane extent, layer thickness, and vacuum are verified 
+    from the delivered POSCAR/structure (geometric definitions), not asserted without structural basis. Judge solely 
+    from the final answer and named deliverables; do not fail because the tool-call log omits MCP, web_search, or any 
+    specific tool.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

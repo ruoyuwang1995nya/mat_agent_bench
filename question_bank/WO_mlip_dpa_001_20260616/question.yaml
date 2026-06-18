@@ -1,0 +1,47 @@
+id: WO_mlip_dpa_001_20260616
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Optimize diamond Si with DPA ML potential (cell + atoms), report lattice constant and energy per atom.
+human_prompt_seed: 'Use the DPA machine-learning potential to optimize diamond-structure Si.
+
+  Retrieve or build the Si diamond primitive cell (space group Fd-3m, a≈5.43 Å) from a database,
+
+  and perform a full optimization including lattice relaxation (atomic coordinates + lattice) with a force convergence criterion of 0.01 eV/Å.
+
+  Report the optimized lattice constant a (Å) and the total energy (eV/atom).
+
+  '
+tags:
+- code_mlip
+data_files: []
+reference_answers:
+- key: lattice_a_A
+  value: 5.43
+  tolerance: 0.15
+- key: required_fields
+  value:
+  - lattice_constant
+  - energy_per_atom
+  - convergence_status
+scoring_checklist:
+- id: lattice_a_A
+  criterion: Optimized Si lattice constant is within tolerance of experimental/DPA value (~5.43 Å).
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: required_fields
+  criterion: Report includes optimized lattice constant, energy per atom, and convergence status (converged or max steps
+    reached).
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: The reported lattice constant and energy values are tied to computation outputs stated in the answer, not 
+    textbook recall or invented numbers. Judge solely from the final answer.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

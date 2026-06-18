@@ -1,0 +1,51 @@
+id: WO_mlip_dpa_005_20260616
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Compute Cu FCC single-vacancy migration barrier with DPA via NEB; report forward barrier energy.
+human_prompt_seed: 'Compute the migration barrier of a single vacancy in FCC Cu.
+
+  Retrieve or build the Cu FCC primitive cell from a database and expand it to a 3×3×3 supercell,
+
+  remove one atom to form the vacancy structure as the initial state, and move a neighboring atom into the vacancy site to form the final state.
+
+  Optimize the initial and final structures separately, then perform an NEB calculation using the DPA machine-learning potential (5 intermediate images).
+
+  Report the forward migration barrier (eV) and the trend of the energy profile.
+
+  '
+tags:
+- struct_transform
+- code_mlip
+data_files: []
+reference_answers:
+- key: forward_barrier_eV
+  value: 0.7
+  tolerance: 0.2
+- key: required_fields
+  value:
+  - initial_state
+  - final_state
+  - forward_barrier
+  - energy_profile
+scoring_checklist:
+- id: forward_barrier_eV
+  criterion: Cu vacancy forward migration barrier is within tolerance (~0.7 eV).
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: required_fields
+  criterion: Report includes description of initial and final states, forward barrier value, and energy profile along 
+    the migration path.
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: The migration barrier is derived from NEB calculation outputs, not literature values. Judge solely from the
+    final answer.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

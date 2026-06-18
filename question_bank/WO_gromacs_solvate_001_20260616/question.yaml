@@ -1,0 +1,106 @@
+id: WO_gromacs_solvate_001_20260616
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Build a solvated, ion-neutralized GROMACS system from a PDB file and run energy minimization, all in a single 
+  Bohrium submission.
+human_prompt_seed: 'A PDB file for alanine dipeptide (ACE-ALA-NME), `ala_dipeptide.pdb`, is provided.
+
+  Please complete the following full GROMACS modeling and simulation workflow: 1) generate the topology for this PDB using the OPLS-AA force field (`pdb2gmx`); 2) define a cubic box with at least 1.0 nm between the solute and the box boundary (`editconf`); 3) solvate it with SPC/E water (`solvate`); 4) add Na+/Cl- ions to neutralize the system charge (`genion`); 5) perform energy minimization (`steep`, `emtol=1000`, `nsteps=50000`).
+
+  In the final answer, report the EM convergence step count, the final potential energy (kJ/mol), and the number of water molecules in the system.'
+tags:
+- eng_gromacs
+data_files:
+- key: ala_dipeptide_pdb
+  path: ala_dipeptide.pdb
+  description: Alanine dipeptide (ACE-ALA-NME) PDB structure
+reference_answers:
+- key: em_output
+  value: em.gro
+- key: single_submission
+  value:
+    filename: run.sh
+    tokens:
+    - gmx_mpi pdb2gmx
+    - gmx_mpi solvate
+    - genion
+    - gmx_mpi mdrun
+    case_sensitive: false
+- key: gmx_mpi_used
+  value:
+    filename: run.sh
+    tokens:
+    - gmx_mpi
+    case_sensitive: true
+- key: maxwarn_used
+  value:
+    filename: run.sh
+    tokens:
+    - -maxwarn
+- key: set_e_in_script
+  value:
+    filename: run.sh
+    tokens:
+    - set -e
+- key: genion_pipe
+  value:
+    filename: run.sh
+    pattern: echo.*\|.*gmx_mpi\s+genion|printf.*\|.*gmx_mpi\s+genion
+    flags: i
+scoring_checklist:
+- id: single_submission
+  criterion: All steps (pdb2gmx, solvate, genion, mdrun) are chained in a single run.sh script submitted once to 
+    Bohrium.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: gmx_mpi_used
+  criterion: The run.sh script uses `gmx_mpi` for GROMACS commands.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: no_local_gmx
+  criterion: Agent does NOT attempt to run any gmx/gmx_mpi command locally (outside of the Bohrium submission).
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: genion_pipe
+  criterion: The genion command uses echo/pipe (e.g. `echo "SOL" | gmx_mpi genion ...`) to provide interactive group 
+    selection.
+  verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
+- id: maxwarn_used
+  criterion: grompp invocations include `-maxwarn` flag.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: topology_before_solvate
+  criterion: The topology file exists (via pdb2gmx) before `solvate -p` is called.
+  verify: llm_binary_judge
+  capability: workflow_orchestration
+  weight: 0.5
+- id: genion_has_tpr
+  criterion: A grompp step produces a .tpr before genion is called (genion requires a .tpr input).
+  verify: llm_binary_judge
+  capability: workflow_orchestration
+  weight: 0.5
+- id: set_e_in_script
+  criterion: The run.sh script includes `set -e` so that it aborts on first error.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: em_convergence
+  criterion: Final answer reports EM convergence (step count and potential energy).
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: water_count
+  criterion: Final answer reports the number of water molecules in the solvated system.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5

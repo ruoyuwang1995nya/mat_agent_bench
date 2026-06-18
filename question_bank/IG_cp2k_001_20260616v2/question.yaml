@@ -1,0 +1,58 @@
+id: IG_cp2k_001_20260616v2
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
+domain: agnostic
+difficulty: easy
+intent: Generate a CP2K DFT single-point energy input file for a simple bulk system.
+human_prompt_seed: 'Please generate a CP2K DFT single-point energy input file for rock-salt MgO (a=4.212 Å) with the
+  following requirements:
+
+  1. Use the PBE functional and a DZVP basis set
+
+  2. Plane-wave cutoff energy of 400 Ry
+
+  3. SCF convergence threshold of 1.0E-6
+
+  4. Use Goedecker pseudopotentials (GTH-PBE)
+
+  The output filename must be `cp2k.inp`.'
+tags:
+- eng_cp2k
+data_files: []
+reference_answers:
+- key: input_artifact
+  value: cp2k.inp
+- key: required_keywords
+  value:
+    filename: cp2k.inp
+    tokens:
+    - FORCE_EVAL
+    - DFT
+    - PBE
+    - SCF
+    - CUTOFF
+    flags: i
+scoring_checklist:
+- id: input_artifact
+  criterion: Agent writes `cp2k.inp` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: required_keywords
+  criterion: The input file contains essential CP2K sections and keywords (FORCE_EVAL, DFT, PBE, SCF, CUTOFF).
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: physical_params
+  criterion: The input file uses physically reasonable parameters for MgO (PBE functional, DZVP basis, GTH 
+    pseudopotentials, cutoff ~400 Ry, SCF convergence 1E-6).
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: Parameters match the user request and standard CP2K MgO calculation practice.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

@@ -1,0 +1,66 @@
+id: WO_direct_spec_priority_002_20260616
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+priority: P0
+intent: When run_spec.json contradicts free-text instructions, generated INCAR-like file must follow the spec 
+  (direct.toml contract).
+human_prompt_seed: 'There is a `run_spec.json` file in the workspace. Please generate a VASP-style single-point INCAR using the parameters specified in it (key-value pairs, one parameter per line is sufficient), and use the filename given by `output_filename` in the JSON.
+
+
+  For similar single-point jobs, I usually use ENCUT=520, ISMEAR=0, and SIGMA=0.2, just for reference.
+
+  '
+tags:
+- eng_vasp
+data_files:
+- key: run_spec
+  path: run_spec.json
+  oss_url: ''
+  description: ENCUT/ISMEAR/SIGMA and output_filename; seed text suggests different defaults on purpose.
+reference_answers:
+- key: incar_artifact
+  value: single_point.incar
+  workspace_resolve: root
+- key: encut_from_spec
+  value:
+    filename: single_point.incar
+    pattern: ENCUT\s*=\s*400
+    flags: i
+  workspace_resolve: root
+- key: ismear_from_spec
+  value:
+    filename: single_point.incar
+    pattern: ISMEAR\s*=\s*-\s*5
+    flags: i
+  workspace_resolve: root
+- key: sigma_from_spec
+  value:
+    filename: single_point.incar
+    pattern: SIGMA\s*=\s*0\.05
+    flags: i
+  workspace_resolve: root
+scoring_checklist:
+- id: incar_artifact
+  criterion: Workspace contains single_point.incar at project root (or discoverable as artifact).
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: encut_from_spec
+  criterion: single_point.incar sets ENCUT from run_spec.json (400), not the wrong 520 value in the prompt text.
+  verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
+- id: ismear_from_spec
+  criterion: single_point.incar sets ISMEAR from run_spec.json (-5), not 0 from the prompt text.
+  verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
+- id: sigma_from_spec
+  criterion: single_point.incar sets SIGMA from run_spec.json (0.05), not 0.2 from the prompt text.
+  verify: text_file_regex
+  capability: data_handling
+  weight: 0.5

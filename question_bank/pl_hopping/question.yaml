@@ -7,17 +7,17 @@ domain: battery
 difficulty: easy
 intent: Analyze Li+ hopping in PEO-LiTFSI by comparing PMF barriers and diffusion evidence for two salt-ratio 
   conditions.
-human_prompt_seed: '文件 `free_energy_hopping_bundle.json` 给出了 PEO-LiTFSI 在两个盐浓度条件下的局域结构、PMF 和扩散关联数据。
+human_prompt_seed: 'The file `free_energy_hopping_bundle.json` provides local-structure, PMF, and diffusion-related data for PEO-LiTFSI under two salt-concentration conditions.
 
-  请完成一个 Li+ hopping 机制分析：
+  Please complete a Li+ hopping mechanism analysis:
 
-  1. 解释 reaction coordinate 的物理意义；
+  1. Explain the physical meaning of the reaction coordinate.
 
-  2. 比较两种条件下 PMF 最低点、主要能垒和稳定态；
+  2. Compare the PMF minima, main barriers, and stable states under the two conditions.
 
-  3. 结合常规 MD 中的配位和扩散信息，判断哪种条件更有利于 hopping；
+  3. Combine the coordination and diffusion information from conventional MD to determine which condition is more favorable for hopping.
 
-  4. 说明如果进一步做实验或更高精度模拟，应优先验证什么。
+  4. Explain what should be prioritized for validation if further experiments or higher-accuracy simulations are performed.
 
   '
 tags:

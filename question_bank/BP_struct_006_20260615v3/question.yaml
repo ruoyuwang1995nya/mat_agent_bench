@@ -1,0 +1,77 @@
+id: BP_struct_006_20260615v3
+task_type: simulation
+capabilities:
+- data_handling
+- scientific_reasoning
+domain: battery
+difficulty: easy
+intent: Batch retrieve 20 lithium-containing structures and compute the average volume per atom from per-structure 
+  metadata.
+human_prompt_seed: 'Batch-retrieve 20 lithium-containing materials (with downloadable structure files) and calculate their
+  average volume per atom.
+
+  Please provide the following deliverables:
+
+  1) `li20_volume_stats.json`: must contain at least `candidate_count`, `volume_per_atom_list`, `average_volume_per_atom`,
+  and `unit`; 2) `li20_retrieval_report.md`: describe the retrieval criteria (lithium-containing, count = 20), the source
+  of the volume/atom-count data for each entry, and the averaging procedure; 3) In the final answer, provide the average
+  value and explain what sample biases may affect this statistic.
+
+  Note: This task emphasizes batch retrieval plus statistical aggregation, and does not require any subsequent first-principles
+  calculations.'
+tags:
+- wf_batch
+- meta_userlog
+data_files: []
+reference_answers:
+- key: stats_json
+  value: li20_volume_stats.json
+- key: retrieval_report
+  value: li20_retrieval_report.md
+- key: stats_required_tokens
+  value:
+    filename: li20_volume_stats.json
+    tokens:
+    - candidate_count
+    - 20
+    - volume_per_atom_list
+    - average_volume_per_atom
+    - unit
+    flags: i
+- key: report_required_tokens
+  value:
+    filename: li20_retrieval_report.md
+    tokens:
+    - lithium
+    - 20
+    - volume
+    - atom
+    - average
+    flags: i
+scoring_checklist:
+- id: stats_json
+  criterion: Agent writes `li20_volume_stats.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: retrieval_report
+  criterion: Agent writes `li20_retrieval_report.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: stats_required_tokens
+  criterion: Stats JSON contains batch-size and average-volume fields for 20 lithium-containing candidates.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: report_required_tokens
+  criterion: Report explains retrieval constraints and average-volume calculation rationale.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: The final answer is grounded in retrieved structure metadata and explicitly distinguishes measured per-item
+    values from computed aggregate statistics.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

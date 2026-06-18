@@ -1,0 +1,51 @@
+id: WO_mech_002_20260616
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: 'Estimate detonation parameters for RDX: independently construct molecule, compute properties, apply Kamlet-Jacobs
+  equations.'
+human_prompt_seed: 'Estimate the detonation velocity and detonation pressure of RDX (C3H6N6O6): construct the RDX molecular structure yourself (using SMILES or manual building), look up or compute the density (1.806 g/cm3) and heat of formation (+70 kJ/mol), and use the Kamlet-Jacobs empirical equations to calculate the detonation velocity D (m/s) and detonation pressure P (GPa). Report the full calculation procedure and unit conversions.
+
+  '
+tags:
+- struct_build
+data_files: []
+reference_answers:
+- key: detonation_velocity_m_s
+  value: 8750.0
+  tolerance: 400.0
+- key: detonation_pressure_GPa
+  value: 34.0
+  tolerance: 4.0
+- key: required_fields
+  value:
+  - equation
+  - unit_consistency
+  - velocity
+  - pressure
+scoring_checklist:
+- id: detonation_velocity_m_s
+  criterion: Detonation velocity is in tolerance.
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: detonation_pressure_GPa
+  criterion: Detonation pressure is in tolerance.
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: required_fields
+  criterion: Report includes Kamlet-Jacobs equation, unit consistency check, velocity and pressure values.
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: Detonation parameters are computed by explicitly applying Kamlet-Jacobs equations with the given density 
+    and heat of formation; formula inputs are stated. Judge solely from the final answer; do not fail because the 
+    tool-call log omits MCP, web_search, or any specific tool.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

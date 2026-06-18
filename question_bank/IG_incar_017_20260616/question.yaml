@@ -1,0 +1,82 @@
+id: IG_incar_017_20260616
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
+domain: agnostic
+difficulty: easy
+intent: 'Generate VASP INCAR for high-precision structure optimization of Al as BSE precursor. PREC=Accurate, ISIF=3.
+
+  '
+human_prompt_seed: 'Generate a VASP INCAR for a high-precision structural optimization of simple metallic Al (FCC) as the precursor step for subsequent optical calculations. High-precision settings and full optimization of the cell parameters are required. Write the complete INCAR to the `INCAR` file in the current directory.'
+tags:
+- eng_vasp
+reference_answers:
+- key: incar_artifact
+  value: INCAR
+- key: incar_critical_tokens
+  value:
+    filename: INCAR
+    tokens:
+    - EDIFF
+    - IBRION
+    - ISIF
+    flags: i
+- key: critical_EDIFF
+  value:
+    filename: INCAR
+    pattern: ^\s*EDIFF\s*=\s*\S+
+    flags: im
+- key: critical_IBRION
+  value:
+    filename: INCAR
+    pattern: ^\s*IBRION\s*=\s*(?:1|2)\b
+    flags: im
+- key: critical_ISIF
+  value:
+    filename: INCAR
+    pattern: ^\s*ISIF\s*=\s*3\b
+    flags: im
+- key: reasonable_params
+  value:
+    filename: INCAR
+scoring_checklist:
+- id: incar_artifact
+  criterion: INCAR file is generated.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: incar_critical_tokens
+  criterion: INCAR contains all critical parameter keywords.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: critical_EDIFF
+  criterion: INCAR sets EDIFF = 1e-06 (critical param).
+  verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
+- id: critical_IBRION
+  criterion: INCAR sets IBRION = 1 or 2 (critical param).
+  verify: text_file_regex
+  capability: tool_utilization
+  weight: 0.5
+- id: critical_ISIF
+  criterion: INCAR sets ISIF = 3 (critical param).
+  verify: text_file_regex
+  capability: tool_utilization
+  weight: 0.5
+- id: reasonable_params
+  criterion: The INCAR uses physically reasonable general settings for a VASP VASP calculation calculation. ENCUT is 
+    present (unless not relevant), EDIFF is present with a reasonable value, PREC is set. Machine-specific params (KPAR,
+    NCORE, NPAR) are optional and should not be penalized if absent or different from reference.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: The generated INCAR is grounded in the provided prompt data (material system, calculation type, critical 
+    parameters) rather than hallucinated. Judge solely from the final answer and stated file content; do not fail 
+    because the tool-call log omits MCP, web_search, or any specific tool.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

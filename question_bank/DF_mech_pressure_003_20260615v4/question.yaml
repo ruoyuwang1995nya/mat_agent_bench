@@ -1,0 +1,104 @@
+id: DF_mech_pressure_003_20260615v4
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
+domain: agnostic
+difficulty: easy
+intent: Produce structured mechanical-pressure estimation with sensitivity analysis and go/no-go recommendation.
+human_prompt_seed: 'The workspace already provides `implant_params.json`.
+
+
+  Please read this file first, then generate:
+
+  1) `calc_sheet.json`: containing `load_N`, `contact_area_mm2`, `pressure_MPa`, and `formula`;
+
+  2) `estimation_report.md`: including a parameter table, formula, calculation steps, sources of uncertainty, and validation
+  suggestions.
+
+  3) `sensitivity_note.md`: apply a ±10% perturbation to both `load_N` and `contact_area_mm2`, and explain the direction
+  and magnitude of the resulting pressure changes.
+
+
+  Notes:
+
+  - You may use the relation `pressure_MPa = load_N / contact_area_mm2` (N/mm^2 = MPa);
+
+  - Do not use fabricated parameters not provided in the file.
+
+  '
+tags:
+- meta_userlog
+- phy_elastic
+data_files:
+- key: implant_params
+  path: implant_params.json
+  oss_url: ''
+  description: Minimal parameter set for interface pressure estimation.
+reference_answers:
+- key: calc_sheet_artifact
+  value: calc_sheet.json
+- key: estimation_report_artifact
+  value: estimation_report.md
+- key: sensitivity_artifact
+  value: sensitivity_note.md
+- key: calc_sheet_required_tokens
+  value:
+    filename: calc_sheet.json
+    tokens:
+    - load_N
+    - contact_area_mm2
+    - pressure_MPa
+    - formula
+    flags: i
+- key: pressure_value_regex
+  value:
+    filename: calc_sheet.json
+    pattern: '"pressure_MPa"\s*:\s*3(?:\.0+)?\b'
+    flags: i
+- key: estimation_report_required_tokens
+  value:
+    filename: estimation_report.md
+    tokens:
+    - parameter
+    - formula
+    - uncertainty
+    - validation suggestion
+    - MPa
+    flags: i
+scoring_checklist:
+- id: calc_sheet_artifact
+  criterion: Agent writes `calc_sheet.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: estimation_report_artifact
+  criterion: Agent writes `estimation_report.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: sensitivity_artifact
+  criterion: Agent writes `sensitivity_note.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: calc_sheet_required_tokens
+  criterion: Calculation sheet JSON includes required keys.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: pressure_value_regex
+  criterion: Calculation sheet reports pressure around 3 MPa from provided parameters.
+  verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
+- id: estimation_report_required_tokens
+  criterion: Report includes formula, units, uncertainty discussion, and validation suggestions.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: The estimate is grounded in `implant_params.json` and avoids fabricated non-provided parameters.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

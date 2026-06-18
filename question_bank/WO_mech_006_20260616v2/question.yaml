@@ -1,0 +1,77 @@
+id: WO_mech_006_20260616v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: alloy
+difficulty: easy
+intent: Build the convex hull for a CuCrZr alloy and summarize stability interpretation artifacts.
+human_prompt_seed: "Perform convex-hull stability analysis for CuCrZr (mock version):\n1. First query/retrieve and organize
+  the input files and reference-phase information needed for convex-hull analysis;\n2. Explain the stability criterion
+  (the relationship between hull distance and stability label);\n3. Do not run a real calculation. Instead, use the
+  following mock results:\n   - hull_distance = 0.024 eV/atom\n   - stability_label = metastable\n   - reference_phases
+  = [\"Cu\", \"Cr2Zr\", \"CuZr2\"]\n4. Based on the mock values, perform stability post-processing and interpret the conclusions.\n\nPlease
+  provide the following deliverables:\n1) `cucrzr_convex_hull_summary.json`: containing at least `input_files`, `hull_distance`,
+  `stability_label`, `reference_phases`, and `notes`;\n2) `cucrzr_convex_hull_report.md`: explain the query-based input
+  organization, the mock post-processing workflow, the stability criterion, and the uncertainty.\n\nIn the final answer,
+  explicitly state the qualitative thermodynamic-stability conclusion for this structure (stable / metastable / unstable).\n"
+tags:
+- code_mlip
+data_files: []
+reference_answers:
+- key: hull_summary_json
+  value: cucrzr_convex_hull_summary.json
+- key: hull_report_md
+  value: cucrzr_convex_hull_report.md
+- key: hull_required_tokens
+  value:
+    filename: cucrzr_convex_hull_summary.json
+    must_cover:
+    - hull_distance
+    - stability_label
+    - reference_phases
+    - Cu
+    - Cr
+    - Zr
+- key: report_required_tokens
+  value:
+    filename: cucrzr_convex_hull_report.md
+    must_cover:
+    - convex hull
+    - stability
+    - CuCrZr
+    - uncertainty
+- key: hull_distance_mock
+  value: 0.024
+  tolerance: 0.01
+scoring_checklist:
+- id: hull_summary_json
+  criterion: Agent writes `cucrzr_convex_hull_summary.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: hull_report_md
+  criterion: Agent writes `cucrzr_convex_hull_report.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: hull_required_tokens
+  criterion: Hull summary JSON includes distance/stability fields and phase-reference metadata.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: report_required_tokens
+  criterion: Report explains convex-hull interpretation and uncertainty caveats.
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: hull_distance_mock
+  criterion: Final answer includes a mock hull distance near 0.024 eV/atom.
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: Final answer is grounded in convex-hull artifacts and does not assert unsupported stability conclusions.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

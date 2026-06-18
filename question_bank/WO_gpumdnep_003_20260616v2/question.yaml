@@ -1,0 +1,53 @@
+id: WO_gpumdnep_003_20260616v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Compute graphene DOS and heat capacity with GPUMD using Graphene_Lindsay_2010_modified potential.
+human_prompt_seed: Retrieve `https://raw.githubusercontent.com/brucefan1983/GPUMD/master/potentials/tersoff/Graphene_Lindsay_2010_modified.txt`,
+  generate a directly runnable `run.in`, and use GPUMD to compute the DOS and heat capacity of graphene.
+tags:
+- eng_gpumd
+data_files: []
+reference_answers:
+- key: run_input_artifact
+  value: run.in
+- key: graphene_potential_token
+  value:
+    filename: run.in
+    tokens:
+    - potential
+    - Graphene_Lindsay_2010_modified.txt
+    flags: i
+- key: dos_core_tokens
+  value:
+    filename: run.in
+    tokens:
+    - ensemble nve
+    - compute_dos
+    flags: i
+- key: heat_capacity_3kb_per_atom
+  value: {}
+scoring_checklist:
+- id: run_input_artifact
+  criterion: Generate `run.in`.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: graphene_potential_token
+  criterion: '`run.in` uses the `Graphene_Lindsay_2010_modified.txt` potential.'
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: dos_core_tokens
+  criterion: '`run.in` contains the two key parameters `ensemble nve` and `compute_dos`.'
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: heat_capacity_3kb_per_atom
+  criterion: The graphene heat-capacity result should be around `3.0 k_B/atom` (a small deviation is acceptable).
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5

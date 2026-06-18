@@ -7,17 +7,17 @@ domain: polymer
 difficulty: easy
 intent: Pre-screen PM6, PTB7-Th, D18, and P3HT donor polymers for a Y6-like acceptor window using curated oligomer, 
   conformational, and ranking data.
-human_prompt_seed: '文件 `donor_prescreen_bundle.json` 提供了 PM6、PTB7-Th、D18 和 P3HT 四类给体聚合物的低聚体建模、量化、构象采样和简化 ranking 结果。
+human_prompt_seed: 'The file `donor_prescreen_bundle.json` provides oligomer modeling, quantum-chemistry, conformational sampling, and simplified ranking results for four donor polymers: PM6, PTB7-Th, D18, and P3HT.
 
-  请完成一个给体预筛选报告：
+  Please complete a donor pre-screening report:
 
-  1. 比较 HOMO/LUMO、带隙、主链扭转角和平面性；
+  1. Compare the HOMO/LUMO levels, band gaps, backbone torsion angles, and planarity.
 
-  2. 结合 1/n 外推结果，判断哪些体系更适合与 Y6 类受体匹配；
+  2. Based on the 1/n extrapolation results, determine which systems are more suitable for matching with a Y6-like acceptor.
 
-  3. 输出最终 shortlist，并分别说明“综合最优”和“高 Voc 候选”；
+  3. Output the final shortlist, and separately identify the "best overall" and the "high-Voc candidate."
 
-  4. 写出至少一个不确定性来源。
+  4. State at least one source of uncertainty.
 
   '
 tags:

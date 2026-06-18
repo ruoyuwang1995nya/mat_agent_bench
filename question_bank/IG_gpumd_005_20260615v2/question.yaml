@@ -1,0 +1,42 @@
+id: IG_gpumd_005_20260615v2
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
+domain: agnostic
+difficulty: easy
+intent: Generate a GPUMD liquid-silicon transport-analysis `run.in`.
+human_prompt_seed: 'Please write a `run.in` for liquid silicon: first perform high-temperature equilibration, then include
+  self-diffusion, MSD, viscosity, and RDF/ADF statistics in the later stage.'
+tags:
+- eng_gpumd
+data_files: []
+reference_answers:
+- key: run_in_artifact
+  value: run.in
+- key: liquid_transport_tokens
+  value:
+    filename: run.in
+    tokens:
+    - potential
+    - velocity
+    - ensemble npt_scr
+    - ensemble nve
+    - compute_sdc
+    - compute_msd
+    - compute_viscosity
+    - compute_rdf
+    - compute_adf
+    - run
+    flags: i
+scoring_checklist:
+- id: run_in_artifact
+  criterion: Generate `run.in`.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: liquid_transport_tokens
+  criterion: The input contains the key commands for liquid-transport statistics.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5

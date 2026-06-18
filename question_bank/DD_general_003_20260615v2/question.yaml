@@ -1,0 +1,46 @@
+id: DD_general_003_20260615v2
+task_type: material_characterization
+capabilities:
+- data_handling
+- scientific_reasoning
+domain: battery
+difficulty: easy
+intent: Diagnose relaxation non-convergence caused by EDIFF being too loose relative to EDIFFG.
+human_prompt_seed: 'Read `case_bundle.json`, which contains the INCAR parameters and an ionic-step excerpt for a LiCoO2
+  relaxation calculation. The run still fails to converge after exhausting 200 NSW steps; the forces oscillate between
+  0.019 and 0.022 eV/A, and each SCF cycle converges in only 3 steps. Please diagnose the root cause and provide a fix.
+
+  '
+tags:
+- log_diagnosis
+data_files:
+- key: case_bundle
+  path: case_bundle.json
+  oss_url: ''
+  description: 'VASP input/output bundle: LiCoO2 relax with EDIFF=1E-3, force oscillates.'
+reference_answers:
+- key: root_cause
+  value: ediff_too_loose_for_relax
+- key: required_fields
+  value:
+  - root_cause
+  - evidence
+  - fix_EDIFF
+  - ediff_ediffg_rule
+scoring_checklist:
+- id: root_cause
+  criterion: Correctly identifies EDIFF too loose (1E-3 causing force noise in LiCoO2 relax) as root cause.
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: required_fields
+  criterion: Explains force noise mechanism from loose EDIFF, and recommends tightening EDIFF to 1E-5 or 1E-6.
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: grounding_evidence
+  criterion: Diagnosis references specific values from the case_bundle.json (EDIFF=1E-3, force oscillation range, rapid 
+    SCF convergence pattern).
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

@@ -1,0 +1,145 @@
+id: SC_struct_005_20260616
+task_type: simulation
+capabilities:
+- structure_manipulation
+domain: agnostic
+difficulty: easy
+intent: Infer SG-derived chemical formulas for 5 disordered crystal structures and construct ordered replicas to assess 
+  3D structure perception.
+human_prompt_seed: 'Process the following 5 crystal structures with disordered occupancies one by one. All inputs are provided via OSS URLs:
+
+  - `disorder_DAN-2.cif` -> `https://bohrium-agent-test.oss-cn-zhangjiakou.aliyuncs.com/evomaster/evaluation/structure_disorder/strucuture_disorder/disorder_DAN-2.cif`
+
+  - `disorder_DAP-4.cif` -> `https://bohrium-agent-test.oss-cn-zhangjiakou.aliyuncs.com/evomaster/evaluation/structure_disorder/strucuture_disorder/disorder_DAP-4.cif`
+
+  - `disorder_PAP-H4.cif` -> `https://bohrium-agent-test.oss-cn-zhangjiakou.aliyuncs.com/evomaster/evaluation/structure_disorder/strucuture_disorder/disorder_PAP-H4.cif`
+
+  - `disorder_PAP-M5.cif` -> `https://bohrium-agent-test.oss-cn-zhangjiakou.aliyuncs.com/evomaster/evaluation/structure_disorder/strucuture_disorder/disorder_PAP-M5.cif`
+
+  - `disorder_TILPEN.cif` -> `https://bohrium-agent-test.oss-cn-zhangjiakou.aliyuncs.com/evomaster/evaluation/structure_disorder/strucuture_disorder/disorder_TILPEN.cif`
+
+
+  For each structure, use a structure-generation tool to construct an ordered replica, and summarize:
+
+  (1) `chemical_formula` (keep the original string returned by the tool/structure parser as much as possible).
+
+  (2) `is_disordered`.
+
+  (3) `ordered_replica_count`.
+
+  (4) `ordered_output_archive`.
+
+
+  For the ordered replica of `disorder_DAN-2.cif`, `chemical_formula` must use **integer stoichiometry** (counts like `H13.98` from fractional occupancies must not appear).
+
+  The ordered-replica output file for each structure must be named `ordered_<original_filename>.cif` (for example, `ordered_disorder_DAN-2.cif`).
+
+  All ordered replicas must be fully ordered structures: every `_atom_site_occupancy` in the output CIF must be 1, with no remaining partial or split occupancies.
+
+  In the final answer, list the above information item by item by filename, and explicitly state the mapping between each original filename and its corresponding `ordered_<original_filename>.cif`.
+
+  '
+tags:
+- struct_molcrys
+reference_answers:
+- key: structures_processed
+  value:
+    pattern: ordered_*.cif
+    expected: 5
+    tolerance: 0
+- key: ordered_files_parsable
+  value:
+    filename: ordered_*.cif
+- key: ordered_files_occupancy_one
+  value:
+    filename: ordered_*.cif
+    tolerance: 1.0e-06
+- key: ordered_file_name_mapping
+  value:
+  - disorder_DAN-2.cif
+  - disorder_DAP-4.cif
+  - disorder_PAP-H4.cif
+  - disorder_PAP-M5.cif
+  - disorder_TILPEN.cif
+  - ordered_disorder_DAN-2.cif
+  - ordered_disorder_DAP-4.cif
+  - ordered_disorder_PAP-H4.cif
+  - ordered_disorder_PAP-M5.cif
+  - ordered_disorder_TILPEN.cif
+- key: sc005_disorder_formulas
+  value: {}
+- key: required_fields
+  value:
+  - chemical_formula
+  - is_disordered
+  - ordered_replica_count
+  - ordered_output_archive
+- key: ordered_integer_stoichiometry
+  value:
+    filename: ordered_*.cif
+- key: ordered_replicas_distinct
+  value:
+    filename: ordered_*.cif
+scoring_checklist:
+- id: structures_processed
+  criterion: All 5 disordered structures are processed (verified by counting ordered-replica output files in workspace).
+  verify: struct_file_count
+  capability: structure_manipulation
+  weight: 0.5
+- id: ordered_files_parsable
+  criterion: All `ordered_*.cif` deliverables can be parsed as structure files.
+  verify: struct_file_parsable
+  capability: structure_manipulation
+  weight: 0.5
+- id: ordered_files_occupancy_one
+  criterion: Every ordered-replica CIF has only occupancy-1 sites; no partial or split occupancies remain in 
+    `_atom_site_occupancy`.
+  verify: struct_file_all_occupancy_one
+  capability: structure_manipulation
+  weight: 0.5
+- id: sc005_disorder_formulas
+  criterion: The answer includes the four reference formula strings for DAP-4, PAP-H4, PAP-M5, and TILPEN; for DAN-2 the
+    reported ordered-replica chemical_formula uses integer stoichiometry only (no fractional occupancies like 13.98 in 
+    counts).
+  verify: sc005_disorder_formulas
+  weight: 0.5
+  capability: structure_manipulation
+- id: partial_formulas_ok
+  criterion: The answer reports chemically plausible ordered-replica formulas for at least 3 of the 5 structures. 
+    Reference formulas — DAP-4 H144C48N24Cl24O96, PAP-H4 H288C80N48Cl48O192, PAP-M5 Ag8H112C40N16Cl24O96, TILPEN 
+    Fe2H40C24N16O2, DAN-2 integer-only stoichiometry. Pass if ≥3 formulas are present and correct (element ordering may 
+    differ).
+  verify: llm_binary_judge
+  weight: 0.5
+  capability: scientific_reasoning
+- id: required_fields
+  criterion: Each filename is paired with chemical_formula, is_disordered, ordered_replica_count, and 
+    ordered_output_archive.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: ordered_file_name_mapping
+  criterion: Final answer explicitly names all five input CIF basenames and the five corresponding 
+    `ordered_<basename>.cif` output files.
+  verify: contains_all
+  capability: data_handling
+  weight: 0.5
+- id: ordered_integer_stoichiometry
+  criterion: The chemical formula of each ordered replica has integer atom counts (no fractional like H13.98 or Li0.5).
+  verify: struct_file_integer_stoichiometry
+  weight: 0.5
+  capability: structure_manipulation
+- id: ordered_replicas_distinct
+  criterion: When multiple ordered replicas are generated for the same structure, they are structurally distinct 
+    (different atom arrangements, not identical copies).
+  verify: struct_file_replicas_distinct
+  weight: 0.5
+  capability: structure_manipulation
+- id: grounding_source
+  criterion: The answer explains the physical/chemical basis for each structure (disorder/occupancy, connectivity, 
+    valence or charge balance, and what changes when building an ordered replica), tied to the named CIFs and delivered 
+    outputs, not only restating task text without structural basis. Judge solely from the final answer and named 
+    deliverables; do not fail because the tool-call log omits MCP, web_search, or any specific tool.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

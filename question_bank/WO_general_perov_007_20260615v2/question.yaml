@@ -1,0 +1,70 @@
+id: WO_general_perov_007_20260615v2
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
+domain: semiconductor
+difficulty: easy
+intent: Query high-efficiency perovskite additives and produce recommendation plus a proposal draft based on predicted 
+  performance.
+human_prompt_seed: 'Please prepare a recommendation and proposal centered on "high-efficiency (>26%) perovskite additive
+  design".
+
+  Please output:
+  1) `perovskite_additive_candidates.json`: containing at least `smiles`, `predicted_effect`, `selection_reason`, and
+  `similar_formulation_hint`;
+  2) `perovskite_additive_proposal.md`: based on the best candidate, provide the research objectives, validation plan,
+  expected results, and risks.
+
+  In the final answer, briefly explain why this candidate is the most worthwhile to validate first.'
+tags: []
+priority: P0
+data_files: []
+reference_answers:
+- key: additive_json
+  value: perovskite_additive_candidates.json
+- key: proposal_md
+  value: perovskite_additive_proposal.md
+- key: additive_tokens
+  value:
+    filename: perovskite_additive_candidates.json
+    must_cover:
+    - smiles
+    - predicted_effect
+    - selection_reason
+    - similar_formulation_hint
+- key: proposal_tokens
+  value:
+    filename: perovskite_additive_proposal.md
+    must_cover:
+    - objective
+    - validation
+    - expected result
+    - risk
+    - uncertainty
+scoring_checklist:
+- id: additive_json
+  criterion: Agent writes `perovskite_additive_candidates.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: proposal_md
+  criterion: Agent writes `perovskite_additive_proposal.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: additive_tokens
+  criterion: Candidate JSON includes required additive-recommendation fields.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: proposal_tokens
+  criterion: Proposal document covers objectives, validation plan, and uncertainty/risk.
+  verify: llm_binary_judge
+  capability: workflow_orchestration
+  weight: 0.5
+- id: grounding_source
+  criterion: Deliverables are grounded in generated candidate analysis rather than unsupported additive claims.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

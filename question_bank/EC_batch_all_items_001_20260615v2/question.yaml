@@ -1,0 +1,108 @@
+id: EC_batch_all_items_001_20260615v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: When given N items to process, agent must complete ALL N, not stop at a partial subset.
+human_prompt_seed: 'Please create a simple description file for each of the following 6 materials (plain text, containing
+  the material name, chemical formula, and crystal structure type):
+
+  1. Diamond (Diamond, C, FCC)
+
+  2. Sodium chloride (NaCl, rock salt)
+
+  3. Zinc blende (ZnS, zinc blende)
+
+  4. Perovskite (BaTiO3, perovskite)
+
+  5. Spinel (MgAl2O4, spinel)
+
+  6. Corundum (Al2O3, corundum)
+
+  The filenames should be: diamond.txt, nacl.txt, zns.txt, batio3.txt, mgal2o4.txt, al2o3.txt'
+tags: []
+priority: P0
+data_files: []
+reference_answers:
+- key: diamond_artifact
+  value: diamond.txt
+- key: nacl_artifact
+  value: nacl.txt
+- key: zns_artifact
+  value: zns.txt
+- key: batio3_artifact
+  value: batio3.txt
+- key: mgal2o4_artifact
+  value: mgal2o4.txt
+- key: al2o3_artifact
+  value: al2o3.txt
+- key: diamond_content
+  value:
+    filename: diamond.txt
+    tokens:
+    - Diamond
+    - C
+    - FCC
+    flags: i
+- key: nacl_content
+  value:
+    filename: nacl.txt
+    tokens:
+    - NaCl
+    - rock salt
+    flags: i
+- key: batio3_content
+  value:
+    filename: batio3.txt
+    tokens:
+    - BaTiO3
+    - perovskite
+    flags: i
+scoring_checklist:
+- id: diamond_artifact
+  criterion: Agent writes `diamond.txt` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: nacl_artifact
+  criterion: Agent writes `nacl.txt` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: zns_artifact
+  criterion: Agent writes `zns.txt` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: batio3_artifact
+  criterion: Agent writes `batio3.txt` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: mgal2o4_artifact
+  criterion: Agent writes `mgal2o4.txt` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: al2o3_artifact
+  criterion: Agent writes `al2o3.txt` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: diamond_content
+  criterion: diamond.txt contains Diamond, C, and FCC.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: nacl_content
+  criterion: nacl.txt contains NaCl and rock salt.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: batio3_content
+  criterion: batio3.txt contains BaTiO3 and perovskite.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5

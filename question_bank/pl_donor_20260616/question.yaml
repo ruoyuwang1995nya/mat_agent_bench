@@ -1,0 +1,76 @@
+id: pl_donor_20260616
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
+domain: polymer
+difficulty: easy
+intent: Pre-screen PM6, PTB7-Th, D18, and P3HT donor polymers for a Y6-like acceptor window using curated oligomer, 
+  conformational, and ranking data.
+human_prompt_seed: 'The file `donor_prescreen_bundle.json` provides oligomer modeling, quantum-chemistry, conformational sampling, and simplified ranking results for four donor polymers: PM6, PTB7-Th, D18, and P3HT.
+
+  Please complete a donor pre-screening report:
+
+  1. Compare the HOMO/LUMO levels, band gaps, backbone torsion angles, and planarity.
+
+  2. Based on the 1/n extrapolation results, determine which systems are more suitable for matching with a Y6-like acceptor.
+
+  3. Output the final shortlist, and separately identify the "best overall" and the "high-Voc candidate."
+
+  4. State at least one source of uncertainty.
+
+  '
+tags: []
+data_files:
+- key: donor_bundle
+  path: donor_prescreen_bundle.json
+  description: Curated donor-polymer bundle with oligomer-level electronic structure, torsional descriptors, 
+    extrapolated gaps, and ranking metrics.
+reference_answers:
+- key: best_candidate
+  value: D18
+- key: d18_gap_extrapolated_eV
+  value: 1.84
+  tolerance: 0.08
+- key: pm6_homo_eV
+  value: -5.45
+  tolerance: 0.1
+- key: required_fields
+  value:
+  - ranking_table
+  - gap_extrapolation
+  - conformational_note
+  - shortlist
+  - uncertainty_note
+- key: grounding_source
+  value:
+    filename: donor_prescreen_bundle.json
+scoring_checklist:
+- id: d18_gap_extrapolated_eV
+  criterion: D18 extrapolated polymer-limit gap is reported within tolerance of the curated value (~1.84 eV).
+  verify: numerical_range
+  capability: data_handling
+  weight: 0.5
+- id: pm6_homo_eV
+  criterion: PM6 HOMO is reported within tolerance of the curated oligomer/QM value (~-5.45 eV).
+  verify: numerical_range
+  capability: data_handling
+  weight: 0.5
+- id: shortlist_correctness
+  criterion: Final shortlist identifies D18 as the best-balanced overall donor and places PM6 ahead of PTB7-Th and P3HT 
+    for the specified Y6-like acceptor window.
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: required_fields
+  criterion: Report includes a ranking table, band-gap extrapolation discussion, conformational-planarity note, final 
+    shortlist, and at least one uncertainty note.
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: Conclusions are explicitly tied to the provided HOMO/LUMO, extrapolated gap, and torsional descriptors from
+    donor_prescreen_bundle.json rather than literature recall alone.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5
