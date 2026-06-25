@@ -168,6 +168,78 @@ def _add_serve_parser(subparsers: argparse._SubParsersAction) -> None:
         help='Path to question_bank directory (default: question_bank next to the package).',
     )
     p.add_argument(
+        '--questions',
+        nargs='*',
+        default=None,
+        metavar='ID',
+        help='Specific question ID(s) to host.',
+    )
+    p.add_argument(
+        '--capability',
+        type=str,
+        default=None,
+        help='Only host questions with this capability.',
+    )
+    p.add_argument(
+        '--task-type',
+        type=str,
+        default=None,
+        dest='task_type',
+        help='Only host questions with this task type.',
+    )
+    p.add_argument(
+        '--domain',
+        type=str,
+        default=None,
+        help='Only host questions from this domain.',
+    )
+    p.add_argument(
+        '--tags',
+        type=str,
+        nargs='*',
+        default=None,
+        help='Only host questions containing all selected tags.',
+    )
+    p.add_argument(
+        '--exclude-questions',
+        nargs='*',
+        default=None,
+        metavar='ID',
+        help='Exclude specific question ID(s) from the hosted set.',
+    )
+    p.add_argument(
+        '--exclude-capability',
+        type=str,
+        default=None,
+        help='Exclude questions with this capability.',
+    )
+    p.add_argument(
+        '--exclude-task-type',
+        type=str,
+        default=None,
+        dest='exclude_task_type',
+        help='Exclude questions with this task type.',
+    )
+    p.add_argument(
+        '--exclude-domain',
+        type=str,
+        default=None,
+        help='Exclude questions from this domain.',
+    )
+    p.add_argument(
+        '--exclude-tags',
+        type=str,
+        nargs='*',
+        default=None,
+        help='Exclude questions containing any selected tag.',
+    )
+    p.add_argument(
+        '--limit',
+        type=int,
+        default=None,
+        help='Host only the first N selected questions after filtering.',
+    )
+    p.add_argument(
         '--store-dir',
         type=str,
         default=None,
@@ -239,7 +311,30 @@ def _cmd_serve(args: argparse.Namespace) -> None:
         qb_dir = _REPO_ROOT / qb_dir
 
     registry = Registry(qb_dir)
-    print(f'Loaded {len(registry)} questions from {qb_dir}', file=sys.stderr)
+    if args.limit is not None and args.limit < 0:
+        print('error: --limit must be non-negative', file=sys.stderr)
+        sys.exit(1)
+    try:
+        registry = registry.filtered(
+            question_ids=args.questions,
+            capability=args.capability,
+            task_type=args.task_type,
+            domain=args.domain,
+            tags=args.tags,
+            exclude_question_ids=args.exclude_questions,
+            exclude_capability=args.exclude_capability,
+            exclude_task_type=args.exclude_task_type,
+            exclude_domain=args.exclude_domain,
+            exclude_tags=args.exclude_tags,
+            limit=args.limit,
+        )
+    except KeyError as exc:
+        print(f'error: {exc}', file=sys.stderr)
+        sys.exit(1)
+    if len(registry) == 0:
+        print('error: no questions selected to host', file=sys.stderr)
+        sys.exit(1)
+    print(f'Loaded {len(registry)} hosted questions from {qb_dir}', file=sys.stderr)
 
     store_dir = Path(args.store_dir) if args.store_dir else Path.home() / ".matbench"
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')

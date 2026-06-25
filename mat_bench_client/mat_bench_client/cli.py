@@ -114,7 +114,10 @@ def _http(
 
 def _json_get(url: str, token: str, params: dict | None = None) -> tuple[int, dict | list]:
     if params:
-        url = url + '?' + urlencode({k: v for k, v in params.items() if v is not None})
+        url = url + '?' + urlencode(
+            {k: v for k, v in params.items() if v is not None},
+            doseq=True,
+        )
     status, raw = _http('GET', url, headers={'X-API-Token': token, 'Accept': 'application/json'})
     try:
         return status, json.loads(raw)
@@ -171,13 +174,21 @@ def api_list_questions(
     api_base: str,
     token: str,
     capability: str | None = None,
+    task_type: str | None = None,
     domain: str | None = None,
+    tags: list[str] | None = None,
     limit: int | None = None,
 ) -> list:
     status, data = _json_get(
         f'{api_base}/questions',
         token,
-        params={'capability': capability, 'domain': domain, 'limit': limit},
+        params={
+            'capability': capability,
+            'task_type': task_type,
+            'domain': domain,
+            'tags': tags,
+            'limit': limit,
+        },
     )
     if status != 200:
         print(f'error: listing questions failed ({status}): {data}', file=sys.stderr)
@@ -361,7 +372,9 @@ def _build_parser() -> argparse.ArgumentParser:
     p = subs.add_parser('questions', help='List available questions')
     _server_arg(p)
     p.add_argument('--capability', type=str, default=None)
+    p.add_argument('--task-type', type=str, default=None, dest='task_type')
     p.add_argument('--domain', type=str, default=None)
+    p.add_argument('--tags', type=str, nargs='*', default=None)
     p.add_argument('--limit', type=int, default=None)
     p.add_argument('--pending', action='store_true',
                    help='Only show questions not yet evaluated in the current session')
@@ -481,7 +494,11 @@ def _cmd_questions(args: argparse.Namespace) -> None:
     token, session_id = _require_credentials(server)
     questions = api_list_questions(
         _api(server), token,
-        capability=args.capability, domain=args.domain, limit=args.limit,
+        capability=args.capability,
+        task_type=args.task_type,
+        domain=args.domain,
+        tags=args.tags,
+        limit=args.limit,
     )
     if args.pending:
         evaluated = api_get_evaluated_question_ids(_api(server), token, session_id)

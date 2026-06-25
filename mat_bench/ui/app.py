@@ -166,17 +166,35 @@ def create_app(
         _mint_token = None
         _backend_url = backend_url.rstrip("/")
 
+    def _question_registry() -> Registry:
+        if registry is not None:
+            return registry
+        return Registry(qb_dir)
+
     # Cache total question count and per-capability counts for normalized scoring
     try:
-        _all_qs = Registry(qb_dir).list_questions()
+        _all_qs = _question_registry().list_questions()
         _total_questions = len(_all_qs)
+        _hosted_question_ids = {q.id for q in _all_qs}
         _cap_question_counts: dict[str, int] = {}
         for _q in _all_qs:
             for cap in _q.capability:
                 _cap_question_counts[cap] = _cap_question_counts.get(cap, 0) + 1
     except Exception:
         _total_questions = 0
+        _hosted_question_ids = set()
         _cap_question_counts = {}
+
+    def _hosted_result_rows(
+        rows: list[tuple[str, str, EvalRunRecord]],
+    ) -> list[tuple[str, str, EvalRunRecord]]:
+        if not _hosted_question_ids:
+            return rows
+        return [
+            (token, session_id, rec)
+            for token, session_id, rec in rows
+            if rec.question_id in _hosted_question_ids
+        ]
 
     app = FastAPI(title="mat-bench UI", docs_url=None, redoc_url=None)
     app.mount("/static", StaticFiles(directory=_STATIC_DIR, html=True), name="static")
@@ -279,10 +297,10 @@ def create_app(
         tags: list[str] | None = Query(None),
     ):
         try:
-            registry = Registry(qb_dir)
+            question_registry = _question_registry()
         except FileNotFoundError as exc:
             raise HTTPException(404, str(exc))
-        questions = registry.list_questions(capability=capability, task_type=task_type, domain=domain, tags=tags)
+        questions = question_registry.list_questions(capability=capability, task_type=task_type, domain=domain, tags=tags)
         return [
             {
                 "id": q.id,
@@ -301,11 +319,11 @@ def create_app(
     @app.get("/api/questions/{question_id}")
     async def get_question(question_id: str):
         try:
-            registry = Registry(qb_dir)
+            question_registry = _question_registry()
         except FileNotFoundError as exc:
             raise HTTPException(404, str(exc))
         try:
-            q = registry.get_question(question_id)
+            q = question_registry.get_question(question_id)
         except KeyError:
             raise HTTPException(404, f"Question '{question_id}' not found")
         return {"id": q.id, "prompt": q.item.human_prompt_seed}
@@ -340,7 +358,7 @@ def create_app(
         token_set = {t["token"] for t in user_tokens}
 
         token_stats: dict[str, dict] = {t: {"eval_count": 0, "models": set()} for t in token_set}
-        for token, _sid, rec in _read_results(sessions_db):
+        for token, _sid, rec in _hosted_result_rows(_read_results(sessions_db)):
             if token in token_stats:
                 token_stats[token]["eval_count"] += 1
                 if rec.model_name:
@@ -399,7 +417,7 @@ def create_app(
             }
 
         # Attach results to their sessions
-        for token, session_id, rec in _read_results(sessions_db):
+        for token, session_id, rec in _hosted_result_rows(_read_results(sessions_db)):
             if session_id in session_meta:
                 session_meta[session_id]["records"].append(rec)
 
@@ -445,7 +463,7 @@ def create_app(
 
     @app.get("/api/leaderboard")
     async def get_leaderboard():
-        rows = _read_results(sessions_db)
+        rows = _hosted_result_rows(_read_results(sessions_db))
 
         if not rows:
             return {"leaderboard": [], "total_evaluations": 0}
@@ -483,7 +501,7 @@ def create_app(
 
     @app.get("/api/leaderboard/{agent_name}/questions")
     async def get_agent_questions(agent_name: str):
-        rows = _read_results(sessions_db)
+        rows = _hosted_result_rows(_read_results(sessions_db))
         token_to_agent = ui_db.get_token_agents()
         by_agent = _best_session_recs_by_agent(rows, token_to_agent)
         agent_recs = by_agent.get(agent_name)
@@ -520,7 +538,7 @@ def create_app(
         token_to_agent = {t["token"]: t["agent_name"] for t in user_tokens}
         token_set = set(token_to_agent)
 
-        rows = _read_results(sessions_db)
+        rows = _hosted_result_rows(_read_results(sessions_db))
         session_recs: list[EvalRunRecord] = []
         session_agent: str | None = None
         for token, sid, rec in rows:

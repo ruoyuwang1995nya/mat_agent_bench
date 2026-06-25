@@ -8,7 +8,7 @@ Endpoints::
     GET  /                                Bench API info (version, guide link)
     GET  /guide                           Agent HTTP API reference (plain text, no auth)
     POST /sessions                        Create a new session (requires X-API-Token header)
-    GET  /questions                       List questions (filter: capability, domain, limit)
+    GET  /questions                       List questions (filters: capability, task_type, domain, tags, limit)
     GET  /questions/{id}                  Full question details + data file list (requires session_id; starts duration timer)
     GET  /questions/{id}/data/{fname}     Download a data file
     POST /submit/{id}?session_id=S0001    Submit result files + metadata (multipart)
@@ -333,12 +333,19 @@ try:
     @app.get("/questions")
     async def list_questions(
         capability: str | None = None,
+        task_type: str | None = None,
         domain: str | None = None,
+        tags: list[str] | None = Query(default=None),
         limit: int | None = None,
     ) -> list[dict]:
         """List available questions with optional filters."""
         registry = _require_registry()
-        questions = registry.list_questions(capability=capability, domain=domain)
+        questions = registry.list_questions(
+            capability=capability,
+            task_type=task_type,
+            domain=domain,
+            tags=tags,
+        )
         if limit is not None:
             questions = questions[:limit]
         return [
@@ -611,6 +618,9 @@ try:
         Otherwise returns all records for this question across all sessions of
         the authenticated token.
         """
+        registry = _require_registry()
+        if question_id not in registry:
+            raise HTTPException(404, detail=f"Question '{question_id}' not found")
         with _results_lock:
             if session_id is not None:
                 key = f"{token}:{session_id}:{question_id}"
@@ -673,6 +683,10 @@ try:
         if not records:
             return {"total": 0, "results": []}
         registry = _require_registry()
+        hosted_question_ids = set(registry.list_question_ids())
+        records = [rec for rec in records if rec.question_id in hosted_question_ids]
+        if not records:
+            return {"total": 0, "results": []}
         total_q = len(registry.list_questions())
         summary = build_summary(records, total_q)
         return {
