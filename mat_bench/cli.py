@@ -16,6 +16,31 @@ import sys
 from pathlib import Path
 
 
+def _add_question_config_arg(p: argparse.ArgumentParser) -> None:
+    p.add_argument(
+        '--question-config',
+        type=str,
+        default=None,
+        metavar='FILE',
+        help=(
+            'YAML file with enabled/disabled question settings. If omitted, '
+            '~/.matbench/questions.yaml is used when present.'
+        ),
+    )
+
+
+def _apply_question_config_or_exit(registry, path: str | None):
+    from pydantic import ValidationError
+
+    from .registry.question_config import load_and_apply_question_config
+
+    try:
+        return load_and_apply_question_config(registry, path)
+    except (OSError, ValueError, KeyError, ValidationError) as exc:
+        print(f'error: failed to apply question config: {exc}', file=sys.stderr)
+        sys.exit(1)
+
+
 def _add_run_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser(
         'run',
@@ -43,6 +68,7 @@ def _add_run_parser(subparsers: argparse._SubParsersAction) -> None:
         default='question_bank',
         help='Path to question_bank directory (default: question_bank).',
     )
+    _add_question_config_arg(p)
     p.add_argument(
         '--questions',
         nargs='*',
@@ -167,6 +193,7 @@ def _add_serve_parser(subparsers: argparse._SubParsersAction) -> None:
         default=None,
         help='Path to question_bank directory (default: question_bank next to the package).',
     )
+    _add_question_config_arg(p)
     p.add_argument(
         '--questions',
         nargs='*',
@@ -311,6 +338,9 @@ def _cmd_serve(args: argparse.Namespace) -> None:
         qb_dir = _REPO_ROOT / qb_dir
 
     registry = Registry(qb_dir)
+    registry, config_path = _apply_question_config_or_exit(registry, args.question_config)
+    if config_path is not None:
+        print(f'Applied question config: {config_path}', file=sys.stderr)
     if args.limit is not None and args.limit < 0:
         print('error: --limit must be non-negative', file=sys.stderr)
         sys.exit(1)
@@ -409,10 +439,58 @@ def _add_list_parser(subparsers: argparse._SubParsersAction) -> None:
         default='question_bank',
         help='Path to question_bank directory (default: question_bank)',
     )
+    _add_question_config_arg(p)
     p.add_argument('--capability', type=str, default=None, help='Filter by capability')
     p.add_argument('--domain', type=str, default=None, help='Filter by domain')
     p.add_argument('--tags', type=str, nargs='*', default=None, help='Filter by tags')
     p.set_defaults(func=_cmd_list)
+
+
+def _add_questions_parser(subparsers: argparse._SubParsersAction) -> None:
+    from .registry.question_config import default_question_config_path
+
+    p = subparsers.add_parser('questions', help='Manage enabled/disabled questions')
+    p.add_argument(
+        '--question-bank-dir',
+        type=str,
+        default='question_bank',
+        help='Path to question_bank directory (default: question_bank)',
+    )
+    p.add_argument(
+        '--question-config',
+        type=str,
+        default=str(default_question_config_path()),
+        metavar='FILE',
+        help='Question config file to edit (default: ~/.matbench/questions.yaml).',
+    )
+    question_subparsers = p.add_subparsers(dest='questions_command')
+
+    list_p = question_subparsers.add_parser('list', help='List enabled questions')
+    list_p.set_defaults(func=_cmd_questions_list)
+
+    validate_p = question_subparsers.add_parser('validate', help='Validate question config')
+    validate_p.set_defaults(func=_cmd_questions_validate)
+
+    enable_p = question_subparsers.add_parser('enable', help='Enable question ID(s)')
+    enable_p.add_argument('question_ids', nargs='+', metavar='ID')
+    enable_p.set_defaults(func=_cmd_questions_enable)
+
+    disable_p = question_subparsers.add_parser('disable', help='Disable question ID(s)')
+    disable_p.add_argument('question_ids', nargs='+', metavar='ID')
+    disable_p.set_defaults(func=_cmd_questions_disable)
+
+    set_p = question_subparsers.add_parser(
+        'set-enabled',
+        help='Replace the enabled-question allowlist with the given ID(s)',
+    )
+    set_p.add_argument('question_ids', nargs='+', metavar='ID')
+    set_p.set_defaults(func=_cmd_questions_set_enabled)
+
+    clear_p = question_subparsers.add_parser(
+        'clear-enabled',
+        help='Remove the enabled-question allowlist so all non-disabled questions are enabled',
+    )
+    clear_p.set_defaults(func=_cmd_questions_clear_enabled)
 
 
 def _add_grade_parser(subparsers: argparse._SubParsersAction) -> None:
@@ -447,6 +525,7 @@ def _cmd_list(args: argparse.Namespace) -> None:
     from .registry import Registry
 
     registry = Registry(args.question_bank_dir)
+    registry, config_path = _apply_question_config_or_exit(registry, args.question_config)
     questions = registry.list_questions(
         capability=args.capability,
         domain=args.domain,
@@ -454,10 +533,122 @@ def _cmd_list(args: argparse.Namespace) -> None:
     )
 
     print(f'Found {len(questions)} questions in {args.question_bank_dir}')
+    if config_path is not None:
+        print(f'Config: {config_path}')
     print()
     for q in questions:
         tags_str = ', '.join(q.tags[:3])
-        print(f'  {q.id:<30s} {q.capability:<25s} {q.domain:<15s} {tags_str}')
+        capabilities = ','.join(q.capability)
+        print(f'  {q.id:<30s} {capabilities:<25s} {q.domain:<15s} {tags_str}')
+
+
+def _load_question_config_for_edit(args: argparse.Namespace):
+    from pydantic import ValidationError
+
+    from .registry.question_config import load_question_config_or_default
+
+    try:
+        return load_question_config_or_default(args.question_config)
+    except (OSError, ValueError, ValidationError) as exc:
+        print(f'error: failed to load question config: {exc}', file=sys.stderr)
+        sys.exit(1)
+
+
+def _load_registry_for_questions(args: argparse.Namespace):
+    from .registry import Registry
+
+    try:
+        return Registry(args.question_bank_dir)
+    except FileNotFoundError as exc:
+        print(f'error: {exc}', file=sys.stderr)
+        sys.exit(1)
+
+
+def _validate_question_ids_or_exit(registry, question_ids: list[str]) -> None:
+    try:
+        for question_id in question_ids:
+            registry.get_question(question_id)
+    except KeyError as exc:
+        print(f'error: {exc}', file=sys.stderr)
+        sys.exit(1)
+
+
+def _save_question_config_or_exit(path: str, config) -> None:
+    from .registry.question_config import save_question_config
+
+    try:
+        save_question_config(path, config)
+    except OSError as exc:
+        print(f'error: failed to save question config: {exc}', file=sys.stderr)
+        sys.exit(1)
+
+
+def _cmd_questions_list(args: argparse.Namespace) -> None:
+    from .registry.question_config import apply_question_config
+
+    registry = _load_registry_for_questions(args)
+    config = _load_question_config_for_edit(args)
+    registry = apply_question_config(registry, config)
+    questions = registry.list_questions()
+    print(f'Enabled questions: {len(questions)}')
+    print(f'Config: {args.question_config}')
+    print()
+    for q in questions:
+        print(q.id)
+
+
+def _cmd_questions_validate(args: argparse.Namespace) -> None:
+    from .registry.question_config import apply_question_config
+
+    registry = _load_registry_for_questions(args)
+    config = _load_question_config_for_edit(args)
+    registry = apply_question_config(registry, config)
+    print(f'Config OK: {args.question_config}')
+    print(f'Enabled questions: {len(registry)}')
+
+
+def _cmd_questions_enable(args: argparse.Namespace) -> None:
+    from .registry.question_config import enable_questions
+
+    registry = _load_registry_for_questions(args)
+    _validate_question_ids_or_exit(registry, args.question_ids)
+    config = _load_question_config_for_edit(args)
+    enable_questions(config, args.question_ids)
+    _save_question_config_or_exit(args.question_config, config)
+    print(f'Enabled {len(args.question_ids)} question(s) in {args.question_config}')
+
+
+def _cmd_questions_disable(args: argparse.Namespace) -> None:
+    from .registry.question_config import disable_questions
+
+    registry = _load_registry_for_questions(args)
+    _validate_question_ids_or_exit(registry, args.question_ids)
+    config = _load_question_config_for_edit(args)
+    disable_questions(config, args.question_ids)
+    _save_question_config_or_exit(args.question_config, config)
+    print(f'Disabled {len(args.question_ids)} question(s) in {args.question_config}')
+
+
+def _cmd_questions_set_enabled(args: argparse.Namespace) -> None:
+    from .registry.question_config import QuestionSelectionConfig
+
+    registry = _load_registry_for_questions(args)
+    _validate_question_ids_or_exit(registry, args.question_ids)
+    config = _load_question_config_for_edit(args)
+    config.enabled_questions = list(dict.fromkeys(args.question_ids))
+    config.disabled_questions = [
+        qid for qid in config.disabled_questions if qid not in set(config.enabled_questions)
+    ]
+    QuestionSelectionConfig.model_validate(config.model_dump())
+    _save_question_config_or_exit(args.question_config, config)
+    print(f'Set {len(config.enabled_questions)} enabled question(s) in {args.question_config}')
+
+
+def _cmd_questions_clear_enabled(args: argparse.Namespace) -> None:
+    config = _load_question_config_for_edit(args)
+    config.enabled_questions = None
+    _save_question_config_or_exit(args.question_config, config)
+    print(f'Cleared enabled-question allowlist in {args.question_config}')
 
 
 def _cmd_grade(args: argparse.Namespace) -> None:
@@ -512,11 +703,12 @@ def main() -> None:
     _add_run_parser(subparsers)
     _add_serve_parser(subparsers)
     _add_list_parser(subparsers)
+    _add_questions_parser(subparsers)
     _add_grade_parser(subparsers)
     _add_report_parser(subparsers)
 
     args = parser.parse_args()
-    if not args.command:
+    if not args.command or (args.command == 'questions' and not args.questions_command):
         parser.print_help()
         sys.exit(1)
 

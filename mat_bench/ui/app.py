@@ -175,6 +175,7 @@ def create_app(
     try:
         _all_qs = _question_registry().list_questions()
         _total_questions = len(_all_qs)
+        _total_points = _total_questions
         _hosted_question_ids = {q.id for q in _all_qs}
         _cap_question_counts: dict[str, int] = {}
         for _q in _all_qs:
@@ -182,6 +183,7 @@ def create_app(
                 _cap_question_counts[cap] = _cap_question_counts.get(cap, 0) + 1
     except Exception:
         _total_questions = 0
+        _total_points = 0
         _hosted_question_ids = set()
         _cap_question_counts = {}
 
@@ -283,7 +285,11 @@ def create_app(
 
     @app.get("/api/config")
     async def config():
-        return {"server_url": "/bench" if _combined else _backend_url}
+        return {
+            "server_url": "/bench" if _combined else _backend_url,
+            "enabled_question_count": _total_questions,
+            "total_points": _total_points,
+        }
 
     # ------------------------------------------------------------------
     # Question bank endpoints
@@ -466,7 +472,12 @@ def create_app(
         rows = _hosted_result_rows(_read_results(sessions_db))
 
         if not rows:
-            return {"leaderboard": [], "total_evaluations": 0}
+            return {
+                "leaderboard": [],
+                "total_evaluations": 0,
+                "enabled_question_count": _total_questions,
+                "total_points": _total_points,
+            }
 
         token_to_agent = ui_db.get_token_agents()
         by_agent = _best_session_recs_by_agent(rows, token_to_agent)
@@ -497,7 +508,12 @@ def create_app(
             )
 
         leaderboard.sort(key=lambda x: x["weighted_score"], reverse=True)
-        return {"leaderboard": leaderboard, "total_evaluations": len(rows)}
+        return {
+            "leaderboard": leaderboard,
+            "total_evaluations": len(rows),
+            "enabled_question_count": _total_questions,
+            "total_points": _total_points,
+        }
 
     @app.get("/api/leaderboard/{agent_name}/questions")
     async def get_agent_questions(agent_name: str):

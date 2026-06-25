@@ -29,6 +29,10 @@
           <div class="stat-label">Questions</div>
         </div>
         <div class="stat-card">
+          <div class="stat-value" id="stat-points"><div class="spinner"></div></div>
+          <div class="stat-label">Total Points</div>
+        </div>
+        <div class="stat-card">
           <div class="stat-value" id="stat-runs"><div class="spinner"></div></div>
           <div class="stat-label">Evaluation Runs</div>
         </div>
@@ -58,12 +62,13 @@
   <script>
     async function loadStats() {
       try {
+        let qs = [];
         const [qRes, lbRes] = await Promise.all([
           fetch('/api/questions'),
           fetch('/api/leaderboard'),
         ]);
         if (qRes.ok) {
-          const qs = await qRes.json();
+          qs = await qRes.json();
           document.getElementById('stat-questions').textContent = qs.length;
         } else {
           document.getElementById('stat-questions').textContent = '—';
@@ -72,12 +77,14 @@
           const lb = await lbRes.json();
           document.getElementById('stat-runs').textContent = lb.total_evaluations ?? 0;
           document.getElementById('stat-models').textContent = lb.leaderboard?.length ?? 0;
+          document.getElementById('stat-points').textContent = lb.total_points ?? qs.length;
         } else {
           document.getElementById('stat-runs').textContent = '—';
           document.getElementById('stat-models').textContent = '—';
+          document.getElementById('stat-points').textContent = '—';
         }
       } catch {
-        ['stat-questions', 'stat-runs', 'stat-models'].forEach(id => {
+        ['stat-questions', 'stat-points', 'stat-runs', 'stat-models'].forEach(id => {
           document.getElementById(id).textContent = '—';
         });
       }
