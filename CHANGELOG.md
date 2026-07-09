@@ -1,6 +1,29 @@
 # CHANGELOG
 
 
+## v0.6.2 (2026-07-09)
+
+### Bug Fixes
+
+- Add config file to modify question banks
+  ([`3aad133`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/3aad13362a1947bff3b0aab5cb8f595f641df136))
+
+- Increase width to display fully
+  ([`1b3db63`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/1b3db632475a810f4c30e612f994371d481e3164))
+
+- Missing registry file
+  ([`afbbc26`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/afbbc265e0377f20f3d24cb3bdb745d5503e769e))
+
+- Update gpumd_005 yaml
+  ([`1796caa`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/1796caaecae45280dae3bd3989127e7fe0e40d92))
+
+- Update server
+  ([`749279d`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/749279dcecc8523d1edb8eba38028718c0466773))
+
+- Update server and client
+  ([`d492d19`](https://github.com/ruoyuwang1995nya/mat_agent_bench/commit/d492d1953c88189dbb60030c9020ce702baf53f2))
+
+
 ## v0.6.1 (2026-06-09)
 
 ### Bug Fixes
