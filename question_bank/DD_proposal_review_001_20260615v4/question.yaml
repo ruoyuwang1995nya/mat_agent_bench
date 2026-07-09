@@ -1,0 +1,110 @@
+id: DD_proposal_review_001_20260615v4
+task_type: material_characterization
+capabilities:
+- data_handling
+- scientific_reasoning
+domain: agnostic
+difficulty: easy
+intent: Evaluate a proposal excerpt and produce structured scorecard, rationale, and risk-mitigation artifacts.
+human_prompt_seed: 'The workspace already provides `proposal_excerpt.md`.
+
+
+  Please read this file first, then generate:
+
+  1) `review_scorecard.json`: containing `innovation_score`, `importance_score`, `feasibility_score`, `total_score`,
+  and `funding_recommendation`.
+
+  2) `review_rationale.md`: provide at least two supporting points for each dimension, and include the main risks and
+  improvement suggestions.
+
+  3) `risk_mitigation.json`: containing at least `top_risks`, `mitigation_actions`, `owner`, and `priority`.
+
+
+  Constraints:
+
+  - Each of the three sub-scores must be in the range 0-30;
+
+  - The total score must be in the range 0-90;
+
+  - Do not make unsupported conclusions beyond the given text.
+
+  '
+tags:
+- meta_userlog
+- meta_literature
+- wf_postprocess
+data_files:
+- key: proposal_excerpt
+  path: proposal_excerpt.md
+  oss_url: ''
+  description: Proposal excerpt for structured review scoring.
+reference_answers:
+- key: scorecard_artifact
+  value: review_scorecard.json
+- key: rationale_artifact
+  value: review_rationale.md
+- key: risk_artifact
+  value: risk_mitigation.json
+- key: scorecard_required_tokens
+  value:
+    filename: review_scorecard.json
+    tokens:
+    - innovation_score
+    - importance_score
+    - feasibility_score
+    - total_score
+    - funding_recommendation
+    flags: i
+- key: score_bounds_regex
+  value:
+    filename: review_scorecard.json
+    pattern: 
+      (?is)"innovation_score"\s*:\s*(?:[12]?\d|30)\b.*"importance_score"\s*:\s*(?:[12]?\d|30)\b.*"feasibility_score"\s*:\s*(?:[12]?\d|30)\b.*"total_score"\s*:\s*(?:[1-8]?\d|90)\b
+    flags: is
+- key: rationale_required_tokens
+  value:
+    filename: review_rationale.md
+    tokens:
+    - innovation
+    - importance
+    - feasibility
+    - risk
+    - suggestion
+    - recommendation
+    flags: i
+scoring_checklist:
+- id: scorecard_artifact
+  criterion: Agent writes `review_scorecard.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: rationale_artifact
+  criterion: Agent writes `review_rationale.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: risk_artifact
+  criterion: Agent writes `risk_mitigation.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: scorecard_required_tokens
+  criterion: Scorecard JSON includes required score and recommendation keys.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: score_bounds_regex
+  criterion: Score fields stay within required numeric ranges.
+  verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
+- id: rationale_required_tokens
+  criterion: Rationale includes all required dimensions, risks, suggestions, and recommendation statement.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: Judgments are grounded in `proposal_excerpt.md` rather than generic boilerplate.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

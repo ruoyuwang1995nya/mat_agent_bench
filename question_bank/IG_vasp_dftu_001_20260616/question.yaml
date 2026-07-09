@@ -1,0 +1,88 @@
+id: IG_vasp_dftu_001_20260616
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
+domain: agnostic
+difficulty: easy
+intent: Generate VASP INCAR for NiO with DFT+U (Dudarev) settings.
+human_prompt_seed: 'There is a file `NiO.vasp` in the workspace (rocksalt NiO, 4 atoms: 2 Ni + 2 O, with atom order Ni O in the POSCAR).
+
+  NiO is a strongly correlated antiferromagnetic insulator, and the Ni 3d electrons have strong on-site Coulomb interaction. Please generate a static-calculation INCAR file `INCAR_dftu` that includes strong-correlation effects.
+
+  Use a Hubbard U correction, with an effective U value of 6.2 eV for Ni. Use the PBE functional and ENCUT=550 eV.'
+tags:
+- eng_vasp
+data_files: []
+reference_answers:
+- key: incar_dftu_artifact
+  value: INCAR_dftu
+- key: must_ldau
+  value:
+    filename: INCAR_dftu
+    tokens:
+    - LDAU = .TRUE.
+    - LDAU=.TRUE.
+    flags: i
+- key: must_ldautype
+  value:
+    filename: INCAR_dftu
+    tokens:
+    - LDAUTYPE = 2
+    - LDAUTYPE=2
+    flags: i
+- key: must_ldaul
+  value:
+    filename: INCAR_dftu
+    pattern: LDAUL\s*=\s*2\s+(-1|0)
+    flags: i
+- key: must_ldauu
+  value:
+    filename: INCAR_dftu
+    pattern: LDAUU\s*=\s*6\.2\s+0
+    flags: i
+- key: duration_budget
+  value:
+    max: 7200000
+- key: must_ispin
+  value:
+    filename: INCAR_dftu
+    pattern: ISPIN\s*=\s*2
+    flags: i
+scoring_checklist:
+- id: incar_dftu_artifact
+  criterion: INCAR_dftu file exists in workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: must_ldau
+  criterion: LDAU = .TRUE. is set to enable DFT+U.
+  verify: text_file_contains_all
+  capability: tool_utilization
+  weight: 0.5
+- id: must_ldautype
+  criterion: LDAUTYPE = 2 (Dudarev method) is specified.
+  verify: text_file_contains_all
+  capability: scientific_reasoning
+  weight: 0.5
+- id: must_ldaul
+  criterion: LDAUL array matches species order (2 for Ni d-orbital, -1 or 0 for O).
+  verify: text_file_regex
+  capability: scientific_reasoning
+  weight: 0.5
+- id: must_ldauu
+  criterion: LDAUU array sets 6.2 for Ni and 0 for O, matching POSCAR species order.
+  verify: text_file_regex
+  capability: tool_utilization
+  weight: 0.5
+- id: must_ispin
+  criterion: INCAR_dftu sets ISPIN = 2 (required for antiferromagnetic NiO).
+  verify: text_file_regex
+  capability: scientific_reasoning
+  weight: 0.5
+- id: grounding_dftu
+  criterion: Agent explains the physical basis for U value choice and why Dudarev (not Liechtenstein) method is 
+    appropriate.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

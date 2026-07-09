@@ -1,0 +1,42 @@
+id: CR_BP_HT_adsorption_tree_20260615v3
+task_type: simulation
+capabilities:
+- data_handling
+- scientific_reasoning
+domain: catalysis
+difficulty: easy
+intent: Generate HT_adsorption/ directory tree with pure_metals, compounds, clusters sections per doc 4.1 (high-level 
+  structure and naming).
+human_prompt_seed: 'Construct a high-throughput adsorption modeling dataset directory `HT_adsorption/`, with three top-level
+  sections: `pure_metals`, `compounds`, and `clusters`. The naming and hierarchy must follow Document 4.1: under `pure_metals`,
+  organize by element and `std-{structure}`, and include `bulk/`, `slab/001/`, `slab/011/`, `adslab/001/`, and `adslab/011/`.
+  Slabs must have at least 5 layers, vacuum >=15 A, and lateral size >=10 A. The adsorbates are HCOOH, CO2, COOH, HCOO,
+  H, and CO. Each slab must contain at least three adsorption sites: `top`, `bridge`, and `hollow`, with filenames in
+  the format `{adsorbate}_{site}.xyz`. The `compounds` list and `clusters` (such as Au13) should be included according
+  to the document. If it is not feasible to generate all elements at once, please provide a reproducible script plus complete
+  example subtrees for Ag, ZnO, and Au13, and explain how to scale the approach to the full set.
+
+  '
+tags:
+- catalysis_lab
+- wf_batch
+- meta_database
+data_files: []
+reference_answers: []
+scoring_checklist:
+- id: tree_and_script
+  criterion: Deliver either a description of the `HT_adsorption/` hierarchy or the actual directory tree; include the
+    `bulk`/`slab`/`adslab` organization logic and the adsorption-site naming convention; provide at least checkable example
+    subtrees or equivalent artifacts for Ag, ZnO, and Au13.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: grounding_batch
+  criterion: The directory hierarchy and script logic described in the final answer are consistent with the fields defined
+    in Document 4.1 (element list, compound list, cluster list, and filename rules), and the answer contains no internal
+    contradictions. Evaluation is based only on the directory description and script logic in the final answer, and should
+    not fail merely because subdirectories are missing from the flat workspace file listing (it is normal that subdirectory
+    contents are not visible in the flat artifact list).
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

@@ -1,0 +1,64 @@
+id: SA_unit_conversion_001_20260616
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
+domain: agnostic
+difficulty: easy
+intent: Correctly convert energy values between Rydberg and eV units.
+human_prompt_seed: 'Below is a set of energy values from a Quantum ESPRESSO calculation (unit: Ry):
+
+  - Total energy: -158.73 Ry
+
+  - Fermi energy: 0.4521 Ry
+
+  - Band gap: 0.0834 Ry
+
+  Please convert these three values into eV units (1 Ry = 13.6057 eV), and write the results to `energy_ev.json` in the format {"total_energy_eV": ..., "fermi_energy_eV": ..., "band_gap_eV": ...}, keeping 4 decimal places.'
+tags: []
+data_files: []
+reference_answers:
+- key: output_artifact
+  value: energy_ev.json
+- key: total_energy_check
+  value:
+    filename: energy_ev.json
+    checks:
+    - key: total_energy_eV
+      min: -2160.3
+      max: -2158.3
+- key: fermi_energy_check
+  value:
+    filename: energy_ev.json
+    checks:
+    - key: fermi_energy_eV
+      min: 6.05
+      max: 6.25
+- key: band_gap_check
+  value:
+    filename: energy_ev.json
+    checks:
+    - key: band_gap_eV
+      min: 1.085
+      max: 1.185
+scoring_checklist:
+- id: output_artifact
+  criterion: Agent writes `energy_ev.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: total_energy_check
+  criterion: Total energy conversion is correct (≈ -2159.3 eV ± 1.0).
+  verify: text_file_numeric_range
+  capability: tool_utilization
+  weight: 0.5
+- id: fermi_energy_check
+  criterion: Fermi energy conversion is correct (≈ 6.15 eV ± 0.1).
+  verify: text_file_numeric_range
+  capability: tool_utilization
+  weight: 0.5
+- id: band_gap_check
+  criterion: Band gap conversion is correct (≈ 1.135 eV ± 0.05).
+  verify: text_file_numeric_range
+  capability: tool_utilization
+  weight: 0.5

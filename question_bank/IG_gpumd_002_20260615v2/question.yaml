@@ -1,0 +1,39 @@
+id: IG_gpumd_002_20260615v2
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
+domain: agnostic
+difficulty: easy
+intent: Generate a GPUMD HNEMD+SHC `run.in` for graphene.
+human_prompt_seed: Please generate a `run.in` for graphene HNEMD thermal conductivity and SHC decomposition. It should
+  perform equilibration first and then production, and the production stage must include the HNEMD driving and SHC-related
+  settings.
+tags:
+- eng_gpumd
+data_files: []
+reference_answers:
+- key: run_in_artifact
+  value: run.in
+- key: hnemd_core_tokens
+  value:
+    filename: run.in
+    tokens:
+    - potential
+    - velocity
+    - ensemble nvt_nhc
+    - compute_hnemd
+    - compute_shc
+    - run
+    flags: i
+scoring_checklist:
+- id: run_in_artifact
+  criterion: Generate `run.in`.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: hnemd_core_tokens
+  criterion: The input contains the key commands for HNEMD and SHC decomposition.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5

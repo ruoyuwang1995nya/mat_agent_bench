@@ -1,0 +1,113 @@
+id: PXRD_pawley_303K_001_20260616
+task_type: material_characterization
+capabilities:
+- scientific_reasoning
+- scientific_grounding
+domain: agnostic
+difficulty: easy
+intent: Perform Pawley refinement on a single PXRD pattern at 303 K to extract all lattice parameters (a, b, c, beta, V)
+  and report the weighted profile R-factor (wR).
+human_prompt_seed: 'The file `pxrd_303K.xy` is a powder X-ray diffraction (PXRD) dataset collected at 303 K (30 °C) for an organic-inorganic hybrid nitroprusside salt (Cu Kα1, λ = 1.5406 Å, 2θ range 5°–50°, step size about 0.02°, two-column format: 2θ intensity).
+
+  This compound is monoclinic, with space group P 21 (No. 4). Literature reference cell: a ≈ 10.83 Å, b ≈ 9.62 Å, c ≈ 10.13 Å, beta ≈ 108.75°, V ≈ 1000 Å³.
+
+  Suggested refinement strategy: - use the 14°–50° 2θ range to avoid low-angle artifacts - use a low-order baseline/background function (order 0–1) to avoid overfitting - if multiple refinements converge to different basins, choose the result with the lowest wR and the smallest volume deviation from the initial guess.
+
+  Please perform a Pawley refinement on this PXRD pattern, extract the refined lattice parameters, and report the refinement quality.
+
+  [Machine-scoring convention] At the end of the final answer, append a JSON block wrapped in an eval_results tag (values without units; conventions: a/b/c in Å, beta in degrees, V in Å³, wR in %), in the following format:
+
+  <eval_results> {"a": ..., "b": ..., "c": ..., "beta": ..., "V": ..., "wR": ...} </eval_results>
+
+  The values must come from the actual Pawley refinement result, and must not be filled in using the approximate initial guesses from the prompt. '
+tags:
+- char_diffraction
+data_files:
+- key: pxrd_data
+  path: pxrd_303K.xy
+  oss_url: ''
+  description: PXRD pattern at 303 K (Cu Kalpha1, 5-50 deg 2theta), two-column format (2theta, intensity). Generated 
+    from real laboratory diffractometer scan.
+reference_answers:
+- key: cell_a
+  value:
+    json_path: a
+    target: 10.828
+    tolerance: 0.04
+  unit: A
+- key: cell_b
+  value:
+    json_path: b
+    target: 9.57
+    tolerance: 0.08
+  unit: A
+- key: cell_c
+  value:
+    json_path: c
+    target: 10.14
+    tolerance: 0.06
+  unit: A
+- key: cell_beta
+  value:
+    json_path: beta
+    target: 108.1
+    tolerance: 1.2
+  unit: deg
+- key: cell_V
+  value:
+    json_path: V
+    target: 997.0
+    tolerance: 12.0
+  unit: A3
+- key: wR_factor
+  value:
+    json_path: wR
+    target: 16.0
+    tolerance: 4.0
+  unit: percent
+- key: grounding_source
+  value:
+    filename: pxrd_303K.xy
+scoring_checklist:
+- id: cell_a
+  criterion: Refined lattice parameter a is within tolerance (target 10.828 ± 0.04 Å). Read from the eval_results JSON 
+    path a.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: tool_utilization
+- id: cell_b
+  criterion: Refined lattice parameter b is within tolerance (target 9.57 ± 0.08 Å). Read from the eval_results JSON 
+    path b.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: tool_utilization
+- id: cell_c
+  criterion: Refined lattice parameter c is within tolerance (target 10.14 ± 0.06 Å). Read from the eval_results JSON 
+    path c.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: tool_utilization
+- id: cell_beta
+  criterion: Refined monoclinic angle beta is within tolerance (target 108.1 ± 1.2°). Read from the eval_results JSON 
+    path beta.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: tool_utilization
+- id: cell_V
+  criterion: Refined unit cell volume V is within tolerance (target 997.0 ± 12.0 Å³). Read from the eval_results JSON 
+    path V.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: tool_utilization
+- id: wR_factor
+  criterion: Weighted profile R-factor wR is within tolerance (target 16.0 ± 4.0 %). Read from the eval_results JSON 
+    path wR.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: tool_utilization
+- id: grounding_source
+  criterion: Lattice parameters and wR are derived from Pawley refinement of the provided PXRD data file, not from 
+    literature values or hallucination. Judge from the final answer and stated methodology.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

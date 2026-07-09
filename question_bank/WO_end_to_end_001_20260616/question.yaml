@@ -1,0 +1,57 @@
+id: WO_end_to_end_001_20260616
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Complete an end-to-end workflow from structure retrieval to surface construction to input generation.
+human_prompt_seed: 'Please complete the following end-to-end workflow:
+
+  1. Retrieve the rutile TiO2 structure (space group P4_2/mnm) from a structure database.
+
+  2. Cut a (110) surface slab with 3 layers, a 2×1×1 supercell, and 15 Å vacuum.
+
+  3. Generate a VASP static-calculation INCAR for the slab (ENCUT=520, ISMEAR=0, SIGMA=0.05, NSW=0).
+
+  Output three files: `tio2_bulk.cif` (bulk), `tio2_110_slab.cif` (slab), and `INCAR`.'
+tags:
+- eng_vasp
+- struct_surface
+- meta_database
+data_files: []
+reference_answers:
+- key: bulk_artifact
+  value: tio2_bulk.cif
+- key: slab_artifact
+  value: tio2_110_slab.cif
+- key: incar_artifact
+  value: INCAR
+scoring_checklist:
+- id: bulk_artifact
+  criterion: Agent writes `tio2_bulk.cif` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: slab_artifact
+  criterion: Agent writes `tio2_110_slab.cif` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: incar_artifact
+  criterion: Agent writes `INCAR` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: pipeline_correctness
+  criterion: The workflow is logically connected — bulk structure is TiO2 rutile, slab is cut from it along (110), and 
+    INCAR parameters match the static calculation request.
+  verify: llm_binary_judge
+  capability: workflow_orchestration
+  weight: 0.5
+- id: grounding_source
+  criterion: Each step is grounded in the previous step output (slab from bulk, INCAR for slab), not independently 
+    generated.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

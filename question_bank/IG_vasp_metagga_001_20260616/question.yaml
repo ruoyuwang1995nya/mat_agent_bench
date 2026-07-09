@@ -1,0 +1,84 @@
+id: IG_vasp_metagga_001_20260616
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
+domain: agnostic
+difficulty: easy
+intent: Generate VASP INCAR for r2SCAN meta-GGA calculation with required LASPH setting.
+human_prompt_seed: 'There is a file `TiO2_rutile.vasp` in the workspace (rutile TiO2 structure, 6 atoms).
+
+  Generate an INCAR file `INCAR_r2scan` for an r2SCAN functional structural optimization, with the following requirements:
+
+  - r2SCAN meta-GGA functional
+
+  - Structural optimization (ions + cell)
+
+  - ENCUT = 600 eV
+
+  - Force-convergence criterion 0.01 eV/A'
+tags:
+- eng_vasp
+data_files: []
+reference_answers:
+- key: incar_r2scan_artifact
+  value: INCAR_r2scan
+- key: must_metagga
+  value:
+    filename: INCAR_r2scan
+    tokens:
+    - METAGGA = R2SCAN
+    - METAGGA=R2SCAN
+    flags: i
+- key: must_lasph
+  value:
+    filename: INCAR_r2scan
+    tokens:
+    - LASPH = .TRUE.
+    - LASPH=.TRUE.
+    flags: i
+- key: must_isif3
+  value:
+    filename: INCAR_r2scan
+    pattern: ISIF\s*=\s*3
+    flags: i
+- key: must_ediffg
+  value:
+    filename: INCAR_r2scan
+    pattern: EDIFFG\s*=\s*-0\.01
+    flags: i
+- key: duration_budget
+  value:
+    max: 7200000
+scoring_checklist:
+- id: incar_r2scan_artifact
+  criterion: INCAR_r2scan file exists in workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: must_metagga
+  criterion: METAGGA = R2SCAN is set for r2SCAN functional.
+  verify: text_file_contains_all
+  capability: tool_utilization
+  weight: 0.5
+- id: must_lasph
+  criterion: LASPH = .TRUE. is set (required for meta-GGA calculations).
+  verify: text_file_contains_all
+  capability: scientific_reasoning
+  weight: 0.5
+- id: must_isif3
+  criterion: ISIF = 3 for full cell+ion relaxation.
+  verify: text_file_regex
+  capability: scientific_reasoning
+  weight: 0.5
+- id: must_ediffg
+  criterion: EDIFFG = -0.01 for force convergence criterion.
+  verify: text_file_regex
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_lasph
+  criterion: Agent explains that LASPH=.TRUE. is mandatory for meta-GGA functionals (non-spherical contributions to 
+    PAW).
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

@@ -1,0 +1,48 @@
+id: DD_general_005_20260615v2
+task_type: material_characterization
+capabilities:
+- data_handling
+- scientific_reasoning
+domain: agnostic
+difficulty: easy
+intent: Given descriptions of mixed failed-job scenarios, classify failure modes and provide parameterized retry 
+  strategy.
+human_prompt_seed: 'Suppose you submitted a batch of 20 DFT jobs, and 6 of them failed for the following reasons: Job
+  3 and 7: SCF non-convergence (transition-metal systems, ISPIN=1); Job 11: insufficient memory (improper NCORE setting);
+  Job 15 and 18: timeout caused by overly dense KPOINTS; Job 20: missing POTCAR input file. Please classify these failure
+  modes into at least 3 categories, and for each category provide a parameterized retry strategy and a stop condition.
+
+  '
+tags:
+- wf_recovery
+- wf_batch
+data_files: []
+reference_answers:
+- key: failure_classes_count
+  value: 3
+  tolerance: 1.0
+- key: required_fields
+  value:
+  - classification_table
+  - retry_parameters
+  - fallback_rule
+  - stop_condition
+scoring_checklist:
+- id: failure_classes_count
+  criterion: Identifies expected number of failure classes (≥ 3).
+  verify: numerical_range
+  capability: scientific_reasoning
+  weight: 0.5
+- id: required_fields
+  criterion: Report includes failure classification table, per-class retry parameters, fallback rule, and stop 
+    condition.
+  verify: llm_binary_judge
+  capability: workflow_orchestration
+  weight: 0.5
+- id: grounding_source
+  criterion: Each failure class is grounded in the specific job descriptions provided in the prompt (Job IDs, error 
+    types); no generic advice without tracing to the prompt. Judge solely from the final answer; do not fail because the
+    tool-call log omits MCP, web_search, or any specific tool.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

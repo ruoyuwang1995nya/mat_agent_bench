@@ -7,17 +7,17 @@ domain: polymer
 difficulty: easy
 intent: Compare PIM-1, Matrimid, and 6FDA-DAM membranes for CO2/N2 separation by integrating solubility, diffusivity, 
   free-volume, and ranking metrics.
-human_prompt_seed: '文件 `membrane_screening_bundle.json` 汇总了 PIM-1、Matrimid 和 6FDA-DAM 三类聚合物膜在 CO2/N2 分离中的中间数据。
+human_prompt_seed: 'The file `membrane_screening_bundle.json` summarizes intermediate data for three polymer membranes, PIM-1, Matrimid, and 6FDA-DAM, in CO2/N2 separation.
 
-  请完成一份膜材料筛选报告：
+  Please complete a membrane-material screening report:
 
-  1. 计算或核对各体系的 CO2 permeability 与 CO2/N2 selectivity；
+  1. Calculate or verify the CO2 permeability and CO2/N2 selectivity of each system.
 
-  2. 区分哪些优势来自高溶解度，哪些来自高扩散性；
+  2. Distinguish which advantages come from high solubility and which come from high diffusivity.
 
-  3. 结合自由体积和官能团相互作用解释材料差异；
+  3. Explain the material differences by combining free volume and functional-group interactions.
 
-  4. 给出最适合平衡通量与选择性的候选。
+  4. Recommend the candidate that is best suited to balancing throughput and selectivity.
 
   '
 tags:

@@ -1,0 +1,107 @@
+id: SC_struct_006_20260616
+task_type: simulation
+capabilities:
+- structure_manipulation
+domain: agnostic
+difficulty: easy
+intent: Add missing hydrogens to the diacetylmorphine (DACMOR) molecular crystal CIF and validate the formula, local 
+  molecular environment, and tetrahedral geometry using MolCrysKit.
+human_prompt_seed: 'Add missing hydrogens to the following CIF structure provided via OSS URL:
+
+  - `DACMOR.cif` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/evomaster/evaluation/structure_surface/cda9f292ec4b411facb478d0486b54ce/DACMOR.cif`
+
+
+  This structure is a molecular crystal of diacetylmorphine, obtained from single-crystal XRD, but it is missing H atoms.
+
+  Please hydrogenate this structure and export it as `dacmor_hydrogenated.cif`.
+
+  Requirement: add H atoms so that the structure follows valence rules and is chemically meaningful.
+
+
+  Please explicitly check and report the following in the final answer:
+
+  (1) The reduced chemical formula of each molecule after hydrogenation.
+
+  (2) The total number of H atoms in each molecule.
+
+  (3) A representative H-C-H bond angle (degrees).
+
+  (4) Whether the molecular connectivity is complete after hydrogenation (no broken or extra bonds).
+
+
+  Output the structure file and provide the above verification conclusions.
+
+  '
+tags:
+- struct_molcrys
+data_files:
+- key: dacmor_cif
+  path: DACMOR.cif
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/evomaster/evaluation/structure_surface/cda9f292ec4b411facb478d0486b54ce/DACMOR.cif
+  description: DACMOR (diacetylmorphine) molecular-crystal CIF missing explicit H atoms.
+reference_answers:
+- key: file_exists
+  value: dacmor_hydrogenated.cif
+- key: target_formula
+  value:
+    filename: dacmor_hydrogenated.cif
+    formula: C21H23NO5
+- key: hch_angle_deg
+  value:
+    filename: dacmor_hydrogenated.cif
+    triplet:
+    - H
+    - C
+    - H
+    expected_deg: 109.48
+    tolerance_deg: 8.0
+    cutoff_A: 1.5
+- key: molcrys_local_env
+  value:
+    filename: dacmor_hydrogenated.cif
+    expected_formula: C21H23NO5
+    z_value: 4
+- key: explicit_report_tokens
+  value:
+  - C21H23NO5
+  - '109'
+  - dacmor_hydrogenated.cif
+scoring_checklist:
+- id: file_exists
+  criterion: The output file `dacmor_hydrogenated.cif` exists.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: target_formula
+  criterion: The reduced chemical formula read from dacmor_hydrogenated.cif matches C21H23NO5.
+  verify: struct_file_formula
+  capability: structure_manipulation
+  weight: 0.5
+- id: hch_angle_deg
+  criterion: The mean H-C-H angle computed from dacmor_hydrogenated.cif is close to tetrahedral 109.48 degrees within a 
+    reasonable tolerance.
+  verify: struct_file_bond_angle
+  capability: structure_manipulation
+  weight: 0.5
+- id: molcrys_local_env
+  criterion: MolCrysKit validates that the hydrogenated output has correct molecular connectivity (no fragmented or 
+    over-bonded molecules), each molecule matches the expected formula, and ChemicalEnvironment analysis confirms 
+    H-bearing atoms have chemically consistent local geometry (hybridisation, coordination).
+  verify: molcrys_local_env
+  capability: structure_manipulation
+  weight: 0.5
+- id: explicit_report_tokens
+  criterion: Final answer explicitly reports formula C21H23NO5, a representative H-C-H angle near 109 degrees, and the 
+    `dacmor_hydrogenated.cif` output basename.
+  verify: contains_all
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: The answer states the chemical/geometry rationale (which C/N atoms receive H, tetrahedral geometry targets,
+    carbonyl/ester O should not be hydrogenated) and ties checks to `dacmor_hydrogenated.cif` and the input CIF, not 
+    only procedural wording disconnected from those files. Judge solely from the final answer and named deliverables; do
+    not fail because the tool-call log omits MCP, web_search, or any specific tool.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

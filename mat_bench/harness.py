@@ -469,6 +469,16 @@ def build_cli_parser() -> argparse.ArgumentParser:
         help="Path to question_bank directory (default: question_bank).",
     )
     parser.add_argument(
+        "--question-config",
+        type=str,
+        default=None,
+        metavar="FILE",
+        help=(
+            "YAML file with enabled/disabled question settings. If omitted, "
+            "~/.matbench/questions.yaml is used when present."
+        ),
+    )
+    parser.add_argument(
         "--questions",
         nargs="*",
         help="Specific question ID(s) to run.",
@@ -588,6 +598,21 @@ def run_benchmark(args: argparse.Namespace) -> int:
         qb_dir = _REPO_ROOT / qb_dir
     registry = Registry(qb_dir)
     print(f"Loaded {len(registry)} questions from {qb_dir}", file=sys.stderr)
+    if hasattr(args, "question_config"):
+        from pydantic import ValidationError
+
+        from .registry.question_config import load_and_apply_question_config
+
+        try:
+            registry, config_path = load_and_apply_question_config(
+                registry,
+                args.question_config,
+            )
+        except (OSError, ValueError, KeyError, ValidationError) as exc:
+            print(f"error: failed to apply question config: {exc}", file=sys.stderr)
+            return 1
+        if config_path is not None:
+            print(f"Applied question config: {config_path}", file=sys.stderr)
 
     # Select questions
     if args.questions:

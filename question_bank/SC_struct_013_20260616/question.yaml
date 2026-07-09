@@ -1,0 +1,103 @@
+id: SC_struct_013_20260616
+task_type: simulation
+capabilities:
+- structure_manipulation
+domain: agnostic
+difficulty: easy
+intent: Construct and compare close-packed layer cross sections for fcc and hcp crystals, then expand both slabs to 
+  5x5x1 supercells.
+human_prompt_seed: 'Please demonstrate the difference between fcc and hcp close-packed structures by completing the following modeling task and exporting the structures:
+
+  1) First build bulk template structures for fcc and hcp, respectively. 2) Cut a close-packed layer cross section from each one, using 5 atomic layers and about 1 layer of vacuum. 3) Expand both cross-section structures to 5×5×1 supercells. 4) Output files: `fcc_close_packed_5x5x1.cif`, `hcp_close_packed_5x5x1.cif`, and `packing_comparison.md` (explaining the fcc/hcp stacking difference and the cross-section construction settings).
+
+  In the final answer, briefly explain how you ensured that the two structures were compared under equivalent conditions.'
+tags:
+- struct_surface
+data_files: []
+reference_answers:
+- key: fcc_artifact
+  value: fcc_close_packed_5x5x1.cif
+- key: hcp_artifact
+  value: hcp_close_packed_5x5x1.cif
+- key: compare_artifact
+  value: packing_comparison.md
+- key: fcc_layer_count
+  value:
+    filename: fcc_close_packed_5x5x1.cif
+    expected: 5
+    tolerance: 0
+    axis: z
+    layer_tol_A: 0.25
+- key: hcp_layer_count
+  value:
+    filename: hcp_close_packed_5x5x1.cif
+    expected: 5
+    tolerance: 0
+    axis: z
+    layer_tol_A: 0.25
+- key: fcc_atom_count
+  value:
+    filename: fcc_close_packed_5x5x1.cif
+    expected: 125
+    tolerance: 0
+- key: hcp_atom_count
+  value:
+    filename: hcp_close_packed_5x5x1.cif
+    expected: 125
+    tolerance: 0
+- key: compare_tokens
+  value:
+    filename: packing_comparison.md
+    tokens:
+    - fcc
+    - hcp
+    - AB
+    - ABC
+    flags: i
+scoring_checklist:
+- id: fcc_artifact
+  criterion: Agent writes `fcc_close_packed_5x5x1.cif` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: hcp_artifact
+  criterion: Agent writes `hcp_close_packed_5x5x1.cif` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: compare_artifact
+  criterion: Agent writes `packing_comparison.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: fcc_layer_count
+  criterion: The file `fcc_close_packed_5x5x1.cif` contains exactly 5 distinct z-layers.
+  verify: struct_file_layer_count
+  capability: structure_manipulation
+  weight: 0.5
+- id: hcp_layer_count
+  criterion: The file `hcp_close_packed_5x5x1.cif` contains exactly 5 distinct z-layers.
+  verify: struct_file_layer_count
+  capability: structure_manipulation
+  weight: 0.5
+- id: fcc_atom_count
+  criterion: The file `fcc_close_packed_5x5x1.cif` has 125 atoms for a 5-layer 5x5x1 slab.
+  verify: struct_file_atom_count
+  capability: structure_manipulation
+  weight: 0.5
+- id: hcp_atom_count
+  criterion: The file `hcp_close_packed_5x5x1.cif` has 125 atoms for a 5-layer 5x5x1 slab.
+  verify: struct_file_atom_count
+  capability: structure_manipulation
+  weight: 0.5
+- id: compare_tokens
+  criterion: The file `packing_comparison.md` explicitly mentions fcc, hcp, AB stacking, and ABC stacking.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: The final answer is grounded in both generated CIF files and the comparison note, rather than generic 
+    textbook-only statements.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

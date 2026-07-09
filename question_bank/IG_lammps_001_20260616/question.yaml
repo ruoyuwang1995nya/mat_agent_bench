@@ -1,0 +1,62 @@
+id: IG_lammps_001_20260616
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
+domain: agnostic
+difficulty: easy
+intent: Generate a LAMMPS molecular dynamics input file for a simple Lennard-Jones system relaxation.
+human_prompt_seed: 'Please generate a LAMMPS molecular dynamics input file for an FCC Cu system with the following requirements:
+
+  1. Use the EAM potential (`Cu_u3.eam`) with a lattice constant of 3.615 Å.
+
+  2. A 3×3×3 supercell.
+
+  3. NPT ensemble at 300 K and 0 bar.
+
+  4. Run for 10000 steps with a 1 fs timestep.
+
+  5. Output thermodynamic information every 100 steps.
+
+  The output filename should be `in.lammps`.'
+tags:
+- eng_lammps
+data_files: []
+reference_answers:
+- key: input_artifact
+  value: in.lammps
+- key: required_keywords
+  value:
+    filename: in.lammps
+    tokens:
+    - pair_style
+    - pair_coeff
+    - fix
+    - npt
+    - run
+    - thermo
+    flags: i
+scoring_checklist:
+- id: input_artifact
+  criterion: Agent writes `in.lammps` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: required_keywords
+  criterion: The input file contains essential LAMMPS keywords for an EAM MD simulation (pair_style, pair_coeff, fix 
+    npt, run, thermo).
+  verify: text_file_contains_all
+  capability: tool_utilization
+  weight: 0.5
+- id: physical_params
+  criterion: The input file uses physically reasonable parameters consistent with the request (FCC Cu lattice constant 
+    ~3.615 Å, temperature 300 K, pressure 0, timestep 1 fs, 10000 steps).
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: Parameter choices are tied to the user request and standard Cu EAM simulation practice, not arbitrary 
+    values.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

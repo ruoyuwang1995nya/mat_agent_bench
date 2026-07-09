@@ -1,0 +1,112 @@
+id: WO_general_intake_001_20260615v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Build a structured intake-and-analysis protocol with attachment-level triage priority and rejection criteria.
+human_prompt_seed: 'The workspace already provides `attachment_manifest.json`.
+
+
+  Please read this file first, then generate:
+
+  1) `intake_checklist.json`: list the additional information requirements for each attachment;
+
+  2) `analysis_protocol.md`: including the analysis workflow, quality checks, and exception handling;
+
+  3) `delivery_plan.md`: explicitly define the deliverables in terms of figures/tables/explanatory text.
+
+  4) `triage_policy.md`: provide attachment priorities and the conditions for "rejecting processing" (such as missing
+  critical metadata).
+
+
+  Note: do not assume attachment types that do not appear in the manifest.
+
+  '
+tags: []
+data_files:
+- key: attachment_manifest
+  path: attachment_manifest.json
+  oss_url: ''
+  description: Attachment metadata list for protocol planning.
+reference_answers:
+- key: intake_artifact
+  value: intake_checklist.json
+- key: protocol_artifact
+  value: analysis_protocol.md
+- key: delivery_artifact
+  value: delivery_plan.md
+- key: triage_artifact
+  value: triage_policy.md
+- key: intake_required_tokens
+  value:
+    filename: intake_checklist.json
+    tokens:
+    - dsc_curve.csv
+    - sem_image.png
+    - file type
+    - unit
+    - scale bar
+    - test condition
+    flags: i
+- key: protocol_required_tokens
+  value:
+    filename: analysis_protocol.md
+    must_cover:
+    - analysis workflow
+    - quality check
+    - exception handling
+    - missing value
+    - unit consistency
+- key: delivery_required_tokens
+  value:
+    filename: delivery_plan.md
+    must_cover:
+    - figure
+    - table
+    - explanatory text
+- key: grounding_source
+  value:
+    filename: attachment_manifest.json
+scoring_checklist:
+- id: intake_artifact
+  criterion: Agent writes `intake_checklist.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: protocol_artifact
+  criterion: Agent writes `analysis_protocol.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: delivery_artifact
+  criterion: Agent writes `delivery_plan.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: triage_artifact
+  criterion: Agent writes `triage_policy.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: intake_required_tokens
+  criterion: Intake checklist is grounded in attachment manifest entries and requests concrete missing metadata.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: protocol_required_tokens
+  criterion: Analysis protocol includes workflow, quality checks, and abnormal-case handling.
+  verify: llm_binary_judge
+  capability: workflow_orchestration
+  weight: 0.5
+- id: delivery_required_tokens
+  criterion: Delivery plan explicitly includes figures, tables, and explanatory text.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: The response stays grounded in `attachment_manifest.json` and does not fabricate unseen attachment content.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

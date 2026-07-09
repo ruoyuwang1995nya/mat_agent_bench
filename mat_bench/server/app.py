@@ -8,7 +8,7 @@ Endpoints::
     GET  /                                Bench API info (version, guide link)
     GET  /guide                           Agent HTTP API reference (plain text, no auth)
     POST /sessions                        Create a new session (requires X-API-Token header)
-    GET  /questions                       List questions (filter: capability, domain, limit)
+    GET  /questions                       List questions (filters: capability, task_type, domain, tags, limit)
     GET  /questions/{id}                  Full question details + data file list (requires session_id; starts duration timer)
     GET  /questions/{id}/data/{fname}     Download a data file
     POST /submit/{id}?session_id=S0001    Submit result files + metadata (multipart)
@@ -308,6 +308,24 @@ try:
         _session_store.save_session(session_id, token, model_name, record.created_at)
         return {"session_id": session_id, "model_name": model_name, "created_at": record.created_at.isoformat()}
 
+    @app.get("/sessions")
+    async def list_sessions(
+        token: str = Depends(_require_token),
+        limit: int = Query(default=10, ge=1, le=500, description="Max sessions to return (default: 10)"),
+    ) -> list[dict]:
+        """List sessions for the authenticated token, most recent first."""
+        with _sessions_lock:
+            owned = [r for r in _sessions.values() if r.token == token]
+        owned.sort(key=lambda r: r.created_at, reverse=True)
+        return [
+            {
+                "session_id": r.session_id,
+                "model_name": r.model_name,
+                "created_at": r.created_at.isoformat(),
+            }
+            for r in owned[:limit]
+        ]
+
     # ------------------------------------------------------------------
     # Question endpoints (no auth required)
     # ------------------------------------------------------------------
@@ -315,12 +333,19 @@ try:
     @app.get("/questions")
     async def list_questions(
         capability: str | None = None,
+        task_type: str | None = None,
         domain: str | None = None,
+        tags: list[str] | None = Query(default=None),
         limit: int | None = None,
     ) -> list[dict]:
         """List available questions with optional filters."""
         registry = _require_registry()
-        questions = registry.list_questions(capability=capability, domain=domain)
+        questions = registry.list_questions(
+            capability=capability,
+            task_type=task_type,
+            domain=domain,
+            tags=tags,
+        )
         if limit is not None:
             questions = questions[:limit]
         return [
@@ -593,6 +618,9 @@ try:
         Otherwise returns all records for this question across all sessions of
         the authenticated token.
         """
+        registry = _require_registry()
+        if question_id not in registry:
+            raise HTTPException(404, detail=f"Question '{question_id}' not found")
         with _results_lock:
             if session_id is not None:
                 key = f"{token}:{session_id}:{question_id}"
@@ -655,6 +683,10 @@ try:
         if not records:
             return {"total": 0, "results": []}
         registry = _require_registry()
+        hosted_question_ids = set(registry.list_question_ids())
+        records = [rec for rec in records if rec.question_id in hosted_question_ids]
+        if not records:
+            return {"total": 0, "results": []}
         total_q = len(registry.list_questions())
         summary = build_summary(records, total_q)
         return {

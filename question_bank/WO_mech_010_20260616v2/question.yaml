@@ -1,0 +1,77 @@
+id: WO_mech_010_20260616v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Evaluate phase-forming tendencies of AlCr0.8CoFeNi HEA using descriptor calculations, binary-phase cues, and 
+  solid-solution prediction.
+human_prompt_seed: 'Evaluate the phase-formation tendency of the high-entropy alloy (HEA) AlCr0.8CoFeNi, covering the
+  following information:
+
+  1) key descriptors such as valence electron concentration (VEC), mixing enthalpy, and mixing entropy;
+  2) binary formation-energy / phase-diagram information (used to assist stability judgment);
+  3) whether the system tends to form a solid solution, and the possible crystal structure.
+
+  Please provide the following deliverables:
+  - `hea_alcr0.8cofeni_summary.json`: containing at least `vec`, `mixing_enthalpy`, `mixing_entropy`, `binary_formation_energy_summary`,
+  `solid_solution_prediction`, and `possible_structure`;
+  - `hea_alcr0.8cofeni_report.md`: explain the criteria, the conclusion, and the uncertainty.
+
+  In the final answer, briefly provide the conclusion and basis for "whether a solid solution is likely to form".'
+tags:
+- code_mlip
+data_files: []
+reference_answers:
+- key: hea_summary_json
+  value: hea_alcr0.8cofeni_summary.json
+- key: hea_report_md
+  value: hea_alcr0.8cofeni_report.md
+- key: json_required_tokens
+  value:
+    filename: hea_alcr0.8cofeni_summary.json
+    must_cover:
+    - vec
+    - mixing_enthalpy
+    - mixing_entropy
+    - binary_formation_energy_summary
+    - solid_solution_prediction
+    - possible_structure
+- key: report_required_tokens
+  value:
+    filename: hea_alcr0.8cofeni_report.md
+    must_cover:
+    - AlCr0.8CoFeNi
+    - VEC
+    - mixing enthalpy
+    - mixing entropy
+    - solid solution
+    - uncertainty
+scoring_checklist:
+- id: hea_summary_json
+  criterion: Agent writes `hea_alcr0.8cofeni_summary.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: hea_report_md
+  criterion: Agent writes `hea_alcr0.8cofeni_report.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: json_required_tokens
+  criterion: Summary JSON contains required HEA descriptor, binary-energy summary, and solid-solution prediction fields.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: report_required_tokens
+  criterion: Report explains prediction rationale and uncertainty caveats.
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: grounding_source
+  criterion: Final answer is grounded in generated HEA-analysis artifacts and does not fabricate unsupported phase 
+    conclusions.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

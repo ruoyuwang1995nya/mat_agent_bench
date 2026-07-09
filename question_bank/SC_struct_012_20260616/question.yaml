@@ -1,0 +1,87 @@
+id: SC_struct_012_20260616
+task_type: simulation
+capabilities:
+- structure_manipulation
+domain: agnostic
+difficulty: easy
+intent: Construct corundum (alpha-Al2O3) using Wyckoff-position information and validate lattice/formula consistency.
+human_prompt_seed: 'Please construct the crystal structure of corundum (alpha-Al2O3) based on its Wyckoff-position information, and export it as `corundum_wyckoff.cif`.
+
+  Known target information: - space group number: 167; - approximate lattice constants: a=b≈4.7602 Å, c≈12.9933 Å; - the structure should be built using Wyckoff positions rather than only giving the final chemical formula.
+
+  Deliverables: 1) `corundum_wyckoff.cif`; 2) `wyckoff_construction_notes.md`, describing the space group used, the site settings, the coordinate parameters, and the key points for validating the result.
+
+  In the final answer, briefly explain why the structure is consistent with corundum, and what may cause small parameter deviations.'
+tags:
+- phy_surface
+- mat_oxide
+- meta_userlog
+data_files: []
+reference_answers:
+- key: structure_artifact
+  value: corundum_wyckoff.cif
+- key: notes_artifact
+  value: wyckoff_construction_notes.md
+- key: formula_check
+  value:
+    filename: corundum_wyckoff.cif
+    formula: Al2O3
+- key: lattice_a
+  value:
+    filename: corundum_wyckoff.cif
+    param: a
+    expected: 4.7602
+    tolerance: 0.5
+- key: lattice_c
+  value:
+    filename: corundum_wyckoff.cif
+    param: c
+    expected: 12.9933
+    tolerance: 1.0
+- key: notes_required_tokens
+  value:
+    filename: wyckoff_construction_notes.md
+    tokens:
+    - Wyckoff
+    - 167
+    - Al2O3
+    - lattice
+    - coordinate
+    flags: i
+scoring_checklist:
+- id: structure_artifact
+  criterion: Agent writes `corundum_wyckoff.cif` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: notes_artifact
+  criterion: Agent writes `wyckoff_construction_notes.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: formula_check
+  criterion: Output CIF has reduced formula consistent with Al2O3.
+  verify: struct_file_formula
+  capability: structure_manipulation
+  weight: 0.5
+- id: lattice_a
+  criterion: Lattice parameter a is consistent with corundum reference scale.
+  verify: struct_file_cell_param
+  capability: structure_manipulation
+  weight: 0.5
+- id: lattice_c
+  criterion: Lattice parameter c is consistent with corundum reference scale.
+  verify: struct_file_cell_param
+  capability: structure_manipulation
+  weight: 0.5
+- id: notes_required_tokens
+  criterion: Notes describe Wyckoff-based construction details.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: The final answer is grounded in `corundum_wyckoff.cif` and the Wyckoff-construction notes, rather than 
+    generic mineral background.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

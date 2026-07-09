@@ -1,0 +1,49 @@
+id: CR_WO_Ag_adsorption_20260615v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: catalysis
+difficulty: easy
+intent: Compute adsorption energies of six adsorbates on Ag(001) and Ag(011) at on-top sites using MLIP/calculator with 
+  consistent energy reference per doc 3.2.1.
+human_prompt_seed: 'Cut the Ag bulk into two surfaces, (001) and (011); for each surface, calculate the adsorption energies
+  of six adsorbates, H, CO, COOH, CO2, HCOO, and HCOOH, at the on-top site. Use DP (or the equivalent potential/calculator
+  required by the task environment), and use a consistent energy reference for the gas-phase molecules and the bulk/slab
+  systems (clearly define E_ads and the reference states). Summarize the adsorption energies of all systems in a table
+  (eV), and state whether ZPE/entropy corrections are included; if not, explicitly write "electronic energy only".
+
+  '
+tags:
+- struct_surface
+- code_mlip
+data_files: []
+reference_answers: []
+scoring_checklist:
+- id: workflow_setup
+  criterion: 'Agent demonstrates correct computational approach: (a) builds or references Ag bulk structure, (b) cuts or describes
+    cutting (001) and (011) surface slabs, (c) prepares or scripts adsorbate-slab structures for the six adsorbates (H, CO,
+    COOH, CO2, HCOO, HCOOH), and (d) uses an MLIP/DP calculator or submits remote Bohrium computation jobs. A well-structured
+    script, code, or submitted computation jobs satisfying these elements counts as pass even if final numerical results are
+    not yet available (e.g. due to wall-clock timeout).'
+  verify: llm_binary_judge
+  capability: structure_manipulation
+  weight: 0.5
+- id: coverage_table
+  criterion: 'The results cover Ag(001) and Ag(011), all six adsorbates (H, CO, COOH, CO2, HCOO, HCOOH), and the on-top
+    site; a numerical adsorption-energy table is provided and the energy references (slab and gas phase) are defined. NOTE:
+    the specific calculator used (DP, MACE-MP, or another MLIP) is not part of this criterion, as long as the result coverage
+    is complete and the reference-state definition is clear. If the answer contains markdown table separators (such as
+    |:---:|), they are formatting markers, not truncation. Judge on coverage completeness and reference definition only.'
+  verify: llm_binary_judge
+  weight: 0.5
+  capability: data_handling
+- id: grounding_workflow
+  criterion: From the agent's artifacts (scripts, code, submitted Bohrium computation jobs, or the final narrative/table),
+    one can trace a reasonable computational chain from bulk/surface construction to adsorbate structures. If a final table
+    is provided, the narrative and numerical values must be self-consistent; if only scripts or job-submission records are
+    provided, the code logic must still reflect a reasonable workflow for structure construction and energy calculation.
+    No numerical values should be fabricated without connection to the actual steps.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

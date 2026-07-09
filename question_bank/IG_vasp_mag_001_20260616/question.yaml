@@ -1,0 +1,70 @@
+id: IG_vasp_mag_001_20260616
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
+domain: agnostic
+difficulty: easy
+intent: Generate VASP INCAR for a magnetic Fe BCC system with correct spin-polarization settings.
+human_prompt_seed: 'There is a file `Fe_bcc.vasp` in the workspace (body-centered cubic Fe, 2 atoms).
+
+  Please generate an SCF-calculation INCAR file `INCAR_mag` suitable for this system.
+
+  Note: Fe is a typical ferromagnetic metal, so make sure the calculation settings correctly reflect its magnetism.
+
+  ENCUT = 520 eV, electronic-step convergence accuracy 1E-6 eV, and PBE functional.'
+tags:
+- eng_vasp
+data_files: []
+reference_answers:
+- key: incar_mag_artifact
+  value: INCAR_mag
+- key: must_ispin
+  value:
+    filename: INCAR_mag
+    tokens:
+    - ISPIN = 2
+    - ISPIN=2
+    flags: i
+- key: must_magmom
+  value:
+    filename: INCAR_mag
+    pattern: MAGMOM\s*=\s*2\*5
+    flags: i
+- key: must_encut
+  value:
+    filename: INCAR_mag
+    checks:
+    - key: ENCUT
+      min: 520
+      max: 520
+- key: duration_budget
+  value:
+    max: 7200000
+scoring_checklist:
+- id: incar_mag_artifact
+  criterion: INCAR_mag file exists in workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: must_ispin
+  criterion: INCAR_mag contains ISPIN = 2 for spin-polarized calculation.
+  verify: text_file_contains_all
+  capability: scientific_reasoning
+  weight: 0.5
+- id: must_magmom
+  criterion: INCAR_mag sets MAGMOM with 2*5 (or equivalent per-atom magnetic moment for 2 Fe atoms).
+  verify: text_file_regex
+  capability: scientific_reasoning
+  weight: 0.5
+- id: must_encut
+  criterion: ENCUT is set to 520 eV.
+  verify: text_file_numeric_range
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_mag
+  criterion: Agent explains why ISPIN=2 and MAGMOM are needed for Fe (magnetic material), not just blindly setting 
+    parameters.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

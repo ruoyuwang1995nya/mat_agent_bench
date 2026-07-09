@@ -1,0 +1,38 @@
+id: IG_gpumd_012_20260615v2
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
+domain: agnostic
+difficulty: easy
+intent: Generate a GPUMD MSD self-consistent `run.in`.
+human_prompt_seed: Please write a `run.in` for an MSD self-consistency test, including NVE, `compute_msd`, and basic integration
+  parameters.
+tags:
+- eng_gpumd
+data_files: []
+reference_answers:
+- key: run_in_artifact
+  value: run.in
+- key: msd_tokens
+  value:
+    filename: run.in
+    tokens:
+    - potential
+    - time_step
+    - velocity
+    - ensemble nve
+    - compute_msd
+    - run
+    flags: i
+scoring_checklist:
+- id: run_in_artifact
+  criterion: Generate `run.in`.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: msd_tokens
+  criterion: The input contains the key commands for the MSD self-consistency test.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5

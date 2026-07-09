@@ -29,6 +29,7 @@ async function loadLeaderboard() {
     document.getElementById('stat-total-eval').textContent = data.total_evaluations ?? 0;
     document.getElementById('stat-run-count').textContent = data.run_count ?? 0;
     document.getElementById('stat-model-count').textContent = data.leaderboard?.length ?? 0;
+    document.getElementById('stat-total-points').textContent = data.total_points ?? data.enabled_question_count ?? 0;
 
     allEntries = data.leaderboard ?? [];
     renderLeaderboard();

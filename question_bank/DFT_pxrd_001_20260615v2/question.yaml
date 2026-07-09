@@ -1,0 +1,150 @@
+id: DFT_pxrd_001_20260615v2
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
+domain: agnostic
+difficulty: easy
+intent: Perform Pawley refinement on variable-temperature PXRD patterns to extract lattice parameters at each 
+  temperature, identify two structural phases (low-temperature RTP and high-temperature HTP), and fit linear thermal 
+  expansion equations for each phase.
+human_prompt_seed: 'The file `_td-pxrd_test.txt` contains variable-temperature powder X-ray diffraction (PXRD) data for
+  one compound at 8 temperatures, with temperature-label correspondence as follows: 25°C→303K, 40°C→323K, 60°C→343K,
+  80°C→363K, 100°C→383K, 115°C→393K, 130°C→403K, 140°C→413K. This compound belongs to the monoclinic crystal system.
+
+  Please perform Pawley refinement on the PXRD pattern at each temperature, extract the lattice parameters (a, b, c, beta,
+  V), and analyze the results: 1. Identify two structural phases: the low-temperature phase (1-RTP, 303K-363K) and the
+  high-temperature phase (1-HTP, 383K-413K); 2. For each phase, perform linear fitting of each lattice parameter (a, b,
+  c, beta, V) as a function of temperature, and provide the fitting equations (slope, intercept, R²); 3. Report the refinement
+  results at each temperature (lattice parameters and Rp/Rwp metrics).
+
+  '
+tags:
+- char_xrd
+- phy_phonon
+- wf_postprocess
+data_files:
+- key: vt_pxrd_data
+  path: _td-pxrd_test.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/DF_thermo_001_20260408/1775629319__td-pxrd_test.txt
+  description: Variable-temperature PXRD patterns at 8 temperatures (303K–413K), CSV format with paired (2theta, 
+    intensity) columns for each temperature.
+reference_answers:
+- key: rtp_V_303K
+  value: 999.81
+  tolerance: 20.0
+  unit: A3
+- key: rtp_V_363K
+  value: 1011.67
+  tolerance: 20.0
+  unit: A3
+- key: htp_V_383K
+  value: 1022.73
+  tolerance: 20.0
+  unit: A3
+- key: htp_V_413K
+  value: 1026.1
+  tolerance: 20.0
+  unit: A3
+- key: rtp_a_303K
+  value: 10.828
+  tolerance: 0.05
+  unit: A
+- key: htp_a_383K
+  value: 11.0506
+  tolerance: 0.05
+  unit: A
+- key: rtp_V_slope
+  value: 0.2013
+  tolerance: 0.06
+  unit: A3/K
+- key: htp_V_slope
+  value: 0.1154
+  tolerance: 0.06
+  unit: A3/K
+- key: rtp_a_slope
+  value: 0.00129
+  tolerance: 0.0006
+  unit: A/K
+- key: htp_c_slope
+  value: -0.00053
+  tolerance: 0.0006
+  unit: A/K
+- key: required_fields
+  value:
+  - RTP
+  - HTP
+  - slope
+  - intercept
+scoring_checklist:
+- id: rtp_V_303K
+  criterion: Refined unit cell volume at 303 K (RTP phase) is within tolerance of 999.81 Å³.
+  verify: numerical_range
+  weight: 0.5
+  capability: tool_utilization
+- id: rtp_V_363K
+  criterion: Refined unit cell volume at 363 K (RTP phase) is within tolerance of 1011.67 Å³.
+  verify: numerical_range
+  weight: 0.5
+  capability: tool_utilization
+- id: htp_V_383K
+  criterion: Refined unit cell volume at 383 K (HTP phase) is within tolerance of 1022.73 Å³.
+  verify: numerical_range
+  weight: 0.5
+  capability: tool_utilization
+- id: htp_V_413K
+  criterion: Refined unit cell volume at 413 K (HTP phase) is within tolerance of 1026.10 Å³.
+  verify: numerical_range
+  weight: 0.5
+  capability: tool_utilization
+- id: rtp_a_303K
+  criterion: Refined lattice parameter a at 303 K (RTP phase) is within tolerance of 10.828 Å.
+  verify: numerical_range
+  weight: 0.5
+  capability: tool_utilization
+- id: htp_a_383K
+  criterion: Refined lattice parameter a at 383 K (HTP phase) is within tolerance of 11.0506 Å.
+  verify: numerical_range
+  weight: 0.5
+  capability: tool_utilization
+- id: rtp_V_slope
+  criterion: Linear fit slope of V vs T for RTP phase (303–363 K) is within tolerance of 0.2013 Å³/K.
+  verify: numerical_range
+  weight: 0.5
+  capability: tool_utilization
+- id: htp_V_slope
+  criterion: Linear fit slope of V vs T for HTP phase (383–413 K) is within tolerance of 0.1154 Å³/K.
+  verify: numerical_range
+  weight: 0.5
+  capability: tool_utilization
+- id: rtp_a_slope
+  criterion: Linear fit slope of a vs T for RTP phase is within tolerance of 0.00129 Å/K.
+  verify: numerical_range
+  weight: 0.5
+  capability: tool_utilization
+- id: htp_c_slope
+  criterion: Linear fit slope of c vs T for HTP phase is within tolerance of -0.00053 Å/K (negative thermal expansion 
+    along c axis in HTP phase).
+  verify: numerical_range
+  weight: 0.5
+  capability: tool_utilization
+- id: required_fields
+  criterion: Answer reports both RTP and HTP phases with linear fit equations including slope, intercept, and R² for at 
+    least V vs T in each phase.
+  verify: llm_binary_judge
+  weight: 0.5
+  capability: tool_utilization
+- id: phase_transition_identified
+  criterion: Answer identifies a structural phase transition between 363 K and 383 K, with distinct lattice parameters 
+    for the two phases (notably a jump in a and β at the transition).
+  verify: llm_binary_judge
+  weight: 0.5
+  capability: scientific_reasoning
+- id: grounding_source
+  criterion: Lattice parameters and fit results are derived from Pawley refinement of the provided PXRD data file, not 
+    from literature values or hallucination. Judge from the final answer and stated methodology; do not fail because the
+    tool-call log omits specific tools.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

@@ -1,0 +1,83 @@
+id: SA_perovskite_pl_lifetime_001_20260616
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
+domain: semiconductor
+difficulty: easy
+intent: Extract photoluminescence peak, band width, and lifetime metrics from uploaded Mn-doped perovskite spectra.
+human_prompt_seed: 'Please download and analyze the following two spectral data files provided via OSS URLs:
+
+  - `mn_perovskite_em_ex365.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_perovskite_pl_lifetime_001/1778080963_mn_perovskite_em_ex365.txt` (Mn emission spectrum under 365 nm excitation)
+
+  - `mn_perovskite_decay_ex365_pl520.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_perovskite_pl_lifetime_001/1778080962_mn_perovskite_decay_ex365_pl520.txt` (time-decay curve of the same sample monitored near 520 nm)
+
+  Please complete the following analysis:
+
+  1. Determine the main emission-peak position and emission bandwidth from the emission spectrum. 2. Extract a representative luminescence lifetime from the decay curve. 3. Judge whether the emission is consistent with the broad green-emission feature commonly seen in Mn-doped halide luminescent materials. 4. Briefly explain how background, noise, or tail fitting may affect the results.
+
+  At the end of the final answer, append an `<eval_results>...</eval_results>` JSON block containing at least: `pl.lambda_max_nm`, `pl.fwhm_nm`, and `decay.tau_avg_us`.
+
+  In the JSON, field names like `a.b` indicate nested objects (child key `b` under top-level key `a`); please use a nested structure rather than flat string keys. Example structure (numbers are placeholders):
+
+  ```json {"pl": {"lambda_max_nm": 0, "fwhm_nm": 0}, "decay": {"tau_avg_us": 0}} ```'
+tags:
+- char_optical_spectrum
+- char_time_resolved
+data_files:
+- key: emission_spectrum
+  path: mn_perovskite_em_ex365.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_perovskite_pl_lifetime_001/1778080963_mn_perovskite_em_ex365.txt
+  description: Mn-doped perovskite emission spectrum under 365 nm excitation.
+- key: lifetime_decay
+  path: mn_perovskite_decay_ex365_pl520.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_perovskite_pl_lifetime_001/1778080962_mn_perovskite_decay_ex365_pl520.txt
+  description: Mn-doped perovskite photoluminescence decay trace monitored near 520 nm.
+reference_answers:
+- key: lambda_max
+  value:
+    json_path: pl.lambda_max_nm
+    target: 518.0
+    tolerance: 3.0
+  unit: nm
+- key: fwhm
+  value:
+    json_path: pl.fwhm_nm
+    target: 49.900441952351684
+    tolerance: 10.0
+  unit: nm
+- key: tau_avg
+  value:
+    json_path: decay.tau_avg_us
+    target: 350.99747059656994
+    tolerance: 80.0
+  unit: us
+scoring_checklist:
+- id: lambda_max
+  criterion: The emission maximum reported in eval_results is consistent with the uploaded emission spectrum.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: data_handling
+- id: fwhm
+  criterion: The emission bandwidth reported in eval_results is consistent with the uploaded emission spectrum.
+  verify: answer_json_numeric
+  capability: data_handling
+  weight: 0.5
+- id: tau_avg
+  criterion: The representative lifetime reported in eval_results is consistent with the uploaded decay trace.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: data_handling
+- id: photophysics_interpretation
+  criterion: The final answer recognizes the broad green Mn-related emission and discusses uncertainty from background 
+    or tail fitting.
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: grounding_source
+  criterion: The reported photophysical metrics are derived from the uploaded spectrum and decay trace.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

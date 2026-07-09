@@ -1,0 +1,104 @@
+id: IG_incar_004_20260616
+task_type: simulation
+capabilities:
+- tool_utilization
+- workflow_orchestration
+domain: agnostic
+difficulty: easy
+intent: 'Generate VASP INCAR for HSE06 hybrid functional calculation of MOF C30H22N4O10Zn2. Accurate electronic structure
+  and band gap.
+
+  '
+human_prompt_seed: 'Generate a VASP INCAR for a static HSE06 hybrid-functional calculation of the metal-organic framework (MOF) C30H22N4O10Zn2. Accurate electronic structure and band gap are required. Write the complete INCAR to the `INCAR` file in the current directory.'
+tags:
+- eng_vasp
+reference_answers:
+- key: incar_artifact
+  value: INCAR
+- key: incar_critical_tokens
+  value:
+    filename: INCAR
+    tokens:
+    - HFSCREEN
+    - LHFCALC
+    - IVDW
+    flags: i
+- key: critical_HFSCREEN
+  value:
+    filename: INCAR
+    pattern: ^\s*HFSCREEN\s*=\s*\S+
+    flags: im
+- key: critical_LHFCALC
+  value:
+    filename: INCAR
+    pattern: ^\s*LHFCALC\s*=\s*\.?(?:TRUE|T)\.?
+    flags: im
+- key: optional_NSW
+  value:
+    filename: INCAR
+    pattern: (?ims)\A(?!.*^\s*NSW\s*=)(?:.|\n)*\Z|^\s*NSW\s*=\s*0\b
+    flags: im
+- key: reasonable_params
+  value:
+    filename: INCAR
+- key: critical_IVDW
+  value:
+    filename: INCAR
+    pattern: ^\s*IVDW\s*=\s*(?:11|12)\b
+    flags: im
+- key: correct_ISMEAR_semiconductor
+  value:
+    filename: INCAR
+    pattern: ^\s*ISMEAR\s*=\s*(0|-5)\b
+    flags: im
+scoring_checklist:
+- id: incar_artifact
+  criterion: INCAR file is generated.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: incar_critical_tokens
+  criterion: INCAR contains all critical parameter keywords.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: critical_HFSCREEN
+  criterion: INCAR sets HFSCREEN = 0.2 (critical param).
+  verify: text_file_regex
+  capability: tool_utilization
+  weight: 0.5
+- id: critical_LHFCALC
+  criterion: INCAR sets LHFCALC = .TRUE. (critical param).
+  verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
+- id: optional_NSW
+  criterion: INCAR may omit NSW; if provided, it must be NSW = 0.
+  verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
+- id: reasonable_params
+  criterion: The INCAR uses physically reasonable general settings for a VASP hybrid DFT (HSE06) calculation. ENCUT is 
+    present (unless not relevant), EDIFF is present with a reasonable value, PREC is set. Machine-specific params (KPAR,
+    NCORE, NPAR) are optional and should not be penalized if absent or different from reference.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: The generated INCAR is grounded in the provided prompt data (material system, calculation type, critical 
+    parameters) rather than hallucinated. Judge solely from the final answer and stated file content; do not fail 
+    because the tool-call log omits MCP, web_search, or any specific tool.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5
+- id: correct_ISMEAR_semiconductor
+  criterion: INCAR sets ISMEAR = 0 (Gaussian) or ISMEAR = -5 (tetrahedron) which are appropriate for 
+    semiconductors/insulators with a band gap. Positive ISMEAR values (Methfessel-Paxton, for metals) must not be used.
+  verify: text_file_regex
+  capability: scientific_reasoning
+  weight: 0.5
+- id: critical_IVDW
+  criterion: INCAR sets IVDW = 11 or 12 (critical param).
+  verify: text_file_regex
+  capability: data_handling
+  weight: 0.5

@@ -1,0 +1,51 @@
+id: DD_general_004_20260615v2
+task_type: material_characterization
+capabilities:
+- data_handling
+- scientific_reasoning
+domain: semiconductor
+difficulty: easy
+intent: Diagnose relaxation divergence caused by POTIM too large combined with wrong initial phase.
+human_prompt_seed: 'Read `case_bundle.json`, which contains the INCAR parameters and an ionic-step excerpt for a CsPbI3
+  relaxation calculation. Within 5 steps, the energy rises from -19 eV to +8 eV, the forces explode from 2.3 to 48 eV/A,
+  and the volume fluctuates violently. Please diagnose the root cause and provide a fix.
+
+  '
+tags:
+- eng_vasp
+priority: P0
+data_files:
+- key: case_bundle
+  path: case_bundle.json
+  oss_url: ''
+  description: 'VASP input/output bundle: CsPbI3 cubic->orthorhombic relax with POTIM=1.0, diverges.'
+reference_answers:
+- key: root_cause
+  value: potim_too_large_and_bad_initial_structure
+- key: required_fields
+  value:
+  - root_cause
+  - evidence
+  - fix_POTIM
+  - fix_initial_structure
+- key: grounding_evidence
+  value:
+    filename: case_bundle.json
+scoring_checklist:
+- id: root_cause
+  criterion: Identifies both POTIM too large (1.0) and wrong initial phase (cubic vs orthorhombic CsPbI3).
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: required_fields
+  criterion: Provides evidence from energy/force divergence trajectory, and recommends both reducing POTIM and using 
+    correct Pnma phase.
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: grounding_evidence
+  criterion: Both root causes are evidenced by specific data from case_bundle.json (POTIM=1.0 in INCAR, energy/force 
+    explosion pattern in OUTCAR).
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

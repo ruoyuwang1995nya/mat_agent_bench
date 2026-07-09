@@ -1,0 +1,85 @@
+id: SR_db_006_20260615v2
+task_type: search_and_interpretation
+capabilities:
+- tool_utilization
+- scientific_reasoning
+domain: agnostic
+difficulty: easy
+intent: Retrieve up to two Ti-Al-O compounds with space group 63 and export CIF-oriented retrieval metadata.
+human_prompt_seed: 'Retrieve and return no more than 2 compounds from Materials Project under the following constraints:
+
+  - Only the elements Ti, Al, and O are present (no other elements);
+  - The space-group number is 63;
+  - The output supports CIF-file export information.
+
+  Please provide the following deliverables:
+
+  1) `tao_spg63_candidates.json`: containing at least `rank`, `formula`, `space_group`, `elements`, `structure_identifier`,
+  and `cif_link_or_path`;
+  2) `tao_spg63_report.md`: explain the retrieval conditions, the upper bound on the number of results (`<=2`), and the
+  uncertainty in the screening process.
+
+  In the final answer, briefly confirm whether the three constraints are satisfied: "element set + space group + count
+  upper bound".'
+tags:
+- meta_database
+data_files: []
+reference_answers:
+- key: candidates_json
+  value: tao_spg63_candidates.json
+- key: retrieval_report
+  value: tao_spg63_report.md
+- key: candidates_required_tokens
+  value:
+    filename: tao_spg63_candidates.json
+    tokens:
+    - rank
+    - formula
+    - space_group
+    - elements
+    - structure_identifier
+    - cif_link_or_path
+    - Ti
+    - Al
+    - O
+    - '63'
+    flags: i
+- key: report_required_tokens
+  value:
+    filename: tao_spg63_report.md
+    tokens:
+    - Materials Project
+    - Ti
+    - Al
+    - O
+    - 63
+    - <=2
+    - uncertainty
+    flags: i
+scoring_checklist:
+- id: candidates_json
+  criterion: Agent writes `tao_spg63_candidates.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: retrieval_report
+  criterion: Agent writes `tao_spg63_report.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: candidates_required_tokens
+  criterion: Candidate JSON includes required metadata and explicitly reflects Ti/Al/O with space-group 63 constraints.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5
+- id: report_required_tokens
+  criterion: Retrieval report states filter constraints, upper-bound candidate count, and uncertainty note.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: grounding_source
+  criterion: The final answer is grounded in retrieval artifacts and does not claim unsupported compounds beyond 
+    reported candidates.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

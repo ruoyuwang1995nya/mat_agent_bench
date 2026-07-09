@@ -1,0 +1,54 @@
+id: WO_gromacs_em_npt_001_20260616
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: Submit GROMACS energy minimization and NPT equilibration on Bohrium, verify convergence and output structure.
+human_prompt_seed: 'Perform GROMACS energy minimization plus NPT equilibration for the provided SPC water-box system.
+
+  The following files are provided: - `conf.gro`: initial coordinates for 216 SPC water molecules - `topol.top`: topology file - `em.mdp`: energy-minimization parameters - `npt.mdp`: NPT equilibration parameters (2 ns, 298.15 K, 1 bar)
+
+  Please complete the following steps: 1) submit the energy minimization (EM) on the Bohrium GROMACS image and confirm Fmax < 1000 kJ/mol/nm; 2) use the EM output as the input for NPT and submit the NPT equilibration; 3) write the final structure `npt_final.gro` to the workspace.
+
+  In the final answer, report the EM convergence step count and the final NPT density (g/cm³).'
+tags:
+- eng_gromacs
+data_files:
+- key: conf_gro
+  path: conf.gro
+  description: Initial SPC water box coordinates (216 waters)
+- key: topol_top
+  path: topol.top
+  description: GROMACS topology file
+- key: em_mdp
+  path: em.mdp
+  description: Energy minimization parameters
+- key: npt_mdp
+  path: npt.mdp
+  description: NPT equilibration parameters
+reference_answers:
+- key: npt_output
+  value: npt_final.gro
+scoring_checklist:
+- id: npt_output
+  criterion: Agent produces `npt_final.gro` in the workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: em_convergence
+  criterion: Final answer reports EM convergence (steps and Fmax < 1000).
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: npt_density
+  criterion: Final answer reports NPT equilibrium density close to 1.0 g/cm³ (within ±0.1 for SPC water at 298K).
+  verify: llm_binary_judge
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: The reported density and convergence values come from actual GROMACS output logs, not textbook recall.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

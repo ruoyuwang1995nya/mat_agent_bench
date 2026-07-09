@@ -1,0 +1,79 @@
+id: WO_elec_009_20260615v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: semiconductor
+difficulty: easy
+intent: Compute Si phonon dispersion with ABACUS (including relaxation step) and summarize key spectrum outcomes.
+human_prompt_seed: "Compute the phonon characteristics of Si (mock version):\n1. First query/retrieve and organize the
+  input files required for this task (structure files, parameter files, and phonon-related inputs);\n2. Provide the phonon
+  settings you would use (k-path/sampling, supercell or minimum length, displacement step);\n3. Do not run a real ABACUS
+  calculation. Instead, use the following mock results for post-processing:\n   - supercell_or_min_length = \"3x3x3\"\n
+  \   - displacement_step = 0.01\n   - gamma_optical_frequency_THz = 15.6\n   - imaginary_mode_check = false\n4. Summarize
+  whether any imaginary modes are present, and explain the result confidence and uncertainty.\n\nPlease provide the following
+  deliverables:\n1) `si_phonon_abacus.json`: containing at least `input_files`, `kpath_or_sampling`, `supercell_or_min_length`,
+  `displacement_step`, `imaginary_mode_check`, and `key_frequency_summary`;\n2) `si_phonon_abacus_report.md`: explain
+  the query-based input organization, the mock post-processing workflow, the key conclusions, and the uncertainty.\n\nIn
+  the final answer, briefly state whether any imaginary modes appear, and label the conclusion as based on mock post-processing.\n"
+tags:
+- eng_abacus
+data_files: []
+reference_answers:
+- key: phonon_json
+  value: si_phonon_abacus.json
+- key: phonon_report
+  value: si_phonon_abacus_report.md
+- key: json_required_tokens
+  value:
+    filename: si_phonon_abacus.json
+    must_cover:
+    - displacement_step
+    - imaginary_mode_check
+    - key_frequency_summary
+    - supercell_or_min_length
+- key: report_required_tokens
+  value:
+    filename: si_phonon_abacus_report.md
+    must_cover:
+    - Si
+    - ABACUS
+    - phonon
+    - relaxation
+    - imaginary mode
+    - uncertainty
+- key: gamma_freq_mock
+  value: 15.6
+  tolerance: 1.0
+scoring_checklist:
+- id: phonon_json
+  criterion: Agent writes `si_phonon_abacus.json` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: phonon_report
+  criterion: Agent writes `si_phonon_abacus_report.md` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: json_required_tokens
+  criterion: JSON contains key phonon workflow and imaginary-mode-check fields.
+  verify: llm_binary_judge
+  capability: data_handling
+  weight: 0.5
+- id: report_required_tokens
+  criterion: Report explains relax→phonon workflow and uncertainty caveats.
+  verify: llm_binary_judge
+  capability: workflow_orchestration
+  weight: 0.5
+- id: gamma_freq_mock
+  criterion: Final answer includes a mock gamma optical frequency value near 15.6 THz.
+  verify: numerical_range
+  capability: tool_utilization
+  weight: 0.5
+- id: grounding_source
+  criterion: Final answer is grounded in generated phonon artifacts and does not fabricate unsupported dispersion 
+    conclusions.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5

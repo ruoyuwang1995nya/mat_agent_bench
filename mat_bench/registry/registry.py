@@ -19,6 +19,7 @@ are relative to their question directory.
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -93,6 +94,18 @@ class Registry:
         self._questions: dict[str, Question] = {}
         self._load()
 
+    @classmethod
+    def from_questions(
+        cls,
+        question_bank_dir: str | Path,
+        questions: Iterable[Question],
+    ) -> Registry:
+        """Create a registry view backed by a selected set of questions."""
+        registry = cls.__new__(cls)
+        registry._root = Path(question_bank_dir).resolve()
+        registry._questions = {q.id: q for q in questions}
+        return registry
+
     def _load(self) -> None:
         """Scan all ``*/question.yaml`` files one level below the root."""
         for q_yaml in sorted(self._root.glob('*/question.yaml')):
@@ -159,6 +172,118 @@ class Registry:
             tag_set = set(tags)
             results = [q for q in results if tag_set.issubset(set(q.tags))]
         return sorted(results, key=lambda q: q.id)
+
+    def filtered(
+        self,
+        *,
+        question_ids: list[str] | None = None,
+        capability: str | None = None,
+        task_type: str | None = None,
+        domain: str | None = None,
+        tags: list[str] | None = None,
+        exclude_question_ids: list[str] | None = None,
+        exclude_capability: str | None = None,
+        exclude_task_type: str | None = None,
+        exclude_domain: str | None = None,
+        exclude_tags: list[str] | None = None,
+        limit: int | None = None,
+    ) -> Registry:
+        """Return a registry view after applying include filters, exclusions, and limit.
+
+        Include filters are combined with AND semantics. Exclude filters are
+        combined with OR semantics: matching any exclude criterion removes a
+        question from the hosted set.
+        """
+        if question_ids:
+            self._validate_question_ids(question_ids)
+            question_id_set = set(question_ids)
+            questions = [
+                q for q in self.list_questions()
+                if q.id in question_id_set
+            ]
+            questions = self._apply_include_filters(
+                questions,
+                capability=capability,
+                task_type=task_type,
+                domain=domain,
+                tags=tags,
+            )
+        else:
+            questions = self.list_questions(
+                capability=capability,
+                task_type=task_type,
+                domain=domain,
+                tags=tags,
+            )
+
+        if exclude_question_ids:
+            self._validate_question_ids(exclude_question_ids)
+
+        questions = [
+            q for q in questions
+            if not self._matches_exclude_filter(
+                q,
+                question_ids=exclude_question_ids,
+                capability=exclude_capability,
+                task_type=exclude_task_type,
+                domain=exclude_domain,
+                tags=exclude_tags,
+            )
+        ]
+        if limit is not None:
+            questions = questions[:limit]
+        return Registry.from_questions(self._root, questions)
+
+    def _validate_question_ids(self, question_ids: list[str]) -> None:
+        missing = [qid for qid in question_ids if qid not in self._questions]
+        if missing:
+            quoted = ', '.join(repr(qid) for qid in missing)
+            raise KeyError(
+                f'question id(s) not found in registry: {quoted} '
+                f'({len(self._questions)} questions loaded)'
+            )
+
+    @staticmethod
+    def _apply_include_filters(
+        questions: list[Question],
+        *,
+        capability: str | None = None,
+        task_type: str | None = None,
+        domain: str | None = None,
+        tags: list[str] | None = None,
+    ) -> list[Question]:
+        if capability:
+            questions = [q for q in questions if capability in q.capability]
+        if task_type:
+            questions = [q for q in questions if q.task_type == task_type]
+        if domain:
+            questions = [q for q in questions if q.domain == domain]
+        if tags:
+            tag_set = set(tags)
+            questions = [q for q in questions if tag_set.issubset(set(q.tags))]
+        return questions
+
+    @staticmethod
+    def _matches_exclude_filter(
+        question: Question,
+        *,
+        question_ids: list[str] | None = None,
+        capability: str | None = None,
+        task_type: str | None = None,
+        domain: str | None = None,
+        tags: list[str] | None = None,
+    ) -> bool:
+        if question_ids and question.id in set(question_ids):
+            return True
+        if capability and capability in question.capability:
+            return True
+        if task_type and question.task_type == task_type:
+            return True
+        if domain and question.domain == domain:
+            return True
+        if tags and set(tags).intersection(question.tags):
+            return True
+        return False
 
     def __len__(self) -> int:
         return len(self._questions)

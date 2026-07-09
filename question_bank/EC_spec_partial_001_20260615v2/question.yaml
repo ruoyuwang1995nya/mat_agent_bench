@@ -1,0 +1,65 @@
+id: EC_spec_partial_001_20260615v2
+task_type: simulation
+capabilities:
+- workflow_orchestration
+- tool_utilization
+domain: agnostic
+difficulty: easy
+intent: When run_spec.json has only partial fields, agent should use spec values where present and fill missing fields 
+  from prompt defaults, not error out.
+human_prompt_seed: 'Please generate a VASP INCAR file according to `run_spec.json` and the following instructions.
+
+  Default parameters: ENCUT=520, ISMEAR=0, SIGMA=0.05, EDIFF=1E-6, IBRION=2, NSW=100, ISIF=3
+
+  If `run_spec.json` specifies certain parameters, use the spec values; for any parameters not specified there, use the
+  default values above.
+
+  The output filename must be `INCAR`.'
+tags:
+- eng_vasp
+data_files:
+- key: run_spec
+  path: run_spec.json
+  description: Partial spec with only ENCUT and ISMEAR specified.
+reference_answers:
+- key: output_artifact
+  value: INCAR
+- key: encut_from_spec
+  value:
+    filename: INCAR
+    pattern: ENCUT\s*=\s*600
+- key: ismear_from_spec
+  value:
+    filename: INCAR
+    pattern: ISMEAR\s*=\s*1
+- key: defaults_filled
+  value:
+    filename: INCAR
+    tokens:
+    - SIGMA
+    - EDIFF
+    - IBRION
+    - NSW
+    - ISIF
+    flags: i
+scoring_checklist:
+- id: output_artifact
+  criterion: Agent writes `INCAR` to workspace.
+  verify: artifact_exists
+  capability: tool_utilization
+  weight: 0.5
+- id: encut_from_spec
+  criterion: INCAR uses ENCUT=600 from run_spec.json (not the default 520).
+  verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
+- id: ismear_from_spec
+  criterion: INCAR uses ISMEAR=1 from run_spec.json (not the default 0).
+  verify: text_file_regex
+  capability: data_handling
+  weight: 0.5
+- id: defaults_filled
+  criterion: INCAR includes default values for fields NOT in run_spec.json.
+  verify: text_file_contains_all
+  capability: data_handling
+  weight: 0.5

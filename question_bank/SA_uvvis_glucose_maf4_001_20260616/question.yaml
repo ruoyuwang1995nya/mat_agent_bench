@@ -1,0 +1,111 @@
+id: SA_uvvis_glucose_maf4_001_20260616
+task_type: simulation
+capabilities:
+- scientific_reasoning
+- scientific_grounding
+domain: agnostic
+difficulty: easy
+intent: Analyze a UV-Vis plate-reader export for MAF-4 enzyme-cascade glucose sensing.
+human_prompt_seed: 'Please download and analyze the following plate-reader export file from an enzyme-cascade colorimetric glucose-detection experiment, provided via OSS URL:
+
+  - `glucose_uvvis_platereader.txt` -> `https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_uvvis_glucose_maf4_001/1778080964_glucose_uvvis_platereader.txt`
+
+  This file contains readings for standards and an unknown serum sample.
+
+  Please complete the following analysis:
+
+  1. Determine which wavelength should be used for quantitative readout, and explain the basis. 2. Build a calibration relationship from the standard readings and evaluate its linearity. 3. Calculate the glucose concentration of diluted unknown sample 1, and convert it back to the original serum concentration using the 100× dilution factor. 4. Judge whether the serum result falls within a typical fasting blood-glucose reference range. 5. Briefly explain how you handled wells that were clearly out of the standard range or invalid.
+
+  At the end of the final answer, append an `<eval_results>...</eval_results>` JSON block containing at least: `assay.endpoint_wavelength_nm`, `calibration.slope_abs_per_uM`, `calibration.intercept_abs`, `calibration.r_squared`, `sample1.diluted_glucose_uM`, and `sample1.serum_glucose_mM`.
+
+  In the JSON, field names like `a.b` indicate nested objects (child key `b` under top-level key `a`); please use a nested structure rather than flat string keys. Example structure (numbers are placeholders):
+
+  ```json {"assay": {"endpoint_wavelength_nm": 0}, "calibration": {"slope_abs_per_uM": 0, "intercept_abs": 0, "r_squared":
+  0}, "sample1": {"diluted_glucose_uM": 0, "serum_glucose_mM": 0}} ```'
+tags:
+- char_optical_spectrum
+data_files:
+- key: plate_reader_export
+  path: glucose_uvvis_platereader.txt
+  oss_url: 
+    https://matmaster-test.oss-cn-zhangjiakou.aliyuncs.com/matmaster_evo/eval_data/SA_uvvis_glucose_maf4_001/1778080964_glucose_uvvis_platereader.txt
+  description: UTF-8 text export of a SoftMax-style endpoint UV-Vis glucose assay.
+reference_answers:
+- key: endpoint_wavelength
+  value:
+    json_path: assay.endpoint_wavelength_nm
+    target: 420.0
+    tolerance: 2.0
+  unit: nm
+- key: calibration_slope
+  value:
+    json_path: calibration.slope_abs_per_uM
+    target: 0.009225157232704404
+    tolerance: 0.0015
+  unit: absorbance/uM
+- key: calibration_intercept
+  value:
+    json_path: calibration.intercept_abs
+    target: 0.2232964959568735
+    tolerance: 0.05
+- key: calibration_r2
+  value:
+    json_path: calibration.r_squared
+    target: 0.9974191041794597
+    tolerance: 0.02
+- key: diluted_glucose
+  value:
+    json_path: sample1.diluted_glucose_uM
+    target: 53.80614749308501
+    tolerance: 8.0
+  unit: uM
+- key: serum_glucose
+  value:
+    json_path: sample1.serum_glucose_mM
+    target: 5.380614749308501
+    tolerance: 0.8
+  unit: mM
+scoring_checklist:
+- id: endpoint_wavelength
+  criterion: The endpoint wavelength reported in eval_results is consistent with the assay export.
+  verify: answer_json_numeric
+  capability: data_handling
+  weight: 0.5
+- id: calibration_slope
+  criterion: The calibration slope reported in eval_results is consistent with the valid standard wells.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: data_handling
+- id: calibration_intercept
+  criterion: The calibration intercept reported in eval_results is consistent with the valid standard wells.
+  verify: answer_json_numeric
+  capability: data_handling
+  weight: 0.5
+- id: calibration_r2
+  criterion: The calibration quality reported in eval_results is consistent with the valid standard wells.
+  verify: answer_json_numeric
+  capability: data_handling
+  weight: 0.5
+- id: diluted_glucose
+  criterion: The diluted sample 1 glucose concentration reported in eval_results is consistent with the uploaded 
+    plate-reader data.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: data_handling
+- id: serum_glucose
+  criterion: The back-corrected serum sample 1 glucose concentration reported in eval_results is consistent with the 
+    stated dilution.
+  verify: answer_json_numeric
+  weight: 0.5
+  capability: data_handling
+- id: interpretation
+  criterion: The final answer correctly states that sample 1 is within a typical fasting blood-glucose reference range.
+  verify: llm_binary_judge
+  capability: scientific_reasoning
+  weight: 0.5
+- id: grounding_source
+  criterion: The analysis is grounded in the uploaded plate-reader export and identifies invalid or out-of-range wells 
+    as data quality issues.
+  verify: llm_binary_judge
+  capability: scientific_grounding
+  weight: 0.5
