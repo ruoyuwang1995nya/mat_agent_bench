@@ -36,6 +36,8 @@ from .checks import (
     check_struct_file_count,
     check_struct_file_formula,
     check_struct_file_layer_count,
+    check_struct_file_min_interatomic_distance,
+    check_struct_file_space_group,
     check_struct_file_stoichiometry_ratio,
     check_struct_file_surface_termination,
     check_text_file_contains_all_from_evidence,
@@ -339,6 +341,10 @@ class BinaryEvaluator:
             'struct_file_stoichiometry_ratio': check_struct_file_stoichiometry_ratio,
             'struct_file_coordination': check_struct_file_coordination,
             'struct_file_layer_count': check_struct_file_layer_count,
+            'struct_file_min_interatomic_distance': (
+                check_struct_file_min_interatomic_distance
+            ),
+            'struct_file_space_group': check_struct_file_space_group,
             'struct_file_count': check_struct_file_count,
             'struct_file_surface_termination': check_struct_file_surface_termination,
         }

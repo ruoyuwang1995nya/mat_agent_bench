@@ -6,7 +6,7 @@ domain: catalysis
 difficulty: easy
 intent: Build Au13 cluster CIF, ZnO(001) two-layer 2x2x1 slab with Au single atom and HCOO adsorbate on-top per doc 
   3.1.3.
-human_prompt_seed: 'According to Document 3.1.3: (1) build an Au13 cluster using ASE or an equivalent method and save
+human_prompt_seed: '(1) build an Au13 cluster using ASE or an equivalent method and save
   it as a CIF file; (2) build a ZnO(001) slab with two layers and a 2×2×1 supercell; (3) place a single Au atom on one
   of the two surface O sites; (4) place HCOO on the Au atom in an on-top configuration, with a reasonable initial adsorption
   height (about 1.5-2.5 Å) and no severe atomic overlap. Output the structure files for the cluster and the adslab, and

@@ -52,12 +52,13 @@ scoring_checklist:
   capability: tool_utilization
   weight: 0.5
 - id: tensile_tokens
-  criterion: Prediction JSON includes required composition-strength fields.
+  criterion: The `duplex_ni_tensile_predictions.json` file contains at least `formula`, `ni_content`, `predicted_uts`, and `trend_label`.
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: analysis_tokens
-  criterion: Analysis document explains Ni-strength trend with uncertainty caveats.
+  criterion: The `duplex_ni_tensile_analysis.md` file explains the mechanistic interpretation of how changes in Ni content lead to strength
+    changes, together with the uncertainty.
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5

@@ -13,7 +13,7 @@ human_prompt_seed: 'Based on recent literature, please recommend sulfur-containi
   Please output:
   1) `sulfur_sse_candidates.json`: containing at least `material`, `key_property`, `interface_stability_note`, `ionic_conductivity_note`,
   and `reference_hint`;
-  2) `sulfur_sse_review.md`: explain the screening logic, representative systems, and applicability boundaries.
+  2) `sulfur_sse_review.md`: explain the sulfur-containing solid-electrolyte screening logic, representative systems, and applicability boundaries.
 
   In the final answer, briefly provide the 2-3 candidates you recommend most and the reasons why.'
 tags:
@@ -62,8 +62,8 @@ scoring_checklist:
   capability: data_handling
   weight: 0.5
 - id: review_required_tokens
-  criterion: Review explains the conductivity-stability tradeoff with uncertainty notes.
-  verify: text_file_contains_all
+  criterion: '`sulfur_sse_review.md` explains the sulfur-containing solid-electrolyte screening logic, representative systems, and applicability boundaries.'
+  verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: grounding_source

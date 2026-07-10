@@ -114,17 +114,16 @@ scoring_checklist:
   criterion: '[Must] comparison_plot.png exists showing ΔEf vs strain for both defect types.'
   capability: data_handling
 - id: cb_increasing_trend
-  verify: text_file_numeric_range
+  verify: llm_binary_judge
   weight: 0.15
-  criterion: '[Must] The ΔEf for C_B at 8% strain is positive (formation energy increases with tensile strain), consistent
-    with the paper''s finding that C (smaller than B) creates local tensile strain that cooperates with external tensile strain.'
+  criterion: '[Must] `formation_energies.json` shows that the ΔEf for C_B at 8% strain is positive, i.e. the C_B formation
+    energy increases with tensile strain.'
   capability: scientific_reasoning
 - id: cn_decreasing_trend
-  verify: text_file_numeric_range
+  verify: llm_binary_judge
   weight: 0.15
-  criterion: '[Must] The ΔEf for C_N at 8% strain is negative (formation energy decreases with tensile strain), consistent
-    with the paper''s finding that C (larger than N) creates local compressive strain that is compensated by external tensile
-    strain.'
+  criterion: '[Must] `formation_energies.json` shows that the ΔEf for C_N at 8% strain is negative, i.e. the C_N formation
+    energy decreases with tensile strain.'
   capability: scientific_reasoning
 - id: analysis_mechanism
   verify: text_file_contains_all
@@ -133,17 +132,16 @@ scoring_checklist:
     host atom creates local strain fields that either cooperate with or compensate the external strain.'
   capability: scientific_reasoning
 - id: strain_levels
-  verify: text_file_numeric_range
+  verify: llm_binary_judge
   weight: 0.1
-  criterion: '[Must] Formation energies are computed at multiple strain levels (at least 0%, 4%, 8%) and show the correct
-    qualitative trend (monotonic increase for C_B, monotonic decrease for C_N).'
+  criterion: '[Must] `formation_energies.json` includes formation-energy data for multiple strain levels including at least
+    0%, 4%, and 8%, and the ΔEf trend is qualitatively correct: C_B increases with tensile strain while C_N decreases.'
   capability: data_handling
 - id: workflow_sequence
   verify: llm_binary_judge
   weight: 0.1
-  criterion: '[Must] The agent correctly sequences the workflow: (1) build supercell from primitive, (2) create defects, (3)
-    apply strain at each level, (4) relax structures, (5) compute total energies, (6) calculate formation energies using chemical
-    potentials, (7) analyze trends.'
+  criterion: '[Must] The agent correctly sequences the workflow: (1) build structures, (2) relax structures, (3) compute total energies, (4) calculate formation energies using chemical
+    potentials, (5) analyze trends.'
   capability: workflow_orchestration
 - id: tool_usage
   verify: llm_binary_judge

@@ -33,7 +33,9 @@ from ..validators import (
     check_formula,
     check_layer_count,
     check_molcrys_local_env,
+    check_min_interatomic_distance,
     check_sc005_other_formulas_in_answer,
+    check_space_group,
     check_stoichiometry_ratio,
     check_surface_termination,
     check_text_file_contains_all,
@@ -441,6 +443,40 @@ def check_struct_file_formula(
         ws,
         filename=cfg.get('filename', '*.cif'),
         formula=str(cfg.get('formula', '')),
+    )
+
+
+def check_struct_file_space_group(
+    *, evidence: EvidenceBundle | None, ref: ReferenceAnswer
+) -> tuple[bool, str]:
+    ws, err = _get_workspace(evidence)
+    if err:
+        return False, err
+    cfg = _cfg(ref)
+    if 'expected_number' not in cfg:
+        return False, "reference answer missing 'expected_number'"
+    return check_space_group(
+        ws,
+        filename=str(cfg.get('filename', '*.cif')),
+        expected_number=int(cfg['expected_number']),
+        symprec=float(cfg.get('symprec', 0.1)),
+        angle_tolerance=float(cfg.get('angle_tolerance', 5.0)),
+    )
+
+
+def check_struct_file_min_interatomic_distance(
+    *, evidence: EvidenceBundle | None, ref: ReferenceAnswer
+) -> tuple[bool, str]:
+    ws, err = _get_workspace(evidence)
+    if err:
+        return False, err
+    cfg = _cfg(ref)
+    if 'min_distance_A' not in cfg:
+        return False, "reference answer missing 'min_distance_A'"
+    return check_min_interatomic_distance(
+        ws,
+        filename=str(cfg.get('filename', '*.cif')),
+        min_distance_A=float(cfg['min_distance_A']),
     )
 
 

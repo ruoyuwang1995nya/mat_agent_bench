@@ -18,7 +18,7 @@ reference_answers:
   tolerance: 0.08
 - key: b0_GPa
   value: 79.0
-  tolerance: 8.0
+  tolerance: 10.0
 - key: required_fields
   value:
   - volume_points

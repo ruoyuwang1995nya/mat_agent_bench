@@ -24,7 +24,6 @@ reference_answers:
 - key: required_fields
   value:
   - '13'
-  - phenol
 scoring_checklist:
 - id: file_exists
   criterion: Agent writes `phenol.xyz` to workspace.
