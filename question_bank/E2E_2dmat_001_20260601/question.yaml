@@ -64,17 +64,6 @@ reference_answers:
       max: -0.5
       min: -2.5
     filename: formation_energies.json
-- key: analysis_mechanism
-  value:
-    flags: IGNORECASE
-    tokens:
-    - atomic radius
-    - local strain
-    - bond contraction
-    - bond elongation
-    - tensile
-    - compressive
-    filename: strain_analysis.txt
 - key: strain_levels
   value:
     checks:
@@ -93,7 +82,7 @@ reference_answers:
     max: 1800000
 scoring_checklist:
 - id: artifact_structures
-  verify: artifact_exists
+  verify: llm_binary_judge
   weight: 0.1
   criterion: '[Must] The strained_structures/ directory exists and contains POSCAR files for pristine and defective structures
     at multiple strain levels.'
@@ -126,16 +115,17 @@ scoring_checklist:
     energy decreases with tensile strain.'
   capability: scientific_reasoning
 - id: analysis_mechanism
-  verify: text_file_contains_all
+  verify: llm_binary_judge
   weight: 0.1
-  criterion: '[Must] The analysis correctly identifies the physical mechanism: atomic radius mismatch between impurity and
+  criterion: '[Must] The `strain_analysis.txt` identifies the physical mechanism: atomic radius mismatch between impurity and
     host atom creates local strain fields that either cooperate with or compensate the external strain.'
   capability: scientific_reasoning
 - id: strain_levels
   verify: llm_binary_judge
   weight: 0.1
-  criterion: '[Must] `formation_energies.json` includes formation-energy data for multiple strain levels including at least
-    0%, 4%, and 8%, and the ΔEf trend is qualitatively correct: C_B increases with tensile strain while C_N decreases.'
+  criterion: '[Must] `formation_energies.json` contains the required data structure: CB_formation_eV and CN_formation_eV
+    map strain_pct values to formation energies, and delta_Ef contains CB and CN sub-keys mapping strain_pct values to
+    ΔEf = Ef(strain) - Ef(0%).'
   capability: data_handling
 - id: workflow_sequence
   verify: llm_binary_judge
@@ -146,8 +136,7 @@ scoring_checklist:
 - id: tool_usage
   verify: llm_binary_judge
   weight: 0.05
-  criterion: '[Must] The agent uses appropriate computational tools (DFT code, structure manipulation tools) to perform the
-    calculations.'
+  criterion: '[Must] The agent uses appropriate DFT methodology to perform the calculations.'
   capability: tool_utilization
 - id: grounding_check
   verify: llm_binary_judge

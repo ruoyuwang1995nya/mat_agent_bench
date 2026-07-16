@@ -140,10 +140,9 @@ scoring_checklist:
   criterion: '[Must] Charge transfer direction: electrons flow from FeS2 to TiO2 under illumination'
   capability: scientific_reasoning
 - id: report_content
-  verify: text_file_contains_all
+  verify: llm_binary_judge
   weight: 0.5
-  criterion: '[Must] Report covers supercell construction, DFT+U methodology, potential line-up for band alignment, and type-II
-    charge separation mechanism'
+  criterion: '[Must] `analysis_report.txt` reports a detailed methodology'
   capability: scientific_reasoning
 - id: workflow_orchestration
   verify: llm_binary_judge

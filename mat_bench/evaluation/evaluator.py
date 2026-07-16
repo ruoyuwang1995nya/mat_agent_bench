@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any
 
 from .checks import (
     build_llm_context,
+    check_answer_json_numeric_from_evidence,
     check_atomworld_active_task_from_evidence,
     check_batch_consistent_calls,
     check_batch_single_variable_sweep,
@@ -358,6 +359,7 @@ class BinaryEvaluator:
             'text_file_kpt_path': check_text_file_kpt_path_from_evidence,
             'text_file_numeric_range': check_text_file_numeric_range_from_evidence,
             'text_file_regex': check_text_file_regex_from_evidence,
+            'answer_json_numeric': check_answer_json_numeric_from_evidence,
         }
         if item.verify in _TEXT_FILE_DISPATCH:
             if ref is None:

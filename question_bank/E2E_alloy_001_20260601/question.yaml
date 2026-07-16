@@ -88,8 +88,9 @@ scoring_checklist:
 - id: json_formation_energies
   verify: llm_binary_judge
   weight: 0.15
-  criterion: '[Must] `phase_stability_report.json` reports formation energies for both H-MgZn2 and C-MgZn2, the values
-    are reasonably close to the reference values(all within ~0.5 kJ/mol of reference)'
+  criterion: '[Must] `phase_stability_report.json` reports formation energies for both phases within the reference
+    ranges: formation_energies.H-MgZn2_kJ_mol is between -13.5 and -12.5 kJ/mol, and formation_energies.C-MgZn2_kJ_mol
+    is between -13.3 and -12.3 kJ/mol.'
   capability: scientific_reasoning
 - id: json_debye_ordering
   verify: llm_binary_judge
