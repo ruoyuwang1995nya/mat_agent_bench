@@ -33,6 +33,7 @@ Tool call format in meta.tool_calls::
 from __future__ import annotations
 
 import functools
+import hashlib
 import json
 import logging
 import random
@@ -40,6 +41,7 @@ import secrets
 import string
 import threading
 import time
+import uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
@@ -79,6 +81,31 @@ class SessionRecord(BaseModel):
     created_at: datetime
 
 
+class RunCreateRequest(BaseModel):
+    """Selection request for one immutable evaluation run."""
+
+    model_name: str | None = None
+    question_ids: list[str] | None = None
+    capability: str | None = None
+    task_type: str | None = None
+    domain: str | None = None
+    tags: list[str] | None = None
+    limit: int | None = None
+
+
+class RunRecord(BaseModel):
+    """Persisted run metadata and its activation snapshot."""
+
+    run_id: str
+    session_id: str
+    model_name: str
+    status: str = "active"
+    source: str = "official"
+    catalog_hash: str
+    question_ids: list[str]
+    created_at: datetime
+
+
 # ---------------------------------------------------------------------------
 # Module-level server state (set by init_server before uvicorn starts)
 # ---------------------------------------------------------------------------
@@ -94,6 +121,9 @@ _tokens_lock = threading.Lock()
 
 _sessions: dict[str, SessionRecord] = {}
 _sessions_lock = threading.Lock()
+
+_runs: dict[str, tuple[str, RunRecord]] = {}
+_runs_lock = threading.Lock()
 
 # key = f"{token}:{session_id}:{question_id}" → (token, session_id, record)
 _results: dict[str, tuple[str, str, EvalRunRecord]] = {}
@@ -113,8 +143,14 @@ _max_submissions_per_question: int = 1
 _task_starts: dict[tuple[str, str], datetime] = {}
 _task_starts_lock = threading.Lock()
 
+_run_task_starts: dict[tuple[str, str], datetime] = {}
+_run_task_starts_lock = threading.Lock()
+
 _token_store: "TokenStore | None" = None
 _session_store: "SessionStore | None" = None
+
+_MAX_ARTIFACT_BYTES = 25 * 1024 * 1024
+_MAX_ARTIFACTS = 100
 
 
 
@@ -134,13 +170,16 @@ def init_server(
 ) -> None:
     """Initialise server state. Must be called before uvicorn.run()."""
     global _registry, _llm_cfg, _output_dir, _results, _grading_executor
-    global _token_store, _session_store, _task_starts, _parallel_checklist_workers
+    global _token_store, _session_store, _task_starts, _run_task_starts
+    global _parallel_checklist_workers, _runs
     global _grading_pending, _submission_counts, _max_submissions_per_question
     _registry = registry
     _llm_cfg = llm_cfg
     _output_dir = output_dir
     _results = {}
     _task_starts = {}
+    _run_task_starts = {}
+    _runs = {}
     _grading_pending = set()
     _submission_counts = {}
     _max_submissions_per_question = max(0, int(max_submissions_per_question))
@@ -151,6 +190,9 @@ def init_server(
     _store_dir = store_dir or Path.home() / ".matbench"
     _token_store = TokenStore(_store_dir / "tokens.db")
     _session_store = SessionStore(_store_dir / "sessions.db")
+    interrupted_jobs = _session_store.recover_interrupted_jobs()
+    if interrupted_jobs:
+        _logger.warning("marked %d interrupted grading job(s) as failed", interrupted_jobs)
 
     with _tokens_lock:
         for t, data in _token_store.load_tokens().items():
@@ -169,6 +211,12 @@ def init_server(
 
     with _task_starts_lock:
         _task_starts.update(_session_store.load_task_starts())
+    with _run_task_starts_lock:
+        _run_task_starts.update(_session_store.load_run_task_starts())
+
+    with _runs_lock:
+        for run_id, data in _session_store.load_runs().items():
+            _runs[run_id] = (data["token"], RunRecord.model_validate(data["record"]))
 
     _grading_executor = ThreadPoolExecutor(max_workers=grading_workers)
 
@@ -327,6 +375,165 @@ try:
         ]
 
     # ------------------------------------------------------------------
+    # Run endpoints
+    # ------------------------------------------------------------------
+
+    def _catalog_hash(questions: list[Any]) -> str:
+        payload = json.dumps(
+            [question.item.model_dump(mode="json") for question in questions],
+            separators=(",", ":"),
+            sort_keys=True,
+        )
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+    def _owned_run(run_id: str, token: str) -> RunRecord:
+        with _runs_lock:
+            entry = _runs.get(run_id)
+        if entry is None:
+            raise HTTPException(404, detail=f"Run '{run_id}' not found")
+        owner_token, run = entry
+        if owner_token != token:
+            raise HTTPException(403, detail="Run does not belong to this token")
+        return run
+
+    @app.post("/runs", status_code=201)
+    async def create_run(
+        body: RunCreateRequest,
+        session_id: str = Query(..., description="Session ID from POST /sessions"),
+        token: str = Depends(_require_token),
+    ) -> dict:
+        """Create an immutable, session-owned activation snapshot."""
+        with _sessions_lock:
+            session = _sessions.get(session_id)
+        if session is None:
+            raise HTTPException(404, detail=f"Session '{session_id}' not found")
+        if session.token != token:
+            raise HTTPException(403, detail="Session does not belong to this token")
+        if body.limit is not None and body.limit < 0:
+            raise HTTPException(422, detail="limit must be non-negative")
+
+        registry = _require_registry()
+        try:
+            if body.question_ids:
+                questions = [registry.get_question(qid) for qid in body.question_ids]
+                questions = [
+                    q for q in questions
+                    if (not body.capability or body.capability in q.capability)
+                    and (not body.task_type or body.task_type == q.task_type)
+                    and (not body.domain or body.domain == q.domain)
+                    and (not body.tags or set(body.tags).issubset(set(q.tags)))
+                ]
+            else:
+                questions = registry.list_questions(
+                    capability=body.capability,
+                    task_type=body.task_type,
+                    domain=body.domain,
+                    tags=body.tags,
+                )
+        except KeyError as exc:
+            raise HTTPException(422, detail=str(exc))
+
+        if body.limit is not None:
+            questions = questions[:body.limit]
+        if not questions:
+            raise HTTPException(422, detail="question selection produced no questions")
+
+        question_ids = [q.id for q in questions]
+        created_at = datetime.now(timezone.utc)
+        run = RunRecord(
+            run_id=f"R{created_at.strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}",
+            session_id=session_id,
+            model_name=body.model_name or session.model_name,
+            catalog_hash=_catalog_hash(questions),
+            question_ids=question_ids,
+            created_at=created_at,
+        )
+        with _runs_lock:
+            _runs[run.run_id] = (token, run)
+        _session_store.save_run(
+            run.run_id,
+            token,
+            session_id,
+            json.dumps(run.model_dump(mode="json"), default=str),
+            created_at,
+        )
+        return run.model_dump(mode="json")
+
+    @app.get("/runs/{run_id}")
+    async def get_run(
+        run_id: str,
+        token: str = Depends(_require_token),
+    ) -> dict:
+        """Return one run's immutable activation metadata."""
+        return _owned_run(run_id, token).model_dump(mode="json")
+
+    @app.get("/runs/{run_id}/tasks")
+    async def list_run_tasks(
+        run_id: str,
+        token: str = Depends(_require_token),
+    ) -> list[dict]:
+        """List activated tasks in their frozen run order."""
+        run = _owned_run(run_id, token)
+        registry = _require_registry()
+        tasks = []
+        for position, question_id in enumerate(run.question_ids):
+            try:
+                question = registry.get_question(question_id)
+            except KeyError:
+                tasks.append({"position": position, "question_id": question_id, "status": "unavailable"})
+                continue
+            tasks.append({
+                "position": position,
+                "question_id": question.id,
+                "capability": question.capability,
+                "task_type": question.task_type,
+                "domain": question.domain,
+                "intent": question.intent,
+                "status": "activated",
+            })
+        return tasks
+
+    @app.get("/runs/{run_id}/tasks/{question_id}")
+    async def get_run_task(
+        run_id: str,
+        question_id: str,
+        token: str = Depends(_require_token),
+    ) -> dict:
+        """Fetch an activated task and start its run-scoped timer once."""
+        run = _owned_run(run_id, token)
+        if question_id not in run.question_ids:
+            raise HTTPException(404, detail=f"Question '{question_id}' is not activated in run '{run_id}'")
+        registry = _require_registry()
+        try:
+            question = registry.get_question(question_id)
+        except KeyError:
+            raise HTTPException(410, detail=f"Question '{question_id}' is no longer available")
+
+        task_key = (run_id, question_id)
+        with _run_task_starts_lock:
+            started_at = _run_task_starts.get(task_key)
+        if started_at is None:
+            candidate = datetime.now(timezone.utc)
+            started_at = _session_store.record_run_task_start(run_id, question_id, candidate)
+            with _run_task_starts_lock:
+                _run_task_starts[task_key] = started_at
+
+        return {
+            "run_id": run_id,
+            "question_id": question.id,
+            "capability": question.capability,
+            "task_type": question.task_type,
+            "domain": question.domain,
+            "intent": question.intent,
+            "prompt": question.item.human_prompt_seed,
+            "started_at": started_at.isoformat(),
+            "data_files": [
+                {"key": df.key, "path": df.path, "filename": Path(df.path).name}
+                for df in question.item.data_files
+            ],
+        }
+
+    # ------------------------------------------------------------------
     # Question endpoints (no auth required)
     # ------------------------------------------------------------------
 
@@ -336,7 +543,9 @@ try:
         task_type: str | None = None,
         domain: str | None = None,
         tags: list[str] | None = Query(default=None),
-        limit: int | None = None,
+        q: str | None = Query(default=None, description="Case-insensitive search across ID, intent, domain, capabilities, and tags"),
+        offset: int = Query(default=0, ge=0),
+        limit: int | None = Query(default=None, ge=1, le=500),
     ) -> list[dict]:
         """List available questions with optional filters."""
         registry = _require_registry()
@@ -346,6 +555,17 @@ try:
             domain=domain,
             tags=tags,
         )
+        if q and q.strip():
+            needle = q.strip().casefold()
+            questions = [
+                question for question in questions
+                if needle in question.id.casefold()
+                or needle in question.intent.casefold()
+                or needle in question.domain.casefold()
+                or any(needle in value.casefold() for value in question.capability)
+                or any(needle in value.casefold() for value in question.tags)
+            ]
+        questions = questions[offset:]
         if limit is not None:
             questions = questions[:limit]
         return [
@@ -423,11 +643,22 @@ try:
     # Submission endpoint
     # ------------------------------------------------------------------
 
+    def _safe_artifact_name(name: str) -> Path:
+        """Return a safe workspace-relative path or reject traversal."""
+        if not name or "\\" in name:
+            raise HTTPException(400, detail="artifact filename must be a non-empty relative path")
+        path = Path(name)
+        if path.is_absolute() or ".." in path.parts:
+            raise HTTPException(400, detail=f"unsafe artifact filename: {name!r}")
+        return path
+
     @app.post("/submit/{question_id}")
     async def submit(
         question_id: str,
         request: Request,
-        session_id: str = Query(..., description="Session ID from POST /sessions"),
+        session_id: str | None = Query(default=None, description="Legacy session ID from POST /sessions"),
+        run_id: str | None = Query(default=None, description="Run ID from POST /runs"),
+        idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
         token: str = Depends(_require_token),
     ) -> dict:
         """Submit result files + metadata. Returns immediate grading result.
@@ -442,6 +673,20 @@ try:
         except KeyError:
             raise HTTPException(404, detail=f"Question '{question_id}' not found")
 
+        run: RunRecord | None = None
+        if run_id is not None:
+            run = _owned_run(run_id, token)
+            if question_id not in run.question_ids:
+                raise HTTPException(404, detail=f"Question '{question_id}' is not activated in run '{run_id}'")
+            if session_id is not None and session_id != run.session_id:
+                raise HTTPException(403, detail="Session does not belong to this run")
+            session_id = run.session_id
+            if not idempotency_key or not idempotency_key.strip():
+                raise HTTPException(400, detail="Idempotency-Key header is required for run submissions")
+
+        if session_id is None:
+            raise HTTPException(400, detail="session_id or run_id is required")
+
         # Validate session ownership
         with _sessions_lock:
             session = _sessions.get(session_id)
@@ -450,9 +695,9 @@ try:
         if session.token != token:
             raise HTTPException(403, detail="Session does not belong to this token")
 
-        # Enforce per-question submission limit within a session (read-only check)
-        composite_key = f"{token}:{session_id}:{question_id}"
-        if _max_submissions_per_question > 0:
+        # Enforce the old per-question limit only for legacy session submissions.
+        composite_key = f"{token}:{session_id}:{question_id}" if run is None else f"run:{run_id}:{question_id}"
+        if run is None and _max_submissions_per_question > 0:
             with _submission_counts_lock:
                 if _submission_counts.get(composite_key, 0) >= _max_submissions_per_question:
                     raise HTTPException(
@@ -471,11 +716,22 @@ try:
 
         t_submit = datetime.now(timezone.utc)
 
-        # Compute bench-measured duration from question fetch time
-        with _task_starts_lock:
-            t_start = _task_starts.get((session_id, question_id))
-        if t_start is None:
-            t_start = _session_store.get_task_start(session_id, question_id)
+        # Compute duration from the run timer for new clients, legacy timer otherwise.
+        if run is not None:
+            task_key = (run_id, question_id)
+            with _run_task_starts_lock:
+                t_start = _run_task_starts.get(task_key)
+            if t_start is None:
+                t_start = _session_store.record_run_task_start(
+                    run_id, question_id, t_submit
+                )
+                with _run_task_starts_lock:
+                    _run_task_starts[task_key] = t_start
+        else:
+            with _task_starts_lock:
+                t_start = _task_starts.get((session_id, question_id))
+            if t_start is None:
+                t_start = _session_store.get_task_start(session_id, question_id)
         if t_start is None:
             raise HTTPException(
                 400,
@@ -499,24 +755,55 @@ try:
         submitted: dict[str, bytes] = {}
         for _field, value in form_data.multi_items():
             if hasattr(value, "filename") and value.filename:
+                if len(submitted) >= _MAX_ARTIFACTS:
+                    raise HTTPException(413, detail=f"too many artifacts (maximum {_MAX_ARTIFACTS})")
+                _safe_artifact_name(str(value.filename))
                 content = await value.read()  # type: ignore[union-attr]
+                if len(content) > _MAX_ARTIFACT_BYTES:
+                    raise HTTPException(413, detail=f"artifact exceeds {_MAX_ARTIFACT_BYTES} byte limit")
                 submitted[value.filename] = content  # type: ignore[union-attr]
+
+        attempt: dict | None = None
+        if run is not None:
+            attempt, created = _session_store.create_attempt(
+                attempt_id=f"A{uuid.uuid4().hex}",
+                token=token,
+                session_id=session_id,
+                run_id=run_id,
+                question_id=question_id,
+                idempotency_key=idempotency_key.strip(),
+                created_at=t_submit,
+            )
+            if not created:
+                existing_job = _session_store.get_grading_job_for_attempt(attempt["attempt_id"])
+                return {
+                    "attempt_id": attempt["attempt_id"],
+                    "question_id": question_id,
+                    "run_id": run_id,
+                    "status": attempt["status"],
+                    "job_id": existing_job["job_id"] if existing_job else None,
+                    "idempotent_replay": True,
+                }
 
         # Write files to workspace (scoped by session)
         if _output_dir is None:
             raise HTTPException(500, detail="Server output directory not configured")
-        workspace = _output_dir / "workspaces" / session_id / question_id
+        workspace_scope = run_id if run_id is not None else session_id
+        workspace = _output_dir / "workspaces" / workspace_scope / question_id
         workspace.mkdir(parents=True, exist_ok=True)
 
         input_fnames = {Path(df.path).name for df in question.item.data_files}
         artifacts: list[ArtifactRecord] = []
         for fname, content in submitted.items():
-            (workspace / fname).write_bytes(content)
+            safe_name = _safe_artifact_name(fname)
+            destination = workspace / safe_name
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(content)
             if fname not in input_fnames:
                 artifacts.append(
                     ArtifactRecord(
-                        path=fname,
-                        artifact_type=Path(fname).suffix.lstrip(".") or "unknown",
+                        path=safe_name.as_posix(),
+                        artifact_type=safe_name.suffix.lstrip(".") or "unknown",
                         size_bytes=len(content),
                     )
                 )
@@ -565,6 +852,19 @@ try:
         )
         token_usage_record = build_token_usage_record(usage)
 
+        job_id: str | None = None
+        if attempt is not None:
+            job_id = f"J{uuid.uuid4().hex}"
+            _session_store.create_grading_job(
+                job_id=job_id,
+                attempt_id=attempt["attempt_id"],
+                token=token,
+                session_id=session_id,
+                run_id=run_id,
+                question_id=question_id,
+                created_at=t_submit,
+            )
+
         def _on_grade_done(fut: Any) -> None:
             try:
                 record = fut.result()
@@ -576,9 +876,17 @@ try:
                 _results[composite_key] = (token, session_id, record)
                 _grading_pending.discard(composite_key)
             _session_store.save_result(composite_key, token, session_id, record_json)
+            if attempt is not None:
+                final_status = "failed" if record.run_status == "grading_error" else "completed"
+                _session_store.update_attempt_status(attempt["attempt_id"], final_status)
+                _session_store.update_grading_job(
+                    job_id, final_status, "grading failed" if final_status == "failed" else ""
+                )
 
         with _results_lock:
             _grading_pending.add(composite_key)
+        if job_id is not None:
+            _session_store.update_grading_job(job_id, "running")
         with _submission_counts_lock:
             _submission_counts[composite_key] = _submission_counts.get(composite_key, 0) + 1
 
@@ -597,9 +905,40 @@ try:
         fut.add_done_callback(_on_grade_done)
 
         return {
+            "attempt_id": attempt["attempt_id"] if attempt is not None else None,
+            "job_id": job_id,
             "question_id": question_id,
             "session_id": session_id,
+            "run_id": run_id,
             "status": "grading",
+        }
+
+    @app.get("/grading-jobs/{job_id}")
+    async def get_grading_job(
+        job_id: str,
+        token: str = Depends(_require_token),
+    ) -> dict:
+        """Return durable grading-job state for the authenticated owner."""
+        job = _session_store.get_grading_job(job_id)
+        if job is None or job["token"] != token:
+            raise HTTPException(404, detail=f"Grading job '{job_id}' not found")
+        return {key: value for key, value in job.items() if key != "token"}
+
+    @app.get("/runs/{run_id}/attempts/{attempt_id}")
+    async def get_attempt(
+        run_id: str,
+        attempt_id: str,
+        token: str = Depends(_require_token),
+    ) -> dict:
+        """Return a durable run submission status."""
+        _owned_run(run_id, token)
+        attempt = _session_store.get_attempt(attempt_id)
+        if attempt is None or attempt["run_id"] != run_id or attempt["token"] != token:
+            raise HTTPException(404, detail=f"Attempt '{attempt_id}' not found")
+        return {
+            key: value
+            for key, value in attempt.items()
+            if key != "token"
         }
 
     # ------------------------------------------------------------------
