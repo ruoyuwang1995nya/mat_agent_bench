@@ -1,0 +1,17 @@
+site_name: MAT-AGENT-BENCH API
+site_description: HTTP API reference for integrating external agent systems with MAT-AGENT-BENCH.
+repo_name: mat-agent-bench
+theme:
+  name: material
+  features:
+    - content.code.copy
+    - navigation.sections
+    - navigation.top
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+nav:
+  - Overview: index.md
+  - HTTP API: api.md
