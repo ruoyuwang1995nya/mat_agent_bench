@@ -115,6 +115,40 @@ class BinaryEvaluator:
         if token_usage is None:
             token_usage = TokenUsageRecord()
 
+        checklist = question_item.scoring_checklist
+        if run_status == 'timeout':
+            criteria_results = {
+                item.id: CriterionResult(
+                    criterion_id=item.id,
+                    capability=item.capability,
+                    passed=False,
+                    reason='run timed out before evaluation completed',
+                    verify_method=item.verify,
+                )
+                for item in checklist
+            }
+            return EvalRunRecord(
+                question_id=question_item.id,
+                capabilities=list(question_item.capabilities),
+                task_type=question_item.task_type,
+                domain=question_item.domain,
+                mode=mode,  # type: ignore[arg-type]
+                repeat_idx=repeat_idx,
+                prompt=prompt,
+                answer=answer,
+                run_status=run_status,
+                criteria_results=criteria_results,
+                passed_count=0,
+                total_count=len(checklist),
+                overall_weighted_score=0.0,
+                model_name=model_name,
+                token_usage=token_usage,
+                tool_calls=tool_calls,
+                safety_veto=SafetyVetoRecord(),
+                created_at=datetime.now(timezone.utc),
+                duration_ms=int(duration_ms),
+            )
+
         # Regular questions: evaluate each checklist item
         ref_map = {item.key: item for item in question_item.reference_answers}
         criteria_results = {}
@@ -123,7 +157,6 @@ class BinaryEvaluator:
         total_count = 0
         failed_weight = 0.0
 
-        checklist = question_item.scoring_checklist
         use_parallel = self._parallel_checklist_workers > 1 and len(checklist) > 1
 
         if not use_parallel:

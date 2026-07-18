@@ -149,6 +149,7 @@ Submit your final answer and any output files as a multipart form.
   "answer": "<brief final answer text>",
   "num_turns": 5,
   "is_error": false,
+  "run_status": "completed",
   "usage": {
     "prompt_tokens": 12000,
     "completion_tokens": 3000,
@@ -165,6 +166,8 @@ Submit your final answer and any output files as a multipart form.
   ]
 }
 ```
+
+Use `"run_status": "timeout"` when execution exceeded its limit. Timeout submissions receive zero points.
 
 **curl example (with output files):**
 ```bash

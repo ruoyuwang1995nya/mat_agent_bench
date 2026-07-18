@@ -23,6 +23,20 @@ Returns API identity and the link to the plain-text agent guide. No authenticati
 
 Returns the legacy plain-text HTTP guide. No authentication is required.
 
+## End-to-end smoke test
+
+The repository includes a deterministic API smoke test. It selects one easy,
+text-only question, creates a session and a one-question run, fetches the task,
+uploads mock artifacts, polls the grading job, and retrieves the result.
+
+```bash
+TOKEN=<api-token> ./scripts/smoke_test_api.sh
+```
+
+It verifies the API lifecycle, not scientific correctness. The mock response is
+expected to score poorly or fail criteria. Set `QUESTION_ID` to exercise another
+hosted question, and set `API` when the server is not on the default address.
+
 ## Question catalog
 
 ### `GET /questions`
@@ -153,6 +167,7 @@ curl -s -X POST "$API/submit/$QUESTION_ID?run_id=$RUN" \
 | `answer` | string | Final textual answer. |
 | `num_turns` | integer | Agent turn count. |
 | `is_error` | boolean | Marks the agent execution as an error. |
+| `run_status` | string | Set to `"timeout"` when execution exceeded its limit; timeout submissions receive zero points. |
 | `usage` | object | Token usage, typically `prompt_tokens`, `completion_tokens`, `total_tokens`. |
 | `tool_calls` | array | Self-reported tool evidence with `step`, `tool_name`, `args`, `observation_excerpt`, and `succeeded`. |
 
@@ -188,10 +203,11 @@ Responses include `job_id`, `attempt_id`, `run_id`, `question_id`, `status`, `er
 
 ### `GET /results/{question_id}`
 
-Returns grading result records. Authentication is required. Pass `session_id` to restrict the result to a single session:
+Returns grading result records. Authentication is required. Pass `run_id` for a
+run-scoped submission, or `session_id` for a legacy session submission:
 
 ```bash
-curl -s "$API/results/$QUESTION_ID?session_id=$SESSION" \
+curl -s "$API/results/$QUESTION_ID?run_id=$RUN" \
   -H "X-API-Token: $TOKEN" | jq .
 ```
 

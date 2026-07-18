@@ -280,6 +280,7 @@ def run_single_question(
         agent_result = {
             "answer": "",
             "is_error": True,
+            "run_status": "timeout",
             "error_detail": f"timeout after {timeout_seconds}s",
             "model_name": agent_script.stem,
             "num_turns": 0,
@@ -303,7 +304,9 @@ def run_single_question(
     num_turns = int(agent_result.get("num_turns") or 0)
     model_name = str(agent_result.get("model_name", agent_script.stem))
     usage = agent_result.get("usage") or {}
-    run_status = "error" if is_error else "completed"
+    run_status = str(agent_result.get("run_status") or "").lower()
+    if run_status != "timeout":
+        run_status = "error" if is_error else "completed"
 
     tag = "OK" if not is_error else "FAIL"
     _log(f"{tag} ({elapsed_ms / 1000:.0f}s, turns={num_turns})")

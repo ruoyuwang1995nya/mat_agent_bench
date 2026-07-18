@@ -73,3 +73,36 @@ mkdocs serve
 Open the local documentation site at `http://127.0.0.1:8000`.
 
 GitHub Actions publishes the site from the default branch when GitHub Pages is configured to use Actions as its source.
+
+## Server logs
+
+The server writes structured Uvicorn and `mat_bench` logs to:
+
+```text
+~/.matbench/logs/api-server.log
+```
+
+The file rotates at 10 MiB and retains five backups. Set the display and file level at startup with one of these options, in precedence order:
+
+```bash
+# Highest priority: explicit server command option.
+mat-bench serve --log-level debug
+
+# Used when the command option is omitted. .env is loaded by mat-bench serve.
+MAT_BENCH_LOG_LEVEL=debug
+```
+
+Or create `~/.matbench/config.yaml`:
+
+```yaml
+server:
+    log_level: debug
+```
+
+The shorter root-level form is also accepted:
+
+```yaml
+log_level: debug
+```
+
+Valid levels are `debug`, `info`, `warning`, `error`, and `critical`. The default is `info`.

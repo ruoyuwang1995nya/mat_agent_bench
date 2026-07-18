@@ -21,7 +21,8 @@ Authentication:
 
 Submission form fields:
     meta      JSON string with answer, model_name, num_turns, duration_ms,
-              usage (prompt/completion/total_tokens), tool_calls list, is_error
+              usage (prompt/completion/total_tokens), tool_calls list, is_error,
+              optional run_status ("timeout" receives zero points)
     <any>     File fields — filename attribute is used as the workspace filename
 
 Tool call format in meta.tool_calls::
@@ -572,6 +573,7 @@ try:
             {
                 "id": q.id,
                 "capability": q.capability,
+                "task_type": q.task_type,
                 "domain": q.domain,
                 "intent": q.intent,
                 "tags": q.tags,
@@ -814,7 +816,8 @@ try:
         num_turns = int(meta.get("num_turns") or 0)
         is_error = bool(meta.get("is_error", False))
         usage: dict[str, Any] = meta.get("usage") or {}
-        run_status = "error" if is_error else "completed"
+        reported_status = str(meta.get("run_status") or "").lower()
+        run_status = "timeout" if reported_status == "timeout" else ("error" if is_error else "completed")
 
         # Parse self-reported tool calls (grounding axis)
         raw_tcs = meta.get("tool_calls") or []
@@ -949,19 +952,30 @@ try:
     async def get_result(
         question_id: str,
         session_id: str | None = Query(default=None),
+        run_id: str | None = Query(default=None),
         token: str = Depends(_require_token),
     ) -> list[dict]:
         """Get grading record(s) for a submitted question.
 
-        If session_id is given, returns a single-element list for that session.
+        If run_id or session_id is given, returns a single-element list for that
+        scope. Run-scoped lookup is preferred for run submissions.
         Otherwise returns all records for this question across all sessions of
         the authenticated token.
         """
         registry = _require_registry()
         if question_id not in registry:
             raise HTTPException(404, detail=f"Question '{question_id}' not found")
+        if run_id is not None:
+            run = _owned_run(run_id, token)
+            if question_id not in run.question_ids:
+                raise HTTPException(404, detail=f"Question '{question_id}' is not activated in run '{run_id}'")
         with _results_lock:
-            if session_id is not None:
+            if run_id is not None:
+                key = f"run:{run_id}:{question_id}"
+                entry = _results.get(key)
+                matches = [entry[2]] if entry is not None else []
+                pending = not matches and key in _grading_pending
+            elif session_id is not None:
                 key = f"{token}:{session_id}:{question_id}"
                 entry = _results.get(key)
                 matches = [entry[2]] if entry is not None else []
