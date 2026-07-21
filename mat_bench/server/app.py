@@ -116,6 +116,7 @@ _llm_cfg: LLMConfig | None = None
 _output_dir: Path | None = None
 _grading_executor: ThreadPoolExecutor | None = None
 _parallel_checklist_workers: int = 1
+_allow_token_registration: bool = False
 
 _tokens: dict[str, TokenRecord] = {}
 _tokens_lock = threading.Lock()
@@ -168,11 +169,12 @@ def init_server(
     store_dir: Path | None = None,
     parallel_checklist_workers: int = 1,
     max_submissions_per_question: int = 1,
+    allow_token_registration: bool = False,
 ) -> None:
     """Initialise server state. Must be called before uvicorn.run()."""
     global _registry, _llm_cfg, _output_dir, _results, _grading_executor
     global _token_store, _session_store, _task_starts, _run_task_starts
-    global _parallel_checklist_workers, _runs
+    global _parallel_checklist_workers, _runs, _allow_token_registration
     global _grading_pending, _submission_counts, _max_submissions_per_question
     _registry = registry
     _llm_cfg = llm_cfg
@@ -185,6 +187,7 @@ def init_server(
     _submission_counts = {}
     _max_submissions_per_question = max(0, int(max_submissions_per_question))
     _parallel_checklist_workers = max(1, int(parallel_checklist_workers))
+    _allow_token_registration = allow_token_registration
     output_dir.mkdir(parents=True, exist_ok=True)
 
     from .store import TokenStore, SessionStore
@@ -329,13 +332,31 @@ try:
     @app.get("/")
     async def bench_info() -> dict:
         """Bench API info — version and guide link."""
-        return {"api": "mat-bench", "version": "0.1.0", "guide": "/guide"}
+        return {
+            "api": "mat-bench",
+            "version": "0.1.0",
+            "guide": "/guide",
+            "token_registration": _allow_token_registration,
+        }
 
     @app.get("/guide")
     async def agent_guide() -> PlainTextResponse:
         """Return the agent HTTP API guide as plain text/markdown."""
         path = Path(__file__).parent.parent.parent / "agents" / "agent_api_guide.md"
         return PlainTextResponse(path.read_text(encoding="utf-8"))
+
+    @app.post("/token")
+    async def register_token() -> dict:
+        """Mint a token only when explicitly enabled for local development or tests."""
+        if not _allow_token_registration:
+            raise HTTPException(
+                403,
+                detail=(
+                    "Token registration is disabled. Start the server with "
+                    "--allow-token-registration for local development or testing."
+                ),
+            )
+        return create_token_direct()
 
     @app.post("/sessions")
     async def create_session(

@@ -32,7 +32,16 @@ X-API-Token: <your-token>
 
 `/questions` endpoints need no authentication; only a valid `session_id` query parameter.
 
-**Tokens are issued by an admin via the web UI** (`http://localhost:8080`). You cannot self-register via the API.
+**Tokens are issued by an admin via the web UI** (`http://localhost:8080`) by default.
+For local development or testing, an operator may start the server with
+`--allow-token-registration`; only then can an external tool register a token:
+
+```bash
+TOKEN=$(curl -s -X POST "$API/token" | jq -r .token)
+export TOKEN
+```
+
+Do not enable token registration on a shared or internet-accessible server.
 
 ---
 

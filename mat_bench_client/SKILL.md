@@ -28,7 +28,10 @@ Config is persisted at `~/.mat-bench-client/config.yaml` (token, session_id, ser
 
 ## Step 1 — One-time Setup
 
-Use the token provided by the server admin. **Never self-register.**
+Use the token provided by the server admin. Do not self-register on normal,
+shared, or internet-accessible deployments. For a local development server
+explicitly started with `--allow-token-registration`, `mat-bench-client setup`
+may register a development token without `--token`.
 
 ```bash
 mat-bench-client setup \

@@ -343,6 +343,14 @@ def _add_serve_parser(subparsers: argparse._SubParsersAction) -> None:
         help='Parallel LLM judge calls per question checklist (default: 1).',
     )
     p.add_argument(
+        '--allow-token-registration',
+        action='store_true',
+        help=(
+            'Allow unauthenticated POST /bench/token requests. '
+            'Use only for local development or testing.'
+        ),
+    )
+    p.add_argument(
         '--log-level',
         type=str,
         default=None,
@@ -429,6 +437,7 @@ def _cmd_serve(args: argparse.Namespace) -> None:
         grading_workers=args.grading_workers,
         output_dir=output_dir,
         parallel_checklist_workers=args.parallel_checklist_workers,
+        allow_token_registration=args.allow_token_registration,
     )
 
     print(f'Starting mat-bench at http://{args.host}:{args.port}', file=sys.stderr)

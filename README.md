@@ -51,8 +51,8 @@ The server loads this file automatically (override with `--env-file`).
 # Install server dependencies
 uv pip install -e ".[server]"
 
-# Start on default host/port (127.0.0.1:8765)
-mat-bench serve
+# Start locally and allow external tools to register development tokens
+mat-bench serve --allow-token-registration
 ```
 
 ### 3. Register an API token
@@ -60,7 +60,7 @@ mat-bench serve
 Before running any agent, register a token with the server and export it:
 
 ```bash
-TOKEN=$(curl -sf -X POST http://127.0.0.1:8765/token | jq -r .token)
+TOKEN=$(curl -sf -X POST http://127.0.0.1:8080/bench/token | jq -r .token)
 export TOKEN
 ```
 
@@ -125,8 +125,8 @@ Instead of running questions through a local harness script, you can start an HT
 # Install server dependencies first
 uv pip install -e ".[server]"
 
-# Start on default host/port (127.0.0.1:8765)
-mat-bench serve
+# Local development: permit external tools to register tokens
+mat-bench serve --allow-token-registration
 
 # Custom host/port with an LLM judge
 mat-bench serve --host 0.0.0.0 --port 9000 \
@@ -144,13 +144,14 @@ All `mat-bench serve` options:
 --llm-judge PROVIDER/MODEL  LLM judge for llm_binary_judge criteria
 --env-file FILE         Path to .env file for LLM config (default: .env)
 --grading-workers N     Parallel grading threads (default: 4)
+--allow-token-registration  Allow unauthenticated development token registration
 ```
 
 ### API overview
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/token` | Register a new persistent API token |
+| `POST` | `/token` | Register a development token when explicitly enabled |
 | `POST` | `/sessions` | Create a new session (requires `X-API-Token` header) |
 | `GET`  | `/questions` | List questions (filter: `capability`, `domain`, `limit`) |
 | `GET`  | `/questions/{id}` | Full question details + data file list |
@@ -159,7 +160,10 @@ All `mat-bench serve` options:
 | `GET`  | `/results/{id}` | Grading result(s) for one question |
 | `GET`  | `/results` | Summary of all submitted results |
 
-Authentication is required for `/submit` and `/results` — obtain a token via `POST /token` then create a session via `POST /sessions`.
+Authentication is required for `/submit` and `/results`. Tokens are issued in
+the web UI by default. On a local development server started with
+`--allow-token-registration`, external tools can use `POST /bench/token` and
+then create a session via `POST /bench/sessions`.
 
 ### Run a single question via the server (Claude Code)
 
@@ -167,7 +171,7 @@ Authentication is required for `/submit` and `/results` — obtain a token via `
 
 ```bash
 # Register a token first (if not already done)
-TOKEN=$(curl -sf -X POST http://127.0.0.1:8765/token | jq -r .token)
+TOKEN=$(curl -sf -X POST http://127.0.0.1:8080/bench/token | jq -r .token)
 export TOKEN
 
 # Run one question (server must already be running)
