@@ -10,11 +10,14 @@ domain: semiconductor
 difficulty: hard
 intent: 'Execute a complete phonon property benchmarking workflow starting from a crystal structure: geometry relaxation,
   phonon calculation, thermodynamic property extraction, and dynamical stability assessment.'
-human_prompt_seed: Starting from the provided GaAs semiconductor crystal structure in poscar_initial.txt, perform a complete 
-  phonon property characterization workflow using a universal machine learning interatomic potential. Determine the 
-  equilibrium geometry, compute the phonon density of states, assess dynamical stability, and extract thermodynamic 
-  properties (vibrational entropy, Helmholtz free energy, heat capacity) at 300 K. Report all results in 
-  benchmark_results.json and document your workflow decisions in workflow_log.txt.
+human_prompt_seed: |-
+  Starting from the provided GaAs semiconductor crystal structure in poscar_initial.txt, create 2 2 2 supercell, perform a complete phonon property
+  characterization workflow using a universal machine learning interatomic potential. Determine the equilibrium geometry,
+  compute the phonon density of states using a PHONOPY-style finite-displacement workflow, assess dynamical stability, and
+  extract thermodynamic properties (vibrational entropy, Helmholtz free energy, heat capacity) at 300 K. 
+  Report supercell size in final anwser.
+  Report all results in benchmark_results.json with keys: relaxed_volume_A3, max_phonon_freq_K, is_dynamically_stable, entropy_J_K_mol,
+  free_energy_kJ_mol, heat_capacity_J_K_mol; and document your workflow decisions in workflow_log.txt.
 tags:
 - phonon
 - mlip
@@ -63,17 +66,12 @@ reference_answers:
     - stability
     - thermodynamic
     filename: workflow_log.txt
-- key: displaced_structs
-  value: displaced_structures/
 - key: turn_budget
   value:
     max: 20
 - key: no_retries
   value:
     max: 3
-- key: duration_budget
-  value:
-    max: 600000
 - key: token_budget_total
   value:
     max: 50000
@@ -84,7 +82,7 @@ scoring_checklist:
   criterion: '[Must] benchmark_results.json exists with all required keys'
   capability: tool_utilization
 - id: results_structure
-  verify: text_file_numeric_range
+  verify: answer_json_numeric
   weight: 0.5
   criterion: '[Must] Results JSON contains physically reasonable values for all thermodynamic and phonon properties'
   capability: data_handling
@@ -99,11 +97,6 @@ scoring_checklist:
   criterion: '[Must] Workflow log demonstrates correct sequencing: relaxation → phonon calculation → property extraction →
     stability assessment'
   capability: workflow_orchestration
-- id: displaced_structs
-  verify: artifact_exists
-  weight: 0.3
-  criterion: '[Suggested] Displaced supercell structures were generated as intermediate artifacts'
-  capability: structure_manipulation
 - id: grounding
   verify: llm_binary_judge
   weight: 0.4
@@ -113,7 +106,7 @@ scoring_checklist:
 - id: scientific_reasoning_check
   verify: llm_binary_judge
   weight: 0.4
-  criterion: '[Must] Agent chose appropriate supercell size and displacement distance for the material system'
+  criterion: '[Must] Final anwser reports supercell size is 2 2 2'
   capability: scientific_reasoning
 - id: turn_budget
   verify: turn_budget
@@ -124,11 +117,6 @@ scoring_checklist:
   verify: no_retries
   weight: 0.1
   criterion: '[Variable] Agent did not retry failed tool calls excessively'
-  capability: tool_utilization
-- id: duration_budget
-  verify: duration_budget
-  weight: 0.1
-  criterion: '[Variable] Agent completed within duration budget'
   capability: tool_utilization
 - id: token_budget_total
   verify: token_budget

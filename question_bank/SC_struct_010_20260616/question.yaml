@@ -121,18 +121,19 @@ scoring_checklist:
   capability: structure_manipulation
   weight: 0.5
 - id: vacuum_angstrom
-  criterion: The `<eval_results>` JSON reports a vacuum thickness near 12 Å.
-  verify: answer_json_numeric
+  criterion: The final answer includes an `<eval_results>` JSON block reporting `vacuum_angstrom`, and the reported
+    vacuum thickness is near 12 Å (within about 2 Å).
+  verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
 - id: supercell_a
-  criterion: The `<eval_results>` JSON reports the Ag(111) slab as a 2x supercell along a.
-  verify: answer_json_numeric
+  criterion: The final answer includes an `<eval_results>` JSON block reporting `supercell_a = 2`.
+  verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
 - id: supercell_b
-  criterion: The `<eval_results>` JSON reports the Ag(111) slab as a 3x supercell along b.
-  verify: answer_json_numeric
+  criterion: The final answer includes an `<eval_results>` JSON block reporting `supercell_b = 3`.
+  verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
 - id: eval_result_keys
@@ -142,7 +143,7 @@ scoring_checklist:
   capability: data_handling
   weight: 0.5
 - id: required_fields
-  criterion: The answer explicitly reports the output structure file, Ag atom count, H2O molecule count, K ion count, 
+  criterion: The answer explicitly reports Ag atom count, H2O molecule count, K ion count, 
     slab layer count, vacuum thickness near 12 Å, confirms neutral-water-only composition (no OH-/H3O+), and states that
     solvent/ions are placed above one side of the slab rather than embedded into the metal.
   verify: llm_binary_judge

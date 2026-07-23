@@ -78,10 +78,3 @@ scoring_checklist:
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5
-- id: grounding_config_used
-  criterion: 'Parameter values in the generated INCAR files match the convergence_encut.json config exactly: k-mesh 8×8×8,
-    ISMEAR=1, SIGMA=0.1, NSW=0, IBRION=-1, ALGO=Fast, ENCUT sweep [280, 300, 320, 340, 360] eV. The answer or files must show
-    these values were derived from reading the JSON file, not invented independently.'
-  verify: llm_binary_judge
-  capability: scientific_grounding
-  weight: 0.5

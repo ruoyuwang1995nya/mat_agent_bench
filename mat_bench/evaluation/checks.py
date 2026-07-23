@@ -6,6 +6,7 @@ into a single module with all non-LLM verification logic.
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -33,7 +34,9 @@ from ..validators import (
     check_formula,
     check_layer_count,
     check_molcrys_local_env,
+    check_min_interatomic_distance,
     check_sc005_other_formulas_in_answer,
+    check_space_group,
     check_stoichiometry_ratio,
     check_surface_termination,
     check_text_file_contains_all,
@@ -85,6 +88,46 @@ def _cfg(ref: ReferenceAnswer) -> dict[str, Any]:
 def _workspace_resolve_from_ref(ref: ReferenceAnswer) -> str:
     """Plain-text / artifact checks: recursive (legacy) vs workspace root only."""
     return ref.workspace_resolve or 'recursive'
+
+
+def _resolve_workspace_file(
+    workspace: str | Path,
+    filename: str,
+    *,
+    workspace_resolve: str = 'recursive',
+) -> Path | None:
+    root = Path(workspace)
+    if workspace_resolve == 'root':
+        if len(Path(filename).parts) != 1:
+            return None
+        candidate = root / filename
+        return candidate if candidate.is_file() else None
+
+    exact = root / filename
+    if exact.is_file():
+        return exact
+    hits = [p for p in root.rglob('*') if p.is_file() and p.name == filename]
+    if not hits:
+        return None
+    return max(hits, key=lambda p: p.stat().st_mtime)
+
+
+def _get_json_path(data: Any, path: str) -> tuple[bool, Any]:
+    cur = data
+    for part in path.split('.'):
+        if isinstance(cur, dict):
+            if part not in cur:
+                return False, None
+            cur = cur[part]
+            continue
+        if isinstance(cur, list):
+            try:
+                cur = cur[int(part)]
+            except (TypeError, ValueError, IndexError):
+                return False, None
+            continue
+        return False, None
+    return True, cur
 
 
 def _split_tool_names(tool_name: str) -> list[str]:
@@ -444,6 +487,40 @@ def check_struct_file_formula(
     )
 
 
+def check_struct_file_space_group(
+    *, evidence: EvidenceBundle | None, ref: ReferenceAnswer
+) -> tuple[bool, str]:
+    ws, err = _get_workspace(evidence)
+    if err:
+        return False, err
+    cfg = _cfg(ref)
+    if 'expected_number' not in cfg:
+        return False, "reference answer missing 'expected_number'"
+    return check_space_group(
+        ws,
+        filename=str(cfg.get('filename', '*.cif')),
+        expected_number=int(cfg['expected_number']),
+        symprec=float(cfg.get('symprec', 0.1)),
+        angle_tolerance=float(cfg.get('angle_tolerance', 5.0)),
+    )
+
+
+def check_struct_file_min_interatomic_distance(
+    *, evidence: EvidenceBundle | None, ref: ReferenceAnswer
+) -> tuple[bool, str]:
+    ws, err = _get_workspace(evidence)
+    if err:
+        return False, err
+    cfg = _cfg(ref)
+    if 'min_distance_A' not in cfg:
+        return False, "reference answer missing 'min_distance_A'"
+    return check_min_interatomic_distance(
+        ws,
+        filename=str(cfg.get('filename', '*.cif')),
+        min_distance_A=float(cfg['min_distance_A']),
+    )
+
+
 def check_struct_file_bond_count(
     *, evidence: EvidenceBundle | None, ref: ReferenceAnswer
 ) -> tuple[bool, str]:
@@ -692,6 +769,78 @@ def check_text_file_numeric_range_from_evidence(
         checks=checks,
         workspace_resolve=_workspace_resolve_from_ref(ref),
     )
+
+
+def check_answer_json_numeric_from_evidence(
+    *, evidence: EvidenceBundle | None, ref: ReferenceAnswer
+) -> tuple[bool, str]:
+    ws, err = _get_workspace(evidence)
+    if err:
+        return False, err
+    cfg = _cfg(ref)
+    filename = str(cfg.get('filename', '')).strip()
+    if not filename:
+        return False, "reference answer must provide non-empty 'filename'"
+    raw_checks = cfg.get('checks', [])
+    if not isinstance(raw_checks, list) or not raw_checks:
+        return False, "reference answer must provide non-empty 'checks' list"
+
+    fpath = _resolve_workspace_file(
+        ws,
+        filename,
+        workspace_resolve=_workspace_resolve_from_ref(ref),
+    )
+    if fpath is None:
+        return False, f'no file matching {filename!r} in {ws}'
+    try:
+        data = json.loads(fpath.read_text(encoding='utf-8'))
+    except Exception as exc:
+        return False, f'failed parsing {fpath.name} as JSON: {exc}'
+
+    details: list[str] = []
+    for rule in raw_checks:
+        if not isinstance(rule, dict):
+            return False, "each entry in 'checks' must be a dict"
+        key = str(rule.get('key', '')).strip()
+        if not key:
+            return False, "numeric rule missing non-empty 'key'"
+        found, raw_value = _get_json_path(data, key)
+        if not found:
+            return False, f"{fpath.name}: key {key!r} not found"
+
+        allowed_values = rule.get('allowed_values')
+        if allowed_values is not None:
+            allowed = {str(v).lower() for v in allowed_values}
+            actual = str(raw_value).lower()
+            if actual not in allowed:
+                return (
+                    False,
+                    f"{fpath.name}: key {key!r}: value={raw_value!r} not in allowed={sorted(allowed)}",
+                )
+            details.append(f'{key}={raw_value!r}')
+            continue
+
+        try:
+            value = float(raw_value)
+        except (TypeError, ValueError):
+            return False, f"{fpath.name}: key {key!r}: value {raw_value!r} is not numeric"
+
+        if 'expected' in rule:
+            expected = float(rule['expected'])
+            tolerance = float(rule.get('tolerance', 0))
+            if abs(value - expected) > tolerance:
+                return (
+                    False,
+                    f"{fpath.name}: key {key!r}: value={value}, expected={expected}, tolerance={tolerance}",
+                )
+
+        if 'min' in rule and value < float(rule['min']):
+            return False, f"{fpath.name}: key {key!r}: value={value} < min={rule['min']}"
+        if 'max' in rule and value > float(rule['max']):
+            return False, f"{fpath.name}: key {key!r}: value={value} > max={rule['max']}"
+        details.append(f'{key}={value:g}')
+
+    return True, f"{fpath.name}: all JSON numeric checks passed ({', '.join(details)})"
 
 
 def check_text_file_kpt_path_from_evidence(

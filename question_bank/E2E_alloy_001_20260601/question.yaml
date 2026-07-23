@@ -11,11 +11,12 @@ difficulty: hard
 intent: Starting from crystal structures of two Mg-Zn intermetallic phases, perform a complete computational workflow to
   determine relative phase stability through formation energy, elastic anisotropy, and thermodynamic properties, then 
   rank the phases by overall stability.
-human_prompt_seed: Starting from the provided crystal structures of three Mg-Zn intermetallic phases (C-MgZn2, H-MgZn2),
+human_prompt_seed: Starting from the provided crystal structures of two Mg-Zn intermetallic phases (C-MgZn2, H-MgZn2),
   determine their relative phase stability through a complete computational analysis. Compute formation energies, 
   elastic anisotropy indicators, and thermodynamic stability metrics (Debye temperature, Grüneisen parameter). 
   Synthesize all results into a final stability ranking. Report all intermediate and final results in 
-  phase_stability_report.json with the structure specified in the output contract.
+  phase_stability_report.json with the structure specified in the output contract, including the formation energies for
+  both H-MgZn2 and C-MgZn2.
 tags:
 - end_to_end
 - dft_workflow
@@ -79,19 +80,23 @@ scoring_checklist:
   criterion: '[Must] Report contains entries for all three phases (C-MgZn2, H-MgZn2)'
   capability: data_handling
 - id: json_ranking
-  verify: text_file_contains_all
+  verify: llm_binary_judge
   weight: 0.2
-  criterion: '[Must] Stability ranking identifies H-MgZn2 as most stable (lowest formation energy, -12.965 kJ/mol)'
+  criterion: '[Must] `phase_stability_report.json` identifies H-MgZn2 as the most stable phase and ranks it ahead of
+    C-MgZn2 in the final stability ordering.'
   capability: scientific_reasoning
 - id: json_formation_energies
-  verify: text_file_numeric_range
+  verify: llm_binary_judge
   weight: 0.15
-  criterion: '[Must] Formation energies are within tolerance of paper values (all within ~0.5 kJ/mol of reference)'
+  criterion: '[Must] `phase_stability_report.json` reports formation energies for both phases within the reference
+    ranges: formation_energies.H-MgZn2_kJ_mol is between -13.5 and -12.5 kJ/mol, and formation_energies.C-MgZn2_kJ_mol
+    is between -13.3 and -12.3 kJ/mol.'
   capability: scientific_reasoning
 - id: json_debye_ordering
-  verify: text_file_numeric_range
+  verify: llm_binary_judge
   weight: 0.1
-  criterion: '[Suggested] Debye temperature ordering C-MgZn2 > H-MgZn2 > Mg4Zn7 is correctly reflected'
+  criterion: '[Suggested] `phase_stability_report.json` reports Debye temperatures for both C-MgZn2 and H-MgZn2, with
+    C-MgZn2 higher than H-MgZn2.'
   capability: data_handling
 - id: workflow_sequence
   verify: llm_binary_judge

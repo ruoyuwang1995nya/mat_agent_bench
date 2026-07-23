@@ -30,7 +30,7 @@ human_prompt_seed: 'Process the following 5 crystal structures with disordered o
   (4) `ordered_output_archive`.
 
 
-  For the ordered replica of `disorder_DAN-2.cif`, `chemical_formula` must use **integer stoichiometry** (counts like `H13.98` from fractional occupancies must not appear).
+  For all ordered replicas, `chemical_formula` must use **integer stoichiometry** (fractional counts such as `H13.98` must not appear).
 
   The ordered-replica output file for each structure must be named `ordered_<original_filename>.cif` (for example, `ordered_disorder_DAN-2.cif`).
 
@@ -77,9 +77,6 @@ reference_answers:
 - key: ordered_integer_stoichiometry
   value:
     filename: ordered_*.cif
-- key: ordered_replicas_distinct
-  value:
-    filename: ordered_*.cif
 scoring_checklist:
 - id: structures_processed
   criterion: All 5 disordered structures are processed (verified by counting ordered-replica output files in workspace).
@@ -88,13 +85,13 @@ scoring_checklist:
   weight: 0.5
 - id: ordered_files_parsable
   criterion: All `ordered_*.cif` deliverables can be parsed as structure files.
-  verify: struct_file_parsable
+  verify: llm_binary_judge
   capability: structure_manipulation
   weight: 0.5
 - id: ordered_files_occupancy_one
   criterion: Every ordered-replica CIF has only occupancy-1 sites; no partial or split occupancies remain in 
     `_atom_site_occupancy`.
-  verify: struct_file_all_occupancy_one
+  verify: llm_binary_judge
   capability: structure_manipulation
   weight: 0.5
 - id: sc005_disorder_formulas
@@ -126,20 +123,14 @@ scoring_checklist:
   weight: 0.5
 - id: ordered_integer_stoichiometry
   criterion: The chemical formula of each ordered replica has integer atom counts (no fractional like H13.98 or Li0.5).
-  verify: struct_file_integer_stoichiometry
-  weight: 0.5
-  capability: structure_manipulation
-- id: ordered_replicas_distinct
-  criterion: When multiple ordered replicas are generated for the same structure, they are structurally distinct 
-    (different atom arrangements, not identical copies).
-  verify: struct_file_replicas_distinct
+  verify: llm_binary_judge
   weight: 0.5
   capability: structure_manipulation
 - id: grounding_source
-  criterion: The answer explains the physical/chemical basis for each structure (disorder/occupancy, connectivity, 
-    valence or charge balance, and what changes when building an ordered replica), tied to the named CIFs and delivered 
-    outputs, not only restating task text without structural basis. Judge solely from the final answer and named 
-    deliverables; do not fail because the tool-call log omits MCP, web_search, or any specific tool.
+  criterion: The answer is grounded in the named input CIFs and delivered ordered-replica outputs, and briefly explains
+    for each structure how the reported ordered result relates to the original disorder/occupancy information, rather
+    than only restating task text or listing filenames without structural interpretation. Judge solely from the final
+    answer and named deliverables; do not fail because the tool-call log omits MCP, web_search, or any specific tool.
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5

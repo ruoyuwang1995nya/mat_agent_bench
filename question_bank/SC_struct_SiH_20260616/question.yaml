@@ -84,9 +84,9 @@ scoring_checklist:
   capability: structure_manipulation
   weight: 0.5
 - id: grounding_source
-  criterion: The answer cites the structural physics (Si(100) facets, dangling bonds on both surfaces, target 
-    coordination, Si-H bond length) and ties passivation checks to the delivered POSCAR, not only generic semiconductor 
-    chemistry recall disconnected from that file. Judge solely from the final answer and named deliverables; do not fail
+  criterion: The answer ties the passivation result to `Si100_H_passivated_POSCAR` and explicitly states that both the
+    top and bottom surface Si dangling bonds are passivated, the relevant surface Si atoms reach fourfold coordination,
+    and the Si-H bond lengths are reasonable. Judge solely from the final answer and named deliverables; do not fail
     because the tool-call log omits MCP, web_search, or any specific tool.
   verify: llm_binary_judge
   capability: scientific_grounding

@@ -66,12 +66,12 @@ scoring_checklist:
   weight: 0.5
 - id: poscar_parsable
   criterion: The POSCAR deliverable can be parsed as a structure file.
-  verify: struct_file_parsable
+  verify: llm_binary_judge
   capability: structure_manipulation
   weight: 0.5
 - id: mismatch_percent
   criterion: Lattice mismatch reported in `<eval_results>` is below 2% and close to the reference.
-  verify: answer_json_numeric
+  verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
 - id: b_n_ratio

@@ -85,6 +85,6 @@ scoring_checklist:
 - id: grounding_check
   verify: llm_binary_judge
   weight: 0.5
-  criterion: '[Must] The site selection is physically reasonable for Li⁺ in the β-MnO₂ [1×1] tunnel structure, consistent
+  criterion: '[Must] The site selection described in `site_analysis.txt` is physically reasonable for Li⁺ in the β-MnO₂ [1×1] tunnel structure, consistent
     with the coordination-compatibility principles described by Kitchaev et al. 2017'
   capability: scientific_grounding

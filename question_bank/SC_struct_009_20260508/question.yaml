@@ -87,17 +87,3 @@ scoring_checklist:
   verify: llm_binary_judge
   capability: scientific_grounding
   weight: 0.5
-- id: tasker_classification
-  criterion: The agent identifies or discusses the Tasker classification of CeO2(111) (Type 2 surface with charged but 
-    non-dipolar repeat unit O-Ce-O), or equivalently explains that the (111) stacking of alternating charged planes does
-    not produce a net dipole moment per repeat unit when the O-Ce-O trilayer is chosen as the repeat.
-  verify: llm_binary_judge
-  capability: scientific_reasoning
-  weight: 0.5
-- id: symmetric_slab_polarity_strategy
-  criterion: The agent explains or applies a symmetric slab construction strategy (mirror-symmetric terminations on both
-    sides) to ensure no net dipole across the slab, or mentions that dipole corrections are unnecessary because the 
-    chosen O-terminated trilayer repeat is inherently non-polar.
-  verify: llm_binary_judge
-  capability: scientific_reasoning
-  weight: 0.5

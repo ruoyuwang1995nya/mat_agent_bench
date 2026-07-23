@@ -20,6 +20,7 @@ except ImportError:
 _PMG_AVAILABLE = False
 try:
     from pymatgen.core import Molecule, Structure
+    from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
     _PMG_AVAILABLE = True
 except ImportError:
@@ -114,6 +115,102 @@ def check_formula(
         False,
         f'{fpath.name}: formula={actual_reduced} (hill={actual_hill}, alpha={actual_alpha}) '
         f'does not match expected {formula}',
+    )
+
+
+def check_space_group(
+    workspace_dir: str | Path,
+    *,
+    filename: str,
+    expected_number: int,
+    symprec: float = 0.1,
+    angle_tolerance: float = 5.0,
+) -> tuple[bool, str]:
+    """Infer a periodic structure's space group and compare its IT number."""
+    if not _PMG_AVAILABLE:
+        return False, _IMPORT_MSG
+    if expected_number < 1 or expected_number > 230:
+        return False, f'expected_number must be between 1 and 230, got {expected_number}'
+    if symprec <= 0:
+        return False, f'symprec must be positive, got {symprec}'
+
+    root = Path(workspace_dir)
+    fpath = _resolve_file(root, filename)
+    if fpath is None:
+        return False, f'no file matching {filename!r} in {root}'
+    try:
+        struct = _load_structure(fpath)
+    except Exception as exc:
+        return False, f'could not parse {fpath.name}: {exc}'
+    if isinstance(struct, Molecule):
+        return False, f'{fpath.name}: space-group analysis requires a periodic structure'
+
+    try:
+        analyzer = SpacegroupAnalyzer(
+            struct,
+            symprec=symprec,
+            angle_tolerance=angle_tolerance,
+        )
+        actual_number = analyzer.get_space_group_number()
+        actual_symbol = analyzer.get_space_group_symbol()
+    except Exception as exc:
+        return False, f'could not determine space group for {fpath.name}: {exc}'
+
+    passed = actual_number == expected_number
+    relation = 'matches' if passed else 'does not match'
+    return (
+        passed,
+        f'{fpath.name}: inferred space group {actual_symbol} (No. {actual_number}) '
+        f'{relation} expected No. {expected_number} '
+        f'(symprec={symprec:g}, angle_tolerance={angle_tolerance:g})',
+    )
+
+
+def check_min_interatomic_distance(
+    workspace_dir: str | Path,
+    *,
+    filename: str,
+    min_distance_A: float,
+) -> tuple[bool, str]:
+    """Check the closest distinct atom pair, respecting periodic boundaries."""
+    if not _PMG_AVAILABLE:
+        return False, _IMPORT_MSG
+    if min_distance_A < 0:
+        return False, f'min_distance_A must be non-negative, got {min_distance_A}'
+
+    root = Path(workspace_dir)
+    fpath = _resolve_file(root, filename)
+    if fpath is None:
+        return False, f'no file matching {filename!r} in {root}'
+    try:
+        struct = _load_structure(fpath)
+    except Exception as exc:
+        return False, f'could not parse {fpath.name}: {exc}'
+    if len(struct) < 2:
+        return False, f'{fpath.name}: at least two atoms are required'
+
+    closest_distance = float('inf')
+    closest_pair = (0, 1)
+    for i in range(len(struct) - 1):
+        for j in range(i + 1, len(struct)):
+            if isinstance(struct, Molecule):
+                distance = float(struct[i].distance(struct[j]))
+            else:
+                distance = float(struct.get_distance(i, j))
+            if distance < closest_distance:
+                closest_distance = distance
+                closest_pair = (i, j)
+
+    i, j = closest_pair
+    atom_i = f'{struct[i].species_string}{i + 1}'
+    atom_j = f'{struct[j].species_string}{j + 1}'
+    passed = closest_distance >= min_distance_A
+    relation = '>=' if passed else '<'
+    return (
+        passed,
+        f'{fpath.name}: minimum interatomic distance={closest_distance:.4f} Å '
+        f'between {atom_i} and {atom_j}; '
+        f'{closest_distance:.4f} {relation} required {min_distance_A:g} Å',
     )
 
 

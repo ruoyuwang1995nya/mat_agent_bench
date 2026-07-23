@@ -7,7 +7,7 @@ domain: battery
 difficulty: easy
 intent: 'Compute doping formation energy of NFPP: retrieve structure, build doped supercell, use mock energies, calculate
   formation energy.'
-human_prompt_seed: "Compute the Al-doping formation energy of NFPP:\n1. Retrieve the NFPP (Na₄Fe₃(PO₄)₂P₂O₇) structure (space group Pna2₁) and build a 2×1×1 supercell as the pristine structure.\n2. Replace one P atom at a P site (the PO₄ phosphate site) with Al to construct the doped supercell.\n\
+human_prompt_seed: "Compute the Al-doping formation energy of NFPP:\n1. Retrieve the NFPP (Na₄Fe₃(PO₄)₂P₂O₇) structure (space group Pna2₁) and build a 2×1×1 supercell as the pristine structure, and save the parent structure as `NFPP.cif` \n2. Replace one P atom at a P site (the PO₄ phosphate site) with Al to construct the doped supercell.\n\
   3. Use the following mock energies (simulating DPA-relaxed results):\n   - E_pristine = -689.605 eV\n   - E_doped = -687.057 eV\n   - μ_P (red phosphorus reference state) = -5.41 eV/atom\n\
   \   - μ_Al (metallic Al reference state) = -3.75 eV/atom\n4. Compute the formation energy using E_f = E(doped) - E(pristine) + μ_P - μ_Al.\n5. Compute the volume change ratio (doped volume about 1313.17 Å³, pristine volume about 1316.68 Å³).\n6. Report the doping formation energy (eV) and the volume change ratio (%).\n"
 tags:
@@ -23,9 +23,6 @@ reference_answers:
   tolerance: 0.5
 - key: required_fields
   value:
-  - E_pristine
-  - E_doped
-  - chemical_potentials
   - formation_energy
   - volume_change
 scoring_checklist:
@@ -40,13 +37,12 @@ scoring_checklist:
   capability: tool_utilization
   weight: 0.5
 - id: required_fields
-  criterion: Report includes pristine/doped energies, chemical potentials, formation energy, and volume change.
+  criterion: Report includes formation energy, and volume change.
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5
 - id: grounding_source
-  criterion: NFPP structure uses correct Pna2₁ lattice parameters; mock energies used as specified; chemical potentials 
-    explicitly defined. Judge solely from the final answer; do not fail because the tool-call log omits MCP, web_search,
+  criterion: The parent structure file `NFPP.cif` is correct Pna2₁ space group; Judge solely from the final answer; do not fail because the tool-call log omits MCP, web_search,
     or any specific tool.
   verify: llm_binary_judge
   capability: scientific_grounding

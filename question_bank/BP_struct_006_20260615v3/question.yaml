@@ -15,7 +15,8 @@ human_prompt_seed: 'Batch-retrieve 20 lithium-containing materials (with downloa
   1) `li20_volume_stats.json`: must contain at least `candidate_count`, `volume_per_atom_list`, `average_volume_per_atom`,
   and `unit`; 2) `li20_retrieval_report.md`: describe the retrieval criteria (lithium-containing, count = 20), the source
   of the volume/atom-count data for each entry, and the averaging procedure; 3) In the final answer, provide the average
-  value and explain what sample biases may affect this statistic.
+  value, explicitly distinguish the per-structure measured values from the aggregated mean, and explain what sample biases
+  may affect this statistic.
 
   Note: This task emphasizes batch retrieval plus statistical aggregation, and does not require any subsequent first-principles
   calculations.'

@@ -22,10 +22,8 @@ reference_answers:
 - key: must_ispin
   value:
     filename: INCAR_mag
-    tokens:
-    - ISPIN = 2
-    - ISPIN=2
-    flags: i
+    pattern: ^\s*ISPIN\s*=\s*2\b
+    flags: im
 - key: must_magmom
   value:
     filename: INCAR_mag
@@ -49,7 +47,7 @@ scoring_checklist:
   weight: 0.5
 - id: must_ispin
   criterion: INCAR_mag contains ISPIN = 2 for spin-polarized calculation.
-  verify: text_file_contains_all
+  verify: text_file_regex
   capability: scientific_reasoning
   weight: 0.5
 - id: must_magmom
@@ -61,10 +59,4 @@ scoring_checklist:
   criterion: ENCUT is set to 520 eV.
   verify: text_file_numeric_range
   capability: tool_utilization
-  weight: 0.5
-- id: grounding_mag
-  criterion: Agent explains why ISPIN=2 and MAGMOM are needed for Fe (magnetic material), not just blindly setting 
-    parameters.
-  verify: llm_binary_judge
-  capability: scientific_grounding
   weight: 0.5

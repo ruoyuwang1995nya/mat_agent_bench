@@ -9,7 +9,8 @@ intent: 'Generate VASP INCAR for a band structure calculation of Lu4N4. Non-self
   (ICHARG=11), with projected band output (LORBIT=11).
 
   '
-human_prompt_seed: 'Generate a VASP INCAR file for a band-structure calculation of Lu4N4. Requirements: perform a non-self-consistent calculation, read from an existing charge density, and output projected band structure. Write the complete INCAR to the `INCAR` file in the current directory.'
+human_prompt_seed: 'Generate a VASP INCAR file for a band-structure calculation of Lu4N4. Requirements: perform a non-self-consistent calculation, read from an existing charge density, and output projected band structure. Write the complete INCAR to the `INCAR` file in the current directory.
+  Consider whether spin-orbit coupling (SOC) should be included for this system. If you include SOC, reflect it in the INCAR; if you do not include SOC, briefly justify that choice in the final answer.'
 tags:
 - eng_vasp
 reference_answers:

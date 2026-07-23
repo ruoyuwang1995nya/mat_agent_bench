@@ -60,11 +60,6 @@ reference_answers:
   value: methodology.txt
 - key: eos_data_exists
   value: eos_data.csv
-- key: grounding_check
-  value:
-    expected: 'yes'
-    question: Does the methodology trace back to the common workflow approach described in the paper, using 
-      volume-scaled structures with position relaxation at fixed volume/shape and Birch-Murnaghan fitting?
 - key: workflow_orchestration_check
   value:
     expected: 'yes'
@@ -107,11 +102,6 @@ scoring_checklist:
   weight: 0.05
   criterion: '[Must] eos_data.csv exists with volume_A3, energy_eV, and scaling_pct columns'
   capability: data_handling
-- id: grounding_check
-  verify: llm_binary_judge
-  weight: 0.12
-  criterion: '[Must] Methodology traces back to the common workflow EOS approach from the paper'
-  capability: scientific_grounding
 - id: workflow_orchestration_check
   verify: llm_binary_judge
   weight: 0.12

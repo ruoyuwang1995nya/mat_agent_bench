@@ -22,7 +22,6 @@ reference_answers:
   - E_slab
   - surface_area
   - surface_energy
-  - convergence_check
 scoring_checklist:
 - id: surface_energy_J_m2
   criterion: Surface energy is in expected range.
@@ -30,8 +29,7 @@ scoring_checklist:
   capability: tool_utilization
   weight: 0.5
 - id: required_fields
-  criterion: Report includes bulk energy per atom, slab total energy, surface area, computed surface energy, and 
-    convergence check.
+  criterion: Report includes bulk energy per atom, slab total energy, surface area, and computed surface energy.
   verify: llm_binary_judge
   capability: tool_utilization
   weight: 0.5
