@@ -89,9 +89,10 @@ scoring_checklist:
   criterion: '[Must] Output correctly identifies FeO2 and Fe2O as metastable phases with energy above hull > 0.'
   capability: scientific_reasoning
 - id: numeric_range_metastability
-  verify: text_file_numeric_range
+  verify: llm_binary_judge
   weight: 0.5
-  criterion: '[Suggested] Energy above hull for FeO2 is in the range 50-120 meV/atom (expected ~85 meV/atom).'
+  criterion: '[Suggested] In `convex_hull_results.json`, the FeO2 entry reports `energy_above_hull_meV_per_atom` in the
+    range 50-120 meV/atom (expected about 85 meV/atom).'
   capability: scientific_reasoning
 - id: grounding_source
   verify: llm_binary_judge

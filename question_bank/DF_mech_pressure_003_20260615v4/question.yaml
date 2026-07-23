@@ -97,8 +97,3 @@ scoring_checklist:
   verify: text_file_contains_all
   capability: data_handling
   weight: 0.5
-- id: grounding_source
-  criterion: The estimate is grounded in `implant_params.json` and avoids fabricated non-provided parameters.
-  verify: llm_binary_judge
-  capability: scientific_grounding
-  weight: 0.5

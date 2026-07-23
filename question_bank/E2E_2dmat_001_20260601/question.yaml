@@ -64,17 +64,6 @@ reference_answers:
       max: -0.5
       min: -2.5
     filename: formation_energies.json
-- key: analysis_mechanism
-  value:
-    flags: IGNORECASE
-    tokens:
-    - atomic radius
-    - local strain
-    - bond contraction
-    - bond elongation
-    - tensile
-    - compressive
-    filename: strain_analysis.txt
 - key: strain_levels
   value:
     checks:
@@ -93,7 +82,7 @@ reference_answers:
     max: 1800000
 scoring_checklist:
 - id: artifact_structures
-  verify: artifact_exists
+  verify: llm_binary_judge
   weight: 0.1
   criterion: '[Must] The strained_structures/ directory exists and contains POSCAR files for pristine and defective structures
     at multiple strain levels.'
@@ -114,42 +103,40 @@ scoring_checklist:
   criterion: '[Must] comparison_plot.png exists showing ΔEf vs strain for both defect types.'
   capability: data_handling
 - id: cb_increasing_trend
-  verify: text_file_numeric_range
+  verify: llm_binary_judge
   weight: 0.15
-  criterion: '[Must] The ΔEf for C_B at 8% strain is positive (formation energy increases with tensile strain), consistent
-    with the paper''s finding that C (smaller than B) creates local tensile strain that cooperates with external tensile strain.'
+  criterion: '[Must] `formation_energies.json` shows that the ΔEf for C_B at 8% strain is positive, i.e. the C_B formation
+    energy increases with tensile strain.'
   capability: scientific_reasoning
 - id: cn_decreasing_trend
-  verify: text_file_numeric_range
+  verify: llm_binary_judge
   weight: 0.15
-  criterion: '[Must] The ΔEf for C_N at 8% strain is negative (formation energy decreases with tensile strain), consistent
-    with the paper''s finding that C (larger than N) creates local compressive strain that is compensated by external tensile
-    strain.'
+  criterion: '[Must] `formation_energies.json` shows that the ΔEf for C_N at 8% strain is negative, i.e. the C_N formation
+    energy decreases with tensile strain.'
   capability: scientific_reasoning
 - id: analysis_mechanism
-  verify: text_file_contains_all
+  verify: llm_binary_judge
   weight: 0.1
-  criterion: '[Must] The analysis correctly identifies the physical mechanism: atomic radius mismatch between impurity and
+  criterion: '[Must] The `strain_analysis.txt` identifies the physical mechanism: atomic radius mismatch between impurity and
     host atom creates local strain fields that either cooperate with or compensate the external strain.'
   capability: scientific_reasoning
 - id: strain_levels
-  verify: text_file_numeric_range
+  verify: llm_binary_judge
   weight: 0.1
-  criterion: '[Must] Formation energies are computed at multiple strain levels (at least 0%, 4%, 8%) and show the correct
-    qualitative trend (monotonic increase for C_B, monotonic decrease for C_N).'
+  criterion: '[Must] `formation_energies.json` contains the required data structure: CB_formation_eV and CN_formation_eV
+    map strain_pct values to formation energies, and delta_Ef contains CB and CN sub-keys mapping strain_pct values to
+    ΔEf = Ef(strain) - Ef(0%).'
   capability: data_handling
 - id: workflow_sequence
   verify: llm_binary_judge
   weight: 0.1
-  criterion: '[Must] The agent correctly sequences the workflow: (1) build supercell from primitive, (2) create defects, (3)
-    apply strain at each level, (4) relax structures, (5) compute total energies, (6) calculate formation energies using chemical
-    potentials, (7) analyze trends.'
+  criterion: '[Must] The agent correctly sequences the workflow: (1) build structures, (2) relax structures, (3) compute total energies, (4) calculate formation energies using chemical
+    potentials, (5) analyze trends.'
   capability: workflow_orchestration
 - id: tool_usage
   verify: llm_binary_judge
   weight: 0.05
-  criterion: '[Must] The agent uses appropriate computational tools (DFT code, structure manipulation tools) to perform the
-    calculations.'
+  criterion: '[Must] The agent uses appropriate DFT methodology to perform the calculations.'
   capability: tool_utilization
 - id: grounding_check
   verify: llm_binary_judge

@@ -32,7 +32,16 @@ X-API-Token: <your-token>
 
 `/questions` endpoints need no authentication; only a valid `session_id` query parameter.
 
-**Tokens are issued by an admin via the web UI** (`http://localhost:8080`). You cannot self-register via the API.
+**Tokens are issued by an admin via the web UI** (`http://localhost:8080`) by default.
+For local development or testing, an operator may start the server with
+`--allow-token-registration`; only then can an external tool register a token:
+
+```bash
+TOKEN=$(curl -s -X POST "$API/token" | jq -r .token)
+export TOKEN
+```
+
+Do not enable token registration on a shared or internet-accessible server.
 
 ---
 
@@ -149,6 +158,7 @@ Submit your final answer and any output files as a multipart form.
   "answer": "<brief final answer text>",
   "num_turns": 5,
   "is_error": false,
+  "run_status": "completed",
   "usage": {
     "prompt_tokens": 12000,
     "completion_tokens": 3000,
@@ -165,6 +175,8 @@ Submit your final answer and any output files as a multipart form.
   ]
 }
 ```
+
+Use `"run_status": "timeout"` when execution exceeded its limit. Timeout submissions receive zero points.
 
 **curl example (with output files):**
 ```bash

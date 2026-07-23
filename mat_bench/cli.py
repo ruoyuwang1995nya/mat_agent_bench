@@ -11,9 +11,13 @@ Subcommands:
 from __future__ import annotations
 
 import argparse
+import logging
+from logging.handlers import RotatingFileHandler
 import os
 import sys
 from pathlib import Path
+
+import yaml
 
 
 def _add_question_config_arg(p: argparse.ArgumentParser) -> None:
@@ -166,6 +170,40 @@ def _load_env_file(path: str) -> None:
                 os.environ[key] = value
 
 
+def _resolve_server_log_level(
+    cli_level: str | None,
+    store_dir: Path,
+) -> str:
+    """Resolve logging level from CLI, environment, persistent config, then info."""
+    valid_levels = {"debug", "info", "warning", "error", "critical"}
+    configured_level: object = None
+    config_path = store_dir / "config.yaml"
+    if config_path.is_file():
+        try:
+            raw = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+        except (OSError, yaml.YAMLError) as exc:
+            print(f"warning: failed to read server config {config_path}: {exc}", file=sys.stderr)
+        else:
+            if isinstance(raw, dict):
+                server_config = raw.get("server", {})
+                configured_level = (
+                    server_config.get("log_level")
+                    if isinstance(server_config, dict)
+                    else None
+                ) or raw.get("log_level")
+
+    candidate = cli_level or os.environ.get("MAT_BENCH_LOG_LEVEL") or configured_level or "info"
+    level = str(candidate).lower()
+    if level not in valid_levels:
+        print(
+            f"warning: invalid log level {candidate!r}; using info "
+            "(valid: debug, info, warning, error, critical)",
+            file=sys.stderr,
+        )
+        return "info"
+    return level
+
+
 def _add_serve_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser(
         'serve',
@@ -305,11 +343,19 @@ def _add_serve_parser(subparsers: argparse._SubParsersAction) -> None:
         help='Parallel LLM judge calls per question checklist (default: 1).',
     )
     p.add_argument(
+        '--allow-token-registration',
+        action='store_true',
+        help=(
+            'Allow unauthenticated POST /bench/token requests. '
+            'Use only for local development or testing.'
+        ),
+    )
+    p.add_argument(
         '--log-level',
         type=str,
-        default='info',
+        default=None,
         choices=['debug', 'info', 'warning', 'error', 'critical'],
-        help='Uvicorn log level (default: info).',
+        help='Server log level; overrides MAT_BENCH_LOG_LEVEL and config.yaml.',
     )
     p.set_defaults(func=_cmd_serve)
 
@@ -367,6 +413,10 @@ def _cmd_serve(args: argparse.Namespace) -> None:
     print(f'Loaded {len(registry)} hosted questions from {qb_dir}', file=sys.stderr)
 
     store_dir = Path(args.store_dir) if args.store_dir else Path.home() / ".matbench"
+    log_level = _resolve_server_log_level(args.log_level, store_dir)
+    log_dir = store_dir / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    api_log_path = log_dir / "api-server.log"
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     output_dir = store_dir / 'runs' / f'serve_{timestamp}'
 
@@ -387,12 +437,14 @@ def _cmd_serve(args: argparse.Namespace) -> None:
         grading_workers=args.grading_workers,
         output_dir=output_dir,
         parallel_checklist_workers=args.parallel_checklist_workers,
+        allow_token_registration=args.allow_token_registration,
     )
 
     print(f'Starting mat-bench at http://{args.host}:{args.port}', file=sys.stderr)
     print(f'  UI:       http://{args.host}:{args.port}/', file=sys.stderr)
     print(f'  Guide:    http://{args.host}:{args.port}/guide', file=sys.stderr)
     print(f'  Bench API: http://{args.host}:{args.port}/bench', file=sys.stderr)
+    print(f'  API log:  {api_log_path} ({log_level.upper()})', file=sys.stderr)
     log_config = {
         "version": 1,
         "disable_existing_loggers": False,
@@ -420,15 +472,23 @@ def _cmd_serve(args: argparse.Namespace) -> None:
                 "class": "logging.StreamHandler",
                 "stream": "ext://sys.stdout",
             },
+            "api_file": {
+                "formatter": "default",
+                "class": "logging.handlers.RotatingFileHandler",
+                "filename": str(api_log_path),
+                "maxBytes": 10 * 1024 * 1024,
+                "backupCount": 5,
+                "encoding": "utf-8",
+            },
         },
         "loggers": {
-            "uvicorn": {"handlers": ["default"], "level": args.log_level.upper(), "propagate": False},
-            "uvicorn.error": {"handlers": ["default"], "level": args.log_level.upper(), "propagate": False},
-            "uvicorn.access": {"handlers": ["access"], "level": "DEBUG", "propagate": False},
-            "mat_bench": {"handlers": ["default"], "level": "INFO", "propagate": False},
+            "uvicorn": {"handlers": ["default", "api_file"], "level": log_level.upper(), "propagate": False},
+            "uvicorn.error": {"handlers": ["default", "api_file"], "level": log_level.upper(), "propagate": False},
+            "uvicorn.access": {"handlers": ["access", "api_file"], "level": log_level.upper(), "propagate": False},
+            "mat_bench": {"handlers": ["default", "api_file"], "level": log_level.upper(), "propagate": False},
         },
     }
-    uvicorn.run(app, host=args.host, port=args.port, log_level=args.log_level, log_config=log_config)
+    uvicorn.run(app, host=args.host, port=args.port, log_level=log_level, log_config=log_config)
 
 
 def _add_list_parser(subparsers: argparse._SubParsersAction) -> None:

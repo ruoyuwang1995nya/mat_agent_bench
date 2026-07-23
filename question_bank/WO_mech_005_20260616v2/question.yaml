@@ -59,7 +59,7 @@ scoring_checklist:
   capability: tool_utilization
   weight: 0.5
 - id: eos_required_tokens
-  criterion: EOS summary JSON includes required scan-range and fitted-property fields.
+  criterion: alloy_eos_summary.json includes `input_files`, `vol_start`, `vol_end`, `vol_step`, `fit_model`, `equilibrium_volume`, and `bulk_modulus`.
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5

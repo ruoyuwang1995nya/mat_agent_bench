@@ -75,7 +75,7 @@ scoring_checklist:
   capability: data_handling
   weight: 0.5
 - id: report_required_tokens
-  criterion: Retrieval report states filter constraints, candidate-count handling, and uncertainty note.
+  criterion: The retrieval report `oxide_bg_gt2_report.md` states filter constraints, candidate count, and uncertainty note.
   verify: llm_binary_judge
   capability: data_handling
   weight: 0.5

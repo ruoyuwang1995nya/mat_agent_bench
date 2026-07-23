@@ -18,6 +18,8 @@ from .structure import (
     check_file_count,
     check_formula,
     check_layer_count,
+    check_min_interatomic_distance,
+    check_space_group,
     check_stoichiometry_ratio,
     check_surface_termination,
 )
@@ -42,6 +44,8 @@ __all__ = [
     'check_file_count',
     'check_formula',
     'check_layer_count',
+    'check_min_interatomic_distance',
+    'check_space_group',
     'check_stoichiometry_ratio',
     'check_surface_termination',
     'check_disorder_dan2_integer_formula',

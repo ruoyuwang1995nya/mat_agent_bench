@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any
 
 from .checks import (
     build_llm_context,
+    check_answer_json_numeric_from_evidence,
     check_atomworld_active_task_from_evidence,
     check_batch_consistent_calls,
     check_batch_single_variable_sweep,
@@ -36,6 +37,8 @@ from .checks import (
     check_struct_file_count,
     check_struct_file_formula,
     check_struct_file_layer_count,
+    check_struct_file_min_interatomic_distance,
+    check_struct_file_space_group,
     check_struct_file_stoichiometry_ratio,
     check_struct_file_surface_termination,
     check_text_file_contains_all_from_evidence,
@@ -115,6 +118,40 @@ class BinaryEvaluator:
         if token_usage is None:
             token_usage = TokenUsageRecord()
 
+        checklist = question_item.scoring_checklist
+        if run_status == 'timeout':
+            criteria_results = {
+                item.id: CriterionResult(
+                    criterion_id=item.id,
+                    capability=item.capability,
+                    passed=False,
+                    reason='run timed out before evaluation completed',
+                    verify_method=item.verify,
+                )
+                for item in checklist
+            }
+            return EvalRunRecord(
+                question_id=question_item.id,
+                capabilities=list(question_item.capabilities),
+                task_type=question_item.task_type,
+                domain=question_item.domain,
+                mode=mode,  # type: ignore[arg-type]
+                repeat_idx=repeat_idx,
+                prompt=prompt,
+                answer=answer,
+                run_status=run_status,
+                criteria_results=criteria_results,
+                passed_count=0,
+                total_count=len(checklist),
+                overall_weighted_score=0.0,
+                model_name=model_name,
+                token_usage=token_usage,
+                tool_calls=tool_calls,
+                safety_veto=SafetyVetoRecord(),
+                created_at=datetime.now(timezone.utc),
+                duration_ms=int(duration_ms),
+            )
+
         # Regular questions: evaluate each checklist item
         ref_map = {item.key: item for item in question_item.reference_answers}
         criteria_results = {}
@@ -123,7 +160,6 @@ class BinaryEvaluator:
         total_count = 0
         failed_weight = 0.0
 
-        checklist = question_item.scoring_checklist
         use_parallel = self._parallel_checklist_workers > 1 and len(checklist) > 1
 
         if not use_parallel:
@@ -339,6 +375,10 @@ class BinaryEvaluator:
             'struct_file_stoichiometry_ratio': check_struct_file_stoichiometry_ratio,
             'struct_file_coordination': check_struct_file_coordination,
             'struct_file_layer_count': check_struct_file_layer_count,
+            'struct_file_min_interatomic_distance': (
+                check_struct_file_min_interatomic_distance
+            ),
+            'struct_file_space_group': check_struct_file_space_group,
             'struct_file_count': check_struct_file_count,
             'struct_file_surface_termination': check_struct_file_surface_termination,
         }
@@ -352,6 +392,7 @@ class BinaryEvaluator:
             'text_file_kpt_path': check_text_file_kpt_path_from_evidence,
             'text_file_numeric_range': check_text_file_numeric_range_from_evidence,
             'text_file_regex': check_text_file_regex_from_evidence,
+            'answer_json_numeric': check_answer_json_numeric_from_evidence,
         }
         if item.verify in _TEXT_FILE_DISPATCH:
             if ref is None:

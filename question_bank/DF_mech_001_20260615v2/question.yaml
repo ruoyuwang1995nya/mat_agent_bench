@@ -6,8 +6,8 @@ capabilities:
 domain: agnostic
 difficulty: easy
 intent: Fit equation of state from provided E-V data and report V0 and B0.
-human_prompt_seed: Use the E-V data in `ev_curve.json` to fit the Birch-Murnaghan equation of state, and report V0 (A3)
-  and B0 (GPa).
+human_prompt_seed: Use the E-V data in `ev_curve.json` to fit the Birch-Murnaghan equation of state, and report V0 (A3),
+  B0 (GPa), and some measure of fit quality such as R-squared, residuals, or a similar metric.
 tags:
 - phy_eos
 data_files:

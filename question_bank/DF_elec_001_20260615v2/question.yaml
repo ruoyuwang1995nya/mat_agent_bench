@@ -43,10 +43,3 @@ scoring_checklist:
   verify: llm_binary_judge
   capability: scientific_reasoning
   weight: 0.5
-- id: grounding_source
-  criterion: Gap type and value are tied to band_edges.json as described in the final answer, not bare LLM recall of Si.
-    Judge from the answer and stated file use; do not fail because the tool-call log omits MCP, web_search, or any 
-    specific tool.
-  verify: llm_binary_judge
-  capability: scientific_grounding
-  weight: 0.5

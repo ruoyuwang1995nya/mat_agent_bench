@@ -134,6 +134,7 @@ def create_app(
     grading_workers: int = 4,
     output_dir: Path | None = None,
     parallel_checklist_workers: int = 1,
+    allow_token_registration: bool = False,
 ) -> FastAPI:
     """Create and return the UI FastAPI application.
 
@@ -159,6 +160,7 @@ def create_app(
             grading_workers=grading_workers,
             store_dir=store,
             parallel_checklist_workers=parallel_checklist_workers,
+            allow_token_registration=allow_token_registration,
         )
         _backend_url = ""
     else:

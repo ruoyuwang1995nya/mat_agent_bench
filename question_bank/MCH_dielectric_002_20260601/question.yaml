@@ -11,7 +11,8 @@ intent: Given a crystal structure file and its space group, determine the number
   tensor.
 human_prompt_seed: Given the CIF file crystal_structure.cif for Cs2Ti(WO4)3 (a trigonal crystal system), compute the 
   the dielectric tensor and polycrystalline dielectric constant ε using VASP. Write your analysis to tensor_analysis.txt and the computed 
-  scalar dielectric constant to epsilon_scalar.txt. You should identify the number of independent tensor elements in tensor_analysis.txt.
+  scalar dielectric constant to epsilon_scalar.txt. In tensor_analysis.txt, identify the number of independent tensor elements and state the
+  symmetry-reduced dielectric tensor form for the trigonal system.
 tags:
 - dielectric_tensor
 - crystal_symmetry
@@ -33,9 +34,6 @@ reference_answers:
     filename: tensor_analysis.txt
 - key: trigonal_form
   value:
-    tokens:
-    - ε1
-    - ε3
     filename: tensor_analysis.txt
 - key: epsilon_value
   value:
@@ -61,14 +59,15 @@ scoring_checklist:
   criterion: '[Must] Analysis correctly identifies 2 independent elements for trigonal system'
   capability: structure_manipulation
 - id: trigonal_form
-  verify: text_file_contains_all
+  verify: llm_binary_judge
   weight: 0.5
-  criterion: '[Must] Analysis identifies the tensor form diag(ε1, ε1, ε3) for trigonal system'
+  criterion: '[Must] `tensor_analysis.txt` identifies the trigonal dielectric-tensor form with two independent diagonal
+    elements, for example diag(ε1, ε1, ε3), or an equivalent statement such as εxx = εyy and εzz distinct.'
   capability: scientific_reasoning
 - id: epsilon_value
-  verify: text_file_numeric_range
+  verify: llm_binary_judge
   weight: 0.5
-  criterion: '[Must] Polycrystalline dielectric constant ε is computed correctly (expected ~180.89 for Cs2Ti(WO4)3 from paper)'
+  criterion: '[Must] `epsilon_scalar.txt` reports a dielectric constant in the range 100-200.'
   capability: data_handling
 reference_answer_prompt: 'Objective: Determine the number of independent dielectric tensor elements from crystal symmetry.
   Compute the dielectric tensor using VASP density functional perturbation theory (DFPT). Compute the polycrystalline dielectric

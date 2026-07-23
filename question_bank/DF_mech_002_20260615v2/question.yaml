@@ -8,9 +8,11 @@ difficulty: easy
 intent: From MSST Hugoniot simulation data, fit the P-V Hugoniot curve and determine C-J detonation velocity and 
   pressure for RDX.
 human_prompt_seed: 'Read `msst_hugoniot.json`, which contains MSST simulation data for RDX at different shock-wave velocities
-  (pressure, specific volume, temperature, and whether reaction is complete). Filter the fully reacted data points, fit
-  the P-V Hugoniot curve, determine the Chapman-Jouguet (C-J) point using the Rayleigh-line tangent method, and report
-  the C-J detonation velocity (m/s) and detonation pressure (GPa).
+  (pressure, specific volume, temperature, and whether reaction is complete). Filter the fully reacted data points, show
+  the filtered reaction-complete points used in the analysis, fit the P-V Hugoniot curve, determine the Chapman-Jouguet
+  (C-J) point using the Rayleigh-line tangent method, and report the C-J detonation velocity (m/s) and detonation
+  pressure (GPa). In the final answer, explicitly list or summarize the filtered fully reacted MSST points used for the
+  Hugoniot fit.
 
   '
 tags:

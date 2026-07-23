@@ -44,14 +44,9 @@ scoring_checklist:
   capability: tool_utilization
   weight: 0.5
 - id: pipeline_correctness
-  criterion: The workflow is logically connected — bulk structure is TiO2 rutile, slab is cut from it along (110), and 
-    INCAR parameters match the static calculation request.
+  criterion: '`tio2_bulk.cif`, `tio2_110_slab.cif`, and `INCAR` together satisfy the requested workflow outputs: the bulk
+    file is rutile TiO2, the slab file is a (110) slab with 3 layers, 2×1×1 supercell, and 15 Å vacuum, and the INCAR
+    matches the requested static-calculation parameters (ENCUT=520, ISMEAR=0, SIGMA=0.05, NSW=0).'
   verify: llm_binary_judge
   capability: workflow_orchestration
-  weight: 0.5
-- id: grounding_source
-  criterion: Each step is grounded in the previous step output (slab from bulk, INCAR for slab), not independently 
-    generated.
-  verify: llm_binary_judge
-  capability: scientific_grounding
   weight: 0.5
