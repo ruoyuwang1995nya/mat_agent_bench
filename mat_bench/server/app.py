@@ -8,16 +8,22 @@ Endpoints::
     GET  /                                Bench API info (version, guide link)
     GET  /guide                           Agent HTTP API reference (plain text, no auth)
     POST /sessions                        Create a new session (requires X-API-Token header)
-    GET  /questions                       List questions (filters: capability, task_type, domain, tags, limit)
+    GET  /questions                       List questions (filters: capability, task_type, domain, tags, bank_id, limit)
     GET  /questions/{id}                  Full question details + data file list (requires session_id; starts duration timer)
     GET  /questions/{id}/data/{fname}     Download a data file
+    GET  /question-banks                  List hosted question banks (official + custom)
+    GET  /question-banks/{bank_id}        Bank metadata + hosted question IDs
+    POST /question-banks                  Create a new custom question bank (requires X-API-Token header)
+    POST /question-banks/{bank_id}/questions  Add a question to a custom bank (requires X-API-Token header, multipart)
     POST /submit/{id}?session_id=S0001    Submit result files + metadata (multipart)
     GET  /results/{id}                    Grading result(s) for one question
     GET  /results                         Summary of all submitted results
 
 Authentication:
-    All /submit and /results endpoints require the X-API-Token header.
-    Obtain a token from the web UI, then create a session via POST /sessions.
+    All /submit, /results, and /question-banks write endpoints require the
+    X-API-Token header. Obtain a token from the web UI, then create a
+    session via POST /sessions. Question bank management additionally
+    requires the server to be started with --allow-bank-management.
 
 Submission form fields:
     meta      JSON string with answer, model_name, num_turns, duration_ms,
@@ -59,9 +65,9 @@ from ..evaluation.evidence import (
 )
 from ..evaluation.grade import grade_question
 from ..harness import build_token_usage_record
-from ..registry import Registry
+from ..registry import BankManager, BankMeta, Registry
 from ..reporting.aggregator import build_summary
-from ..schemas import EvalRunRecord, LLMConfig, TokenUsageRecord
+from ..schemas import EvalRunRecord, LLMConfig, QuestionItem, TokenUsageRecord
 
 # ---------------------------------------------------------------------------
 # Server-internal models
@@ -112,11 +118,13 @@ class RunRecord(BaseModel):
 # ---------------------------------------------------------------------------
 
 _registry: Registry | None = None
+_bank_manager: BankManager | None = None
 _llm_cfg: LLMConfig | None = None
 _output_dir: Path | None = None
 _grading_executor: ThreadPoolExecutor | None = None
 _parallel_checklist_workers: int = 1
 _allow_token_registration: bool = False
+_allow_bank_management: bool = False
 
 _tokens: dict[str, TokenRecord] = {}
 _tokens_lock = threading.Lock()
@@ -170,13 +178,23 @@ def init_server(
     parallel_checklist_workers: int = 1,
     max_submissions_per_question: int = 1,
     allow_token_registration: bool = False,
+    bank_manager: BankManager | None = None,
+    allow_bank_management: bool = False,
 ) -> None:
-    """Initialise server state. Must be called before uvicorn.run()."""
-    global _registry, _llm_cfg, _output_dir, _results, _grading_executor
+    """Initialise server state. Must be called before uvicorn.run().
+
+    ``registry`` is the (possibly merged) read-only question view used to
+    serve /questions*. Pass ``bank_manager`` as well to additionally enable
+    the /question-banks admin endpoints for creating custom banks and
+    adding questions to them at runtime.
+    """
+    global _registry, _bank_manager, _llm_cfg, _output_dir, _results, _grading_executor
     global _token_store, _session_store, _task_starts, _run_task_starts
     global _parallel_checklist_workers, _runs, _allow_token_registration
     global _grading_pending, _submission_counts, _max_submissions_per_question
+    global _allow_bank_management
     _registry = registry
+    _bank_manager = bank_manager
     _llm_cfg = llm_cfg
     _output_dir = output_dir
     _results = {}
@@ -188,6 +206,7 @@ def init_server(
     _max_submissions_per_question = max(0, int(max_submissions_per_question))
     _parallel_checklist_workers = max(1, int(parallel_checklist_workers))
     _allow_token_registration = allow_token_registration
+    _allow_bank_management = allow_bank_management
     output_dir.mkdir(parents=True, exist_ok=True)
 
     from .store import TokenStore, SessionStore
@@ -237,9 +256,13 @@ def create_token_direct() -> dict:
 
 
 def _require_registry() -> Registry:
+    if _bank_manager is not None:
+        return _bank_manager.combined_registry()
     if _registry is None:
         raise RuntimeError("Server not initialised — call init_server() first.")
     return _registry
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -324,6 +347,26 @@ try:
             if x_api_token not in _tokens:
                 raise HTTPException(401, detail="Invalid or unknown API token")
         return x_api_token
+
+    def _require_bank_manager() -> BankManager:
+        """Return the active BankManager, or raise if bank management is disabled."""
+        if _bank_manager is None:
+            raise HTTPException(
+                501,
+                detail=(
+                    "Custom question banks are not enabled on this server. "
+                    "Start it with a question-banks store directory configured."
+                ),
+            )
+        if not _allow_bank_management:
+            raise HTTPException(
+                403,
+                detail=(
+                    "Question bank management is disabled. Start the server with "
+                    "--allow-bank-management to create banks or add questions."
+                ),
+            )
+        return _bank_manager
 
     # ------------------------------------------------------------------
     # Token & session endpoints
@@ -565,6 +608,7 @@ try:
         task_type: str | None = None,
         domain: str | None = None,
         tags: list[str] | None = Query(default=None),
+        bank_id: str | None = Query(default=None, description="Restrict to questions from a single question bank"),
         q: str | None = Query(default=None, description="Case-insensitive search across ID, intent, domain, capabilities, and tags"),
         offset: int = Query(default=0, ge=0),
         limit: int | None = Query(default=None, ge=1, le=500),
@@ -576,6 +620,7 @@ try:
             task_type=task_type,
             domain=domain,
             tags=tags,
+            bank_id=bank_id,
         )
         if q and q.strip():
             needle = q.strip().casefold()
@@ -593,6 +638,7 @@ try:
         return [
             {
                 "id": q.id,
+                "bank_id": q.bank_id,
                 "capability": q.capability,
                 "task_type": q.task_type,
                 "domain": q.domain,
@@ -629,6 +675,7 @@ try:
 
         return {
             "id": q.id,
+            "bank_id": q.bank_id,
             "capability": q.capability,
             "domain": q.domain,
             "intent": q.intent,
@@ -661,6 +708,107 @@ try:
                 404, detail=f"Data file '{fname}' not found for '{question_id}'"
             )
         return FileResponse(str(file_path), filename=file_path.name)
+
+    # ------------------------------------------------------------------
+    # Question bank management endpoints (requires token + bank management)
+    # ------------------------------------------------------------------
+
+    @app.get("/question-banks")
+    async def list_question_banks() -> list[dict]:
+        """List all hosted question banks (official + custom) with question counts."""
+        manager = _bank_manager
+        if manager is None:
+            return []
+        return manager.list_banks()
+
+    @app.get("/question-banks/{bank_id}")
+    async def get_question_bank(bank_id: str) -> dict:
+        """Get metadata and question IDs for one question bank."""
+        manager = _bank_manager
+        if manager is None:
+            raise HTTPException(404, detail=f"Question bank '{bank_id}' not found")
+        try:
+            meta = manager.get_bank_meta(bank_id)
+            registry = manager.get_registry(bank_id)
+        except KeyError as exc:
+            raise HTTPException(404, detail=str(exc))
+        return {**meta.to_dict(), "question_ids": registry.list_question_ids()}
+
+    @app.post("/question-banks", status_code=201)
+    async def create_question_bank(
+        name: str = Body(..., embed=True, description="Human-readable bank name"),
+        description: str = Body(default="", embed=True),
+        bank_id: str | None = Body(default=None, embed=True, description="Optional explicit bank id (slug)"),
+        token: str = Depends(_require_token),
+    ) -> dict:
+        """Create a new, empty custom question bank."""
+        manager = _require_bank_manager()
+        try:
+            meta = manager.create_bank(name=name, description=description, bank_id=bank_id)
+        except ValueError as exc:
+            raise HTTPException(400, detail=str(exc))
+        return meta.to_dict()
+
+    @app.post("/question-banks/{bank_id}/questions", status_code=201)
+    async def add_bank_question(
+        bank_id: str,
+        request: Request,
+        token: str = Depends(_require_token),
+    ) -> dict:
+        """Add a new question to a custom question bank.
+
+        Multipart form fields:
+            question   JSON string of a full QuestionItem (id, task_type,
+                       capabilities, domain, intent, human_prompt_seed,
+                       scoring_checklist, optional data_files, etc.)
+            <any>      Optional data files; the filename attribute must match
+                       one of question.data_files[*].path.
+        """
+        manager = _require_bank_manager()
+        try:
+            form_data = await request.form()
+        except Exception as exc:
+            raise HTTPException(400, detail=f"Failed to parse form data: {exc}")
+
+        question_raw = form_data.get("question")
+        if not isinstance(question_raw, str) or not question_raw.strip():
+            raise HTTPException(400, detail="'question' form field (JSON) is required")
+        try:
+            question_dict = json.loads(question_raw)
+        except json.JSONDecodeError as exc:
+            raise HTTPException(400, detail=f"Invalid 'question' JSON: {exc}")
+        try:
+            question_item = QuestionItem.model_validate(question_dict)
+        except Exception as exc:
+            raise HTTPException(422, detail=f"Invalid question payload: {exc}")
+
+        data_files: dict[str, bytes] = {}
+        for field, value in form_data.multi_items():
+            if field == "question":
+                continue
+            if hasattr(value, "filename") and value.filename:
+                content = await value.read()  # type: ignore[union-attr]
+                if len(content) > _MAX_ARTIFACT_BYTES:
+                    raise HTTPException(413, detail=f"data file exceeds {_MAX_ARTIFACT_BYTES} byte limit")
+                data_files[value.filename] = content  # type: ignore[union-attr]
+
+        try:
+            question = manager.add_question(bank_id, question_item, data_files)
+        except KeyError as exc:
+            raise HTTPException(404, detail=str(exc))
+        except PermissionError as exc:
+            raise HTTPException(403, detail=str(exc))
+        except ValueError as exc:
+            raise HTTPException(400, detail=str(exc))
+
+        return {
+            "id": question.id,
+            "bank_id": question.bank_id,
+            "capability": question.capability,
+            "task_type": question.task_type,
+            "domain": question.domain,
+        }
+
 
     # ------------------------------------------------------------------
     # Submission endpoint

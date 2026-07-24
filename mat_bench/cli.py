@@ -228,8 +228,14 @@ def _add_serve_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument(
         '--question-bank-dir',
         type=str,
+        nargs='*',
         default=None,
-        help='Path to question_bank directory (default: question_bank next to the package).',
+        metavar='DIR',
+        help=(
+            'Path(s) to official question_bank directory/directories '
+            '(default: question_bank next to the package). Accepts multiple '
+            'paths to host several official banks at once.'
+        ),
     )
     _add_question_config_arg(p)
     p.add_argument(
@@ -351,6 +357,15 @@ def _add_serve_parser(subparsers: argparse._SubParsersAction) -> None:
         ),
     )
     p.add_argument(
+        '--allow-bank-management',
+        action='store_true',
+        help=(
+            'Enable POST /question-banks and POST /question-banks/{id}/questions '
+            'so authenticated clients can create custom question banks and add '
+            'questions to them at runtime.'
+        ),
+    )
+    p.add_argument(
         '--log-level',
         type=str,
         default=None,
@@ -372,18 +387,28 @@ def _cmd_serve(args: argparse.Namespace) -> None:
         )
         sys.exit(1)
 
-    from .registry import Registry
+    from .registry import BankManager
     from .harness import parse_llm_judge_config
     from .ui.app import create_app
     from datetime import datetime
 
     _REPO_ROOT = Path(__file__).resolve().parent.parent
 
-    qb_dir = Path(args.question_bank_dir) if args.question_bank_dir else _REPO_ROOT / "question_bank"
-    if not qb_dir.is_absolute():
-        qb_dir = _REPO_ROOT / qb_dir
+    if args.question_bank_dir:
+        qb_dirs = [Path(d) for d in args.question_bank_dir]
+    else:
+        qb_dirs = [_REPO_ROOT / "question_bank"]
+    qb_dirs = [d if d.is_absolute() else _REPO_ROOT / d for d in qb_dirs]
 
-    registry = Registry(qb_dir)
+    store_dir = Path(args.store_dir) if args.store_dir else Path.home() / ".matbench"
+    banks_root = store_dir / "question_banks"
+
+    try:
+        bank_manager = BankManager(official_dirs=qb_dirs, banks_root=banks_root)
+    except FileNotFoundError as exc:
+        print(f'error: {exc}', file=sys.stderr)
+        sys.exit(1)
+    registry = bank_manager.combined_registry()
     registry, config_path = _apply_question_config_or_exit(registry, args.question_config)
     if config_path is not None:
         print(f'Applied question config: {config_path}', file=sys.stderr)
@@ -410,9 +435,13 @@ def _cmd_serve(args: argparse.Namespace) -> None:
     if len(registry) == 0:
         print('error: no questions selected to host', file=sys.stderr)
         sys.exit(1)
-    print(f'Loaded {len(registry)} hosted questions from {qb_dir}', file=sys.stderr)
+    bank_summary = ', '.join(str(d) for d in qb_dirs)
+    print(
+        f'Loaded {len(registry)} hosted questions from official bank(s) [{bank_summary}] '
+        f'and any custom banks under {banks_root}',
+        file=sys.stderr,
+    )
 
-    store_dir = Path(args.store_dir) if args.store_dir else Path.home() / ".matbench"
     log_level = _resolve_server_log_level(args.log_level, store_dir)
     log_dir = store_dir / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
@@ -430,14 +459,16 @@ def _cmd_serve(args: argparse.Namespace) -> None:
             sys.exit(1)
 
     app = create_app(
-        question_bank_dir=qb_dir,
+        question_bank_dir=qb_dirs[0],
         store_dir=store_dir,
         registry=registry,
+        bank_manager=bank_manager,
         llm_cfg=llm_cfg,
         grading_workers=args.grading_workers,
         output_dir=output_dir,
         parallel_checklist_workers=args.parallel_checklist_workers,
         allow_token_registration=args.allow_token_registration,
+        allow_bank_management=args.allow_bank_management,
     )
 
     print(f'Starting mat-bench at http://{args.host}:{args.port}', file=sys.stderr)

@@ -38,6 +38,7 @@ class Question:
 
     item: QuestionItem
     question_dir: Path
+    bank_id: str = 'default'
 
     @property
     def id(self) -> str:
@@ -85,25 +86,57 @@ class Registry:
         ids = registry.list_question_ids()
     """
 
-    def __init__(self, question_bank_dir: str | Path) -> None:
+    def __init__(self, question_bank_dir: str | Path, *, bank_id: str = 'default') -> None:
         self._root = Path(question_bank_dir).resolve()
         if not self._root.is_dir():
             raise FileNotFoundError(
                 f'question_bank directory not found: {self._root}'
             )
+        self._bank_id = bank_id
         self._questions: dict[str, Question] = {}
         self._load()
+
+    @property
+    def bank_id(self) -> str:
+        return self._bank_id
 
     @classmethod
     def from_questions(
         cls,
         question_bank_dir: str | Path,
         questions: Iterable[Question],
+        *,
+        bank_id: str = 'default',
     ) -> Registry:
         """Create a registry view backed by a selected set of questions."""
         registry = cls.__new__(cls)
         registry._root = Path(question_bank_dir).resolve()
+        registry._bank_id = bank_id
         registry._questions = {q.id: q for q in questions}
+        return registry
+
+    @classmethod
+    def merge(cls, registries: Iterable[Registry], *, bank_id: str = '*') -> Registry:
+        """Combine multiple bank registries into one read-only view.
+
+        Raises ``ValueError`` if two banks define the same question id.
+        """
+        merged: dict[str, Question] = {}
+        roots: list[Path] = []
+        for reg in registries:
+            roots.append(reg._root)
+            for qid, question in reg._questions.items():
+                if qid in merged and merged[qid].bank_id != question.bank_id:
+                    raise ValueError(
+                        f'question id {qid!r} exists in multiple banks: '
+                        f'{merged[qid].bank_id!r} and {question.bank_id!r}'
+                    )
+                merged[qid] = question
+        root = roots[0] if roots else Path('.')
+        registry = cls.__new__(cls)
+        registry._root = root
+        registry._bank_id = bank_id
+        registry._questions = merged
         return registry
 
     def _load(self) -> None:
@@ -130,7 +163,7 @@ class Registry:
             _logger.warning('failed to validate %s: %s', path, exc)
             return
 
-        question = Question(item=item, question_dir=path.parent)
+        question = Question(item=item, question_dir=path.parent, bank_id=self._bank_id)
         if item.id in self._questions:
             _logger.warning('duplicate question id: %s', item.id)
         self._questions[item.id] = question
@@ -159,6 +192,7 @@ class Registry:
         task_type: str | None = None,
         domain: str | None = None,
         tags: list[str] | None = None,
+        bank_id: str | None = None,
     ) -> list[Question]:
         """List questions with optional filters."""
         results = list(self._questions.values())
@@ -171,6 +205,8 @@ class Registry:
         if tags:
             tag_set = set(tags)
             results = [q for q in results if tag_set.issubset(set(q.tags))]
+        if bank_id:
+            results = [q for q in results if q.bank_id == bank_id]
         return sorted(results, key=lambda q: q.id)
 
     def filtered(
@@ -232,7 +268,7 @@ class Registry:
         ]
         if limit is not None:
             questions = questions[:limit]
-        return Registry.from_questions(self._root, questions)
+        return Registry.from_questions(self._root, questions, bank_id=self._bank_id)
 
     def _validate_question_ids(self, question_ids: list[str]) -> None:
         missing = [qid for qid in question_ids if qid not in self._questions]
@@ -292,4 +328,4 @@ class Registry:
         return question_id in self._questions
 
     def __repr__(self) -> str:
-        return f'Registry({self._root}, {len(self._questions)} questions)'
+        return f'Registry({self._root}, bank_id={self._bank_id!r}, {len(self._questions)} questions)'

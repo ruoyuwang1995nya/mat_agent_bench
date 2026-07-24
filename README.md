@@ -109,7 +109,58 @@ The public API also exposes the question list:
 
 ```bash
 curl -sS http://127.0.0.1:8080/bench/questions
+curl -sS "http://127.0.0.1:8080/bench/questions?bank_id=question_bank"
 ```
+
+## Question Banks
+
+Questions are organized into **banks**. The server always hosts one or more
+read-only **official** banks (given via `--question-bank-dir`, defaulting to
+the bundled `question_bank/`). It can also host **custom** banks that are
+created and populated at runtime through the API — useful for private or
+experimental question sets without touching the repository.
+
+Custom banks are stored under `<store-dir>/question_banks/` and are
+rediscovered automatically every time the server restarts, so questions
+added through the API persist across restarts.
+
+Custom bank management is disabled by default. Start the server with
+`--allow-bank-management` to enable it:
+
+```bash
+mat-bench serve --allow-token-registration --allow-bank-management
+```
+
+List hosted banks (no auth required):
+
+```bash
+curl -sS http://127.0.0.1:8080/bench/question-banks
+curl -sS http://127.0.0.1:8080/bench/question-banks/<bank_id>
+```
+
+Create a new custom bank:
+
+```bash
+curl -sS -X POST http://127.0.0.1:8080/bench/question-banks \
+  -H "X-API-Token: $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "My Custom Bank", "description": "internal question set"}'
+```
+
+Add a question to a custom bank. The `question` field is a JSON document
+with the same fields as a `question.yaml` file; any referenced data files
+are attached as additional form fields keyed by filename:
+
+```bash
+curl -sS -X POST http://127.0.0.1:8080/bench/question-banks/My_Custom_Bank/questions \
+  -H "X-API-Token: $TOKEN" \
+  -F 'question={"id":"MY_001","task_type":"search_and_interpretation","capabilities":["scientific_reasoning"],"domain":"agnostic","intent":"...","human_prompt_seed":"...","scoring_checklist":[{"id":"c1","criterion":"...","verify":"artifact_exists"}]}' \
+  -F "input.txt=@./input.txt"
+```
+
+Questions added this way are immediately available through `/bench/questions`
+and `/bench/questions/{id}` — no server restart required. Official banks are
+read-only; attempting to add a question to one returns `403`.
 
 ## Run an Agent Through the API
 
@@ -195,11 +246,11 @@ Run `mat-bench serve --help` for the authoritative option list. The primary opti
 ```text
 --host HOST                    Bind address (default: 0.0.0.0)
 --port PORT                    Listening port (default: 8080)
---question-bank-dir DIR        Question-bank directory
+--question-bank-dir DIR [...]  Official question-bank directory/directories
 --question-config FILE         Question configuration file
 ```
 
-When `--question-config` is omitted, the server uses `~/.matbench/questions.yaml` when it exists. Otherwise, it resolves the repository's bundled `question_bank` directory.
+When `--question-config` is omitted, the server uses `~/.matbench/questions.yaml` when it exists. Otherwise, it resolves the repository's bundled `question_bank` directory. `--question-bank-dir` accepts multiple paths to host several official banks at once; custom banks created via the API are always discovered from `<store-dir>/question_banks/` in addition to the official ones.
 
 ### Question selection
 
@@ -227,6 +278,7 @@ When `--question-config` is omitted, the server uses `~/.matbench/questions.yaml
 --grading-workers N            Parallel grading workers (default: 4)
 --parallel-checklist-workers N Parallel checklist evaluators (default: 1)
 --allow-token-registration     Enable development token registration
+--allow-bank-management        Enable POST /question-banks and add-question endpoints
 ```
 
 Each server invocation creates its run output beneath `~/.matbench/runs/serve_<timestamp>`. Logging-level precedence is `--log-level`, `MAT_BENCH_LOG_LEVEL`, `~/.matbench/config.yaml`, then `info`.

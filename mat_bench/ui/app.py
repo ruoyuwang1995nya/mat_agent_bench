@@ -130,16 +130,20 @@ def create_app(
     store_dir: Path | None = None,
     backend_url: str = "http://localhost:8765",
     registry=None,
+    bank_manager=None,
     llm_cfg=None,
     grading_workers: int = 4,
     output_dir: Path | None = None,
     parallel_checklist_workers: int = 1,
     allow_token_registration: bool = False,
+    allow_bank_management: bool = False,
 ) -> FastAPI:
     """Create and return the UI FastAPI application.
 
     When *registry* is supplied the benchmark backend is mounted at ``/bench``
-    on the same process — no separate backend server is needed.
+    on the same process — no separate backend server is needed. Pass
+    *bank_manager* as well to enable the /bench/question-banks admin
+    endpoints for creating custom question banks at runtime.
     """
     _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
     qb_dir = Path(question_bank_dir or _REPO_ROOT / "question_bank")
@@ -155,12 +159,14 @@ def create_app(
         _out_dir = output_dir or (store / 'runs' / f'serve_{_ts}')
         init_server(
             registry=registry,
+            bank_manager=bank_manager,
             output_dir=_out_dir,
             llm_cfg=llm_cfg,
             grading_workers=grading_workers,
             store_dir=store,
             parallel_checklist_workers=parallel_checklist_workers,
             allow_token_registration=allow_token_registration,
+            allow_bank_management=allow_bank_management,
         )
         _backend_url = ""
     else:
@@ -169,6 +175,8 @@ def create_app(
         _backend_url = backend_url.rstrip("/")
 
     def _question_registry() -> Registry:
+        if bank_manager is not None:
+            return bank_manager.combined_registry()
         if registry is not None:
             return registry
         return Registry(qb_dir)
