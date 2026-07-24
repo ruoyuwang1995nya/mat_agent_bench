@@ -49,6 +49,7 @@ Lists hosted questions. No authentication is required.
 | `task_type` | string | Match the task type. |
 | `domain` | string | Match the domain. |
 | `tags` | repeated string | Require all supplied tags. |
+| `bank_id` | string | Restrict results to one hosted question bank (see [Question bank management](#question-bank-management)). |
 | `q` | string | Case-insensitive search across ID, intent, domain, capability, and tags. |
 | `offset` | integer | Zero-based page offset; default `0`. |
 | `limit` | integer | Maximum results; from `1` through `500`. |
@@ -57,7 +58,7 @@ Lists hosted questions. No authentication is required.
 curl -s "$API/questions?q=ZnO&domain=catalysis&limit=10" | jq .
 ```
 
-Each item includes `id`, `capability`, `domain`, `intent`, and `tags`.
+Each item includes `id`, `bank_id`, `capability`, `domain`, `intent`, and `tags`.
 
 ### `GET /questions/{question_id}/data/{fname}`
 
@@ -66,6 +67,75 @@ Downloads an input file by its data-file key, declared path, or basename. No aut
 ```bash
 curl -s "$API/questions/$QUESTION_ID/data/$FILENAME" -o "$FILENAME"
 ```
+
+## Question bank management
+
+A server can host one read-only official bank (loaded from `--question-bank-dir`
+at startup) plus any number of writable custom banks. Custom banks are only
+available when the server is started with a store directory and
+`--allow-bank-management`; they persist under `<store-dir>/question_banks/`
+and survive restarts. Writes additionally require the `X-API-Token` header.
+
+### `GET /question-banks`
+
+Lists every hosted bank (official + custom) with its question count. No authentication is required.
+
+```bash
+curl -s "$API/question-banks" | jq .
+```
+
+Each item includes `bank_id`, `name`, `description`, `source` (`official` or `custom`), `created_at`, and `question_count`.
+
+### `GET /question-banks/{bank_id}`
+
+Returns one bank's metadata plus the IDs of its hosted questions. No authentication is required.
+
+```bash
+curl -s "$API/question-banks/$BANK_ID" | jq .
+```
+
+Returns `404` if `bank_id` does not exist.
+
+### `POST /question-banks`
+
+Creates a new, empty custom question bank. Authentication is required, and the server must be started with `--allow-bank-management`.
+
+```bash
+curl -s -X POST "$API/question-banks" \
+  -H "X-API-Token: $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"My Custom Bank","description":"Optional description","bank_id":"my-custom-bank"}' | jq .
+```
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `name` | string | Required human-readable bank name. |
+| `description` | string | Optional description; defaults to empty. |
+| `bank_id` | string | Optional explicit slug; derived from `name` when omitted. |
+
+Returns `400` if `name` is empty or `bank_id` already exists. Returns `403` if bank management is disabled, or `501` if the server has no bank store configured.
+
+### `POST /question-banks/{bank_id}/questions`
+
+Adds one question, with optional data files, to a custom bank. Authentication is required, and the server must be started with `--allow-bank-management`. Only custom banks accept writes; the official bank is read-only.
+
+The body is `multipart/form-data`:
+
+| Part | Required | Meaning |
+| --- | --- | --- |
+| `question` | Yes | JSON string of a full `QuestionItem` (`id`, `task_type`, `capabilities`, `domain`, `intent`, `human_prompt_seed`, `scoring_checklist`, optional `data_files`, `reference_answers`, `tags`, `difficulty`, etc.). |
+| Any other file part | No | A data file; its multipart filename must match one of `question.data_files[*].path`. |
+
+```bash
+curl -s -X POST "$API/question-banks/$BANK_ID/questions" \
+  -H "X-API-Token: $TOKEN" \
+  --form-string 'question={"id":"my_q_001","task_type":"search_and_interpretation","capabilities":["scientific_reasoning"],"domain":"agnostic","intent":"...","human_prompt_seed":"...","scoring_checklist":[{"id":"sc1","criterion":"...","verify":"llm_binary_judge","weight":1.0}]}' \
+  -F "notes.txt=@./notes.txt" | jq .
+```
+
+The response contains `id`, `bank_id`, `capability`, `task_type`, and `domain`. Returns `400` for an invalid `question` JSON string or unresolved data file, `403` if bank management is disabled or `bank_id` refers to the official (read-only) bank, `404` if `bank_id` does not exist, and `422` if the question payload fails schema validation.
+
+A worked example, including a runnable smoke-test script, is available at `scripts/smoke_test_custom_bank.sh`.
 
 ## Sessions
 
@@ -236,10 +306,11 @@ Errors use FastAPI's JSON form:
 
 | Status | Typical cause |
 | --- | --- |
-| `400` | Missing run submission idempotency key, missing required context, malformed multipart body, or unsafe artifact path. |
+| `400` | Missing run submission idempotency key, missing required context, malformed multipart body, unsafe artifact path, invalid bank name, or duplicate `bank_id`. |
 | `401` | Missing or unknown `X-API-Token`. |
-| `403` | Resource belongs to another token. |
-| `404` | Unknown resource or question not activated in the run. |
+| `403` | Resource belongs to another token, or question bank management is disabled (`--allow-bank-management` not set) or attempted against the read-only official bank. |
+| `404` | Unknown resource, question not activated in the run, or unknown question bank. |
 | `410` | A question in an existing run is no longer available in the hosted catalog. |
 | `413` | Too many artifacts or an artifact exceeds its file-size limit. |
-| `422` | Invalid request shape or a selection that contains no questions. |
+| `422` | Invalid request shape, a selection that contains no questions, or a question payload that fails schema validation. |
+| `501` | Custom question banks are not enabled on this server (no bank store directory configured). |
