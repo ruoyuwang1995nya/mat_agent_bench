@@ -214,8 +214,8 @@ def _render_markdown(summary: EvaluationSummary) -> str:
     if summary.by_model:
         lines += [
             '## Model Comparison',
-            '| Model | Correctness | Grounding | Efficiency | Overall |',
-            '|-------|-------------|-----------|------------|---------|',
+            _AXIS_TABLE_HEADER[0],
+            _AXIS_TABLE_HEADER[1],
         ]
         for model_key in sorted(summary.by_model):
             lines.append(_axis_row(model_key, summary.by_model[model_key]))
