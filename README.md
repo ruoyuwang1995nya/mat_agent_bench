@@ -4,13 +4,12 @@
 
 The benchmark covers capabilities including structure retrieval and construction, input generation, workflow orchestration, batch processing, data diagnosis, execution contracts, scientific analysis, and safety/refusal.
 
-Each submission is graded with a multiplicative scoring model:
+Each submission is graded with a penalty-deduction scoring model:
 
-- **Correctness** (`S_correct`, 0-1): weighted average of content criteria such as result accuracy and trajectory correctness.
-- **Grounding** (`S_ground`, binary veto): 1 only when every grounding criterion passes; a zero makes the final score zero.
-- **Efficiency** (`S_efficiency`, 0-1): weighted average of budget criteria such as tokens, turns, and wall-clock time. It defaults to 1 when no efficiency criteria are configured.
+- Every scoring checklist item (across all capabilities — correctness, grounding, efficiency budgets, etc.) is checked independently and, if it fails, deducts its `weight` from a starting score of 1.
+- **Overall score = max(0, 1 - sum(weights of failed criteria))**, in the range [0, 1].
 
-**Final score = S_correct x S_ground x S_efficiency**
+Capabilities (including `scientific_grounding`) are reported separately in the by-capability breakdown for diagnostics, but they do not currently gate or multiply the overall score — a grounding failure is weighted the same as any other failed criterion.
 
 ---
 
